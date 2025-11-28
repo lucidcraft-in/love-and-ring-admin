@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 const menuItems = [
   { icon: LayoutDashboard, label: "DASHBOARD", path: "/" },
   { icon: Users, label: "USERS", path: "/users" },
+  { icon: UserCog, label: "CONSULTANTS", path: "/consultants" },
   { icon: Ticket, label: "SUPPORT TICKETS", path: "/support" },
   { icon: Globe, label: "DEMOGRAPHICS", path: "/demographics" },
   { icon: CheckCircle, label: "APPROVALS", path: "/approvals" },

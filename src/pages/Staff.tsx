@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter, Plus, UserCog, Users, Activity, Award, MoreHorizontal, Eye, Edit, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { StaffViewDialog } from "@/components/staff/StaffViewDialog";
+import { StaffEditDialog } from "@/components/staff/StaffEditDialog";
+import { StaffDeleteDialog } from "@/components/staff/StaffDeleteDialog";
 
 const staff = [
   {
@@ -77,7 +81,29 @@ const staff = [
   },
 ];
 
+type StaffMember = typeof staff[0];
+
 const Staff = () => {
+  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
+  const [viewOpen, setViewOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const handleView = (member: StaffMember) => {
+    setSelectedStaff(member);
+    setViewOpen(true);
+  };
+
+  const handleEdit = (member: StaffMember) => {
+    setSelectedStaff(member);
+    setEditOpen(true);
+  };
+
+  const handleDelete = (member: StaffMember) => {
+    setSelectedStaff(member);
+    setDeleteOpen(true);
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6 animate-fade-in">
@@ -253,13 +279,13 @@ const Staff = () => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleView(member)}>
                             <Eye className="w-4 h-4 mr-2" /> View Profile
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEdit(member)}>
                             <Edit className="w-4 h-4 mr-2" /> Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="text-destructive">
+                          <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(member)}>
                             <Trash2 className="w-4 h-4 mr-2" /> Remove
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -272,6 +298,11 @@ const Staff = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Dialogs */}
+      <StaffViewDialog open={viewOpen} onOpenChange={setViewOpen} staff={selectedStaff} />
+      <StaffEditDialog open={editOpen} onOpenChange={setEditOpen} staff={selectedStaff} />
+      <StaffDeleteDialog open={deleteOpen} onOpenChange={setDeleteOpen} staff={selectedStaff} />
     </AdminLayout>
   );
 };

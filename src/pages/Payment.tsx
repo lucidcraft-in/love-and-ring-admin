@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Filter, Download, Plus, CreditCard, IndianRupee, TrendingUp, Calendar, MoreHorizontal, Eye, Edit } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { TransactionViewDialog } from "@/components/payment/TransactionViewDialog";
 
 const transactions = [
   {
@@ -96,7 +98,17 @@ const plans = [
   },
 ];
 
+type Transaction = typeof transactions[0];
+
 const Payment = () => {
+  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [viewOpen, setViewOpen] = useState(false);
+
+  const handleViewTransaction = (txn: Transaction) => {
+    setSelectedTransaction(txn);
+    setViewOpen(true);
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6 animate-fade-in">
@@ -250,7 +262,12 @@ const Payment = () => {
                           </Badge>
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={() => handleViewTransaction(txn)}
+                          >
                             <Eye className="w-4 h-4" />
                           </Button>
                         </TableCell>
@@ -315,6 +332,13 @@ const Payment = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Transaction View Dialog */}
+      <TransactionViewDialog
+        open={viewOpen}
+        onOpenChange={setViewOpen}
+        transaction={selectedTransaction}
+      />
     </AdminLayout>
   );
 };

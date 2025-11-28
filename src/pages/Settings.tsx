@@ -1,4 +1,4 @@
-import { AdminLayout } from "@/components/layout/AdminLayout";
+// import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +11,7 @@ import { Settings as SettingsIcon, Bell, Mail, CreditCard, Globe, Upload, Save }
 
 const Settings = () => {
   return (
-    <AdminLayout>
+    // <AdminLayout>
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -410,7 +410,7 @@ The MatchMate Team`}
           </TabsContent>
         </Tabs>
       </div>
-    </AdminLayout>
+    // </AdminLayout>
   );
 };
 

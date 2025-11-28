@@ -1,4 +1,4 @@
-import { AdminLayout } from "@/components/layout/AdminLayout";
+// import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -73,7 +73,7 @@ const branches = [
 
 const Branches = () => {
   return (
-    <AdminLayout>
+    // <AdminLayout>
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -255,7 +255,7 @@ const Branches = () => {
           </CardContent>
         </Card>
       </div>
-    </AdminLayout>
+    // </AdminLayout>
   );
 };
 

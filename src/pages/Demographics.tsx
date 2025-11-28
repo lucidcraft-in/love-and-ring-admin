@@ -1,4 +1,4 @@
-import { AdminLayout } from "@/components/layout/AdminLayout";
+// import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
@@ -45,7 +45,7 @@ const educationData = [
 
 const Demographics = () => {
   return (
-    <AdminLayout>
+    // <AdminLayout>
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -226,7 +226,7 @@ const Demographics = () => {
           </Card>
         </div>
       </div>
-    </AdminLayout>
+    // </AdminLayout>
   );
 };
 

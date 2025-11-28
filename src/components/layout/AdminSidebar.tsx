@@ -1,4 +1,4 @@
-import { Heart, LayoutDashboard, Users, Ticket, Globe, CheckCircle, CreditCard, MessageSquare, Building2, UserCog, Shield, BarChart3, Settings, FileText, Database, X } from "lucide-react";
+import { Heart, LayoutDashboard, Users, UserCog, X } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -7,18 +7,6 @@ const menuItems = [
   { icon: LayoutDashboard, label: "DASHBOARD", path: "/" },
   { icon: Users, label: "USERS", path: "/users" },
   { icon: UserCog, label: "CONSULTANTS", path: "/consultants" },
-  { icon: Ticket, label: "SUPPORT TICKETS", path: "/support" },
-  { icon: Globe, label: "DEMOGRAPHICS", path: "/demographics" },
-  { icon: CheckCircle, label: "APPROVALS", path: "/approvals" },
-  { icon: CreditCard, label: "PAYMENT", path: "/payment" },
-  { icon: MessageSquare, label: "CONTACT", path: "/contact" },
-  { icon: Building2, label: "BRANCHES", path: "/branches" },
-  { icon: UserCog, label: "STAFF", path: "/staff" },
-  { icon: Shield, label: "ADMINS & ROLES", path: "/admins" },
-  { icon: BarChart3, label: "REPORTS", path: "/reports" },
-  { icon: FileText, label: "CMS", path: "/cms" },
-  { icon: Database, label: "MASTER DATA", path: "/master-data" },
-  { icon: Settings, label: "SETTINGS", path: "/settings" },
 ];
 
 interface AdminSidebarProps {
@@ -32,12 +20,12 @@ export function AdminSidebar({ onClose }: AdminSidebarProps) {
     <aside className="w-56 bg-sidebar min-h-screen flex flex-col shrink-0">
       {/* Header with Logo and Close button */}
       <div className="p-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-sidebar-foreground/20 rounded-full flex items-center justify-center">
+        <div className="flex items-center gap-2">
+          <div className="w-9 h-9 bg-sidebar-foreground/20 rounded-full flex items-center justify-center">
             <Heart className="w-5 h-5 text-sidebar-foreground" fill="currentColor" />
           </div>
-          <span className="text-sidebar-foreground font-semibold text-lg tracking-wide">
-            MatchMate
+          <span className="text-sidebar-foreground font-semibold text-sm tracking-wide leading-tight">
+            Love & Ring<br />Admin
           </span>
         </div>
         {onClose && (

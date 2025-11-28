@@ -1,6 +1,7 @@
-import { Heart, LayoutDashboard, Users, Ticket, Globe, CheckCircle, CreditCard, MessageSquare, Building2, UserCog, Shield, BarChart3, Settings, FileText, Database } from "lucide-react";
+import { Heart, LayoutDashboard, Users, Ticket, Globe, CheckCircle, CreditCard, MessageSquare, Building2, UserCog, Shield, BarChart3, Settings, FileText, Database, X } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 const menuItems = [
   { icon: LayoutDashboard, label: "DASHBOARD", path: "/" },
@@ -19,19 +20,35 @@ const menuItems = [
   { icon: Settings, label: "SETTINGS", path: "/settings" },
 ];
 
-export function AdminSidebar() {
+interface AdminSidebarProps {
+  onClose?: () => void;
+}
+
+export function AdminSidebar({ onClose }: AdminSidebarProps) {
   const location = useLocation();
 
   return (
     <aside className="w-56 bg-sidebar min-h-screen flex flex-col shrink-0">
-      {/* Logo */}
-      <div className="p-6 flex items-center gap-3">
-        <div className="w-10 h-10 bg-sidebar-foreground/20 rounded-full flex items-center justify-center">
-          <Heart className="w-5 h-5 text-sidebar-foreground" fill="currentColor" />
+      {/* Header with Logo and Close button */}
+      <div className="p-6 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-sidebar-foreground/20 rounded-full flex items-center justify-center">
+            <Heart className="w-5 h-5 text-sidebar-foreground" fill="currentColor" />
+          </div>
+          <span className="text-sidebar-foreground font-semibold text-lg tracking-wide">
+            MatchMate
+          </span>
         </div>
-        <span className="text-sidebar-foreground font-semibold text-lg tracking-wide">
-          MatchMate
-        </span>
+        {onClose && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden text-sidebar-foreground hover:bg-sidebar-foreground/10"
+            onClick={onClose}
+          >
+            <X className="w-5 h-5" />
+          </Button>
+        )}
       </div>
 
       {/* Navigation */}
@@ -42,6 +59,7 @@ export function AdminSidebar() {
             <NavLink
               key={item.path}
               to={item.path}
+              onClick={onClose}
               className={cn(
                 "flex items-center gap-3 px-4 py-3 rounded-lg text-xs font-medium transition-all duration-200",
                 isActive

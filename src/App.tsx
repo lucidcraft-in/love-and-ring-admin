@@ -9,6 +9,7 @@ import { AdminLayout } from "@/components/layout/AdminLayout";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import Users from "./pages/Users";
+import Consultants from "./pages/Consultants";
 import SupportTickets from "./pages/SupportTickets";
 import Demographics from "./pages/Demographics";
 import Approvals from "./pages/Approvals";
@@ -22,6 +23,9 @@ import Settings from "./pages/Settings";
 import CMS from "./pages/CMS";
 import MasterData from "./pages/MasterData";
 import NotFound from "./pages/NotFound";
+import ConsultantLogin from "./pages/ConsultantLogin";
+import ConsultantRegister from "./pages/ConsultantRegister";
+import ConsultantDashboard from "./pages/ConsultantDashboard";
 
 const queryClient = new QueryClient();
 
@@ -33,7 +37,15 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
+            {/* Admin Login */}
             <Route path="/login" element={<Login />} />
+            
+            {/* Consultant Portal Routes */}
+            <Route path="/consultant/login" element={<ConsultantLogin />} />
+            <Route path="/consultant/register" element={<ConsultantRegister />} />
+            <Route path="/consultant/dashboard" element={<ConsultantDashboard />} />
+            
+            {/* Admin Protected Routes */}
             <Route
               path="/"
               element={
@@ -50,6 +62,16 @@ const App = () => (
                 <ProtectedRoute>
                   <AdminLayout>
                     <Users />
+                  </AdminLayout>
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/consultants"
+              element={
+                <ProtectedRoute>
+                  <AdminLayout>
+                    <Consultants />
                   </AdminLayout>
                 </ProtectedRoute>
               }

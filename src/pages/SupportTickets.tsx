@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter, MessageSquare, Clock, CheckCircle2, AlertCircle, MoreHorizontal, Eye, Reply } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { TicketDetailsDialog } from "@/components/support/TicketDetailsDialog";
+import { TicketReplyDialog } from "@/components/support/TicketReplyDialog";
+import { MarkResolvedDialog } from "@/components/support/MarkResolvedDialog";
 
 const tickets = [
   {
@@ -62,7 +66,29 @@ const tickets = [
   },
 ];
 
+type Ticket = typeof tickets[0];
+
 const SupportTickets = () => {
+  const [selectedTicket, setSelectedTicket] = useState<Ticket | null>(null);
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [replyOpen, setReplyOpen] = useState(false);
+  const [resolveOpen, setResolveOpen] = useState(false);
+
+  const handleViewDetails = (ticket: Ticket) => {
+    setSelectedTicket(ticket);
+    setDetailsOpen(true);
+  };
+
+  const handleReply = (ticket: Ticket) => {
+    setSelectedTicket(ticket);
+    setReplyOpen(true);
+  };
+
+  const handleMarkResolved = (ticket: Ticket) => {
+    setSelectedTicket(ticket);
+    setResolveOpen(true);
+  };
+
   return (
     <AdminLayout>
       <div className="space-y-6 animate-fade-in">
@@ -249,13 +275,13 @@ const SupportTickets = () => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleViewDetails(ticket)}>
                             <Eye className="w-4 h-4 mr-2" /> View Details
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleReply(ticket)}>
                             <Reply className="w-4 h-4 mr-2" /> Reply
                           </DropdownMenuItem>
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleMarkResolved(ticket)}>
                             <CheckCircle2 className="w-4 h-4 mr-2" /> Mark Resolved
                           </DropdownMenuItem>
                         </DropdownMenuContent>
@@ -268,6 +294,23 @@ const SupportTickets = () => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Dialogs */}
+      <TicketDetailsDialog
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        ticket={selectedTicket}
+      />
+      <TicketReplyDialog
+        open={replyOpen}
+        onOpenChange={setReplyOpen}
+        ticket={selectedTicket}
+      />
+      <MarkResolvedDialog
+        open={resolveOpen}
+        onOpenChange={setResolveOpen}
+        ticket={selectedTicket}
+      />
     </AdminLayout>
   );
 };

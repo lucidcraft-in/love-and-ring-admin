@@ -333,6 +333,119 @@ const createProfileValidation = [
   handleValidationErrors
 ];
 
+/**
+ * User create validation
+ */
+const validateCreateUser = [
+  body('username')
+    .trim()
+    .notEmpty().withMessage('Username is required')
+    .isLength({ min: 3, max: 30 }).withMessage('Username must be 3-30 characters')
+    .matches(/^[a-zA-Z0-9_]+$/).withMessage('Username can only contain letters, numbers, underscores'),
+  body('email')
+    .trim()
+    .notEmpty().withMessage('Email is required')
+    .isEmail().withMessage('Invalid email format')
+    .normalizeEmail(),
+  body('fullName')
+    .optional()
+    .trim()
+    .isLength({ max: 100 }).withMessage('Full name cannot exceed 100 characters'),
+  body('phone')
+    .optional()
+    .trim(),
+  body('gender')
+    .optional()
+    .isIn(['Male', 'Female', 'Other', 'Prefer not to say']).withMessage('Invalid gender'),
+  body('dob')
+    .optional()
+    .isISO8601().withMessage('Invalid date format'),
+  body('roles')
+    .optional()
+    .isArray().withMessage('Roles must be an array'),
+  body('membership')
+    .optional()
+    .isIn(['Free', 'Premium', 'VIP']).withMessage('Invalid membership type'),
+  handleValidationErrors
+];
+
+/**
+ * User update validation
+ */
+const validateUpdateUser = [
+  body('username')
+    .optional()
+    .trim()
+    .isLength({ min: 3, max: 30 }).withMessage('Username must be 3-30 characters')
+    .matches(/^[a-zA-Z0-9_]+$/),
+  body('email')
+    .optional()
+    .trim()
+    .isEmail().withMessage('Invalid email format')
+    .normalizeEmail(),
+  body('fullName')
+    .optional()
+    .trim()
+    .isLength({ max: 100 }),
+  body('gender')
+    .optional()
+    .isIn(['Male', 'Female', 'Other', 'Prefer not to say']),
+  body('dob')
+    .optional()
+    .isISO8601(),
+  body('roles')
+    .optional()
+    .isArray(),
+  body('membership')
+    .optional()
+    .isIn(['Free', 'Premium', 'VIP']),
+  handleValidationErrors
+];
+
+/**
+ * Status change validation
+ */
+const validateStatusChange = [
+  body('action')
+    .notEmpty().withMessage('Action is required')
+    .isIn(['activate', 'deactivate', 'suspend', 'unsuspend', 'verify', 'unverify'])
+    .withMessage('Invalid action'),
+  body('reason')
+    .optional()
+    .trim()
+    .isLength({ max: 500 }).withMessage('Reason cannot exceed 500 characters'),
+  handleValidationErrors
+];
+
+/**
+ * Bulk action validation
+ */
+const validateBulkAction = [
+  body('action')
+    .notEmpty().withMessage('Action is required')
+    .isIn(['activate', 'deactivate', 'suspend', 'unsuspend', 'delete', 'verify'])
+    .withMessage('Invalid action'),
+  body('ids')
+    .isArray({ min: 1 }).withMessage('At least one ID is required'),
+  handleValidationErrors
+];
+
+/**
+ * Validate MongoDB ObjectId parameter
+ */
+const validateObjectId = (paramName) => {
+  const mongoose = require('mongoose');
+  return [
+    param(paramName).custom((value) => {
+      if (!mongoose.Types.ObjectId.isValid(value)) {
+        throw new Error('Invalid ID format');
+      }
+      return true;
+    }),
+    handleValidationErrors
+  ];
+};
+
 module.exports = {
   handleValidationErrors,
   createConsultantValidation,
@@ -344,5 +457,11 @@ module.exports = {
   updatePermissionsValidation,
   listConsultantsValidation,
   createProfileValidation,
-  passwordValidation
+  passwordValidation,
+  // User module validations
+  validateCreateUser,
+  validateUpdateUser,
+  validateStatusChange,
+  validateBulkAction,
+  validateObjectId
 };

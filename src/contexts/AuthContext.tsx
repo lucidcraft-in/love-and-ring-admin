@@ -8,6 +8,7 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, password: string) => Promise<boolean>;
   logout: () => void;
+  refreshAuth: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -51,6 +52,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
+  const refreshAuth = () => {
+    const storedUser = authService.getCurrentUser();
+    const token = authService.getToken();
+    if (storedUser && token) {
+      setUser(storedUser);
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -59,6 +68,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isLoading,
         login,
         logout,
+        refreshAuth,
       }}
     >
       {children}

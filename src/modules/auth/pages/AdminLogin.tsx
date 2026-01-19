@@ -7,12 +7,13 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import axios from "axios";
 
 export default function AdminLogin() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { login } = useAuth();
+  const { login, refreshAuth } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
@@ -25,25 +26,48 @@ export default function AdminLogin() {
     setIsLoading(true);
 
     try {
-      const success = await login(email, password);
+      const response = await axios.post("http://localhost:3000/api/auth/login", {
+        email,
+        password,
+      });
 
-      if (success) {
+      console.log(response.data, "success data in the admin login");
+      console.log(response, "full response");
+
+      // Check if login was successful - check for token or 200 status
+      if (response.status === 200 || response.data?.token) {
+        // Store token and user data
+        if (response.data.token) {
+          sessionStorage.setItem('authToken', response.data.token);
+        }
+        if (response.data.user || response.data.admin) {
+          sessionStorage.setItem('adminUser', JSON.stringify(response.data.user || response.data.admin));
+        }
+
+        // Refresh auth context to sync with sessionStorage
+        refreshAuth();
+
         toast({
           title: "Login Successful",
           description: "Welcome to MatchMate Admin Portal",
         });
-        navigate(from, { replace: true });
+
+        // Navigate to dashboard after a brief delay to ensure state updates
+        setTimeout(() => {
+          navigate("/", { replace: true });
+        }, 100);
       } else {
         toast({
           title: "Login Failed",
-          description: "Please enter valid credentials",
+          description: response.data?.message || "Please enter valid credentials",
           variant: "destructive",
         });
       }
     } catch (error: any) {
+      console.error("Login error:", error);
       toast({
         title: "Login Failed",
-        description: error.message || "An error occurred. Please try again.",
+        description: error.response?.data?.message || error.message || "An error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {

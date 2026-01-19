@@ -1,11 +1,6 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  role: string;
-}
+import authService from "@/lib/axios/services/authService";
+import { User } from "@/lib/axios/types";
 
 interface AuthContextType {
   user: User | null;
@@ -22,33 +17,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing session (simulated)
-    const storedUser = sessionStorage.getItem("adminUser");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
+    // Check for existing session
+    const storedUser = authService.getCurrentUser();
+    const token = authService.getToken();
+
+    if (storedUser && token) {
+      setUser(storedUser);
     }
     setIsLoading(false);
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    // Simulated login - replace with actual API call
-    if (email && password) {
-      const mockUser: User = {
-        id: "1",
-        email,
-        name: "Admin User",
-        role: "Super Admin",
-      };
-      setUser(mockUser);
-      sessionStorage.setItem("adminUser", JSON.stringify(mockUser));
-      return true;
+    try {
+      const response = await authService.login(email, password);
+
+      if (response.success && response.user) {
+        setUser(response.user);
+        return true;
+      }
+      return false;
+    } catch (error: any) {
+      console.error("Login error:", error);
+      // Handle error response from backend
+      if (error.response?.data?.message) {
+        throw new Error(error.response.data.message);
+      }
+      throw new Error("Login failed. Please try again.");
     }
-    return false;
   };
 
   const logout = () => {
+    authService.logout();
     setUser(null);
-    sessionStorage.removeItem("adminUser");
   };
 
   return (

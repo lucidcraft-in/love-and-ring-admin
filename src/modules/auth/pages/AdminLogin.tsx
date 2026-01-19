@@ -24,22 +24,31 @@ export default function AdminLogin() {
     e.preventDefault();
     setIsLoading(true);
 
-    const success = await login(email, password);
-    
-    if (success) {
-      toast({
-        title: "Login Successful",
-        description: "Welcome to MatchMate Admin Portal",
-      });
-      navigate(from, { replace: true });
-    } else {
+    try {
+      const success = await login(email, password);
+
+      if (success) {
+        toast({
+          title: "Login Successful",
+          description: "Welcome to MatchMate Admin Portal",
+        });
+        navigate(from, { replace: true });
+      } else {
+        toast({
+          title: "Login Failed",
+          description: "Please enter valid credentials",
+          variant: "destructive",
+        });
+      }
+    } catch (error: any) {
       toast({
         title: "Login Failed",
-        description: "Please enter valid credentials",
+        description: error.message || "An error occurred. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
   };
 
   return (

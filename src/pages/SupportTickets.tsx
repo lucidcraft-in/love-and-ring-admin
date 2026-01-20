@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -90,7 +89,7 @@ const SupportTickets = () => {
   };
 
   return (
-    <AdminLayout>
+    <>
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -241,10 +240,10 @@ const SupportTickets = () => {
                           ticket.priority === "High"
                             ? "border-chart-orange text-chart-orange"
                             : ticket.priority === "Medium"
-                            ? "border-info text-info"
-                            : ticket.priority === "Low"
-                            ? "border-chart-green text-chart-green"
-                            : ""
+                              ? "border-info text-info"
+                              : ticket.priority === "Low"
+                                ? "border-chart-green text-chart-green"
+                                : ""
                         }
                       >
                         {ticket.priority}
@@ -257,10 +256,10 @@ const SupportTickets = () => {
                           ticket.status === "Open"
                             ? "bg-chart-orange/10 text-chart-orange"
                             : ticket.status === "In Progress"
-                            ? "bg-info/10 text-info"
-                            : ticket.status === "Resolved"
-                            ? "bg-chart-green/10 text-chart-green"
-                            : "bg-muted text-muted-foreground"
+                              ? "bg-info/10 text-info"
+                              : ticket.status === "Resolved"
+                                ? "bg-chart-green/10 text-chart-green"
+                                : "bg-muted text-muted-foreground"
                         }
                       >
                         {ticket.status}
@@ -311,7 +310,7 @@ const SupportTickets = () => {
         onOpenChange={setResolveOpen}
         ticket={selectedTicket}
       />
-    </AdminLayout>
+    </>
   );
 };
 

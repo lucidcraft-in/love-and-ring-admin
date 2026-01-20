@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -105,7 +104,7 @@ const Staff = () => {
   };
 
   return (
-    <AdminLayout>
+
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -303,7 +302,7 @@ const Staff = () => {
       <StaffViewDialog open={viewOpen} onOpenChange={setViewOpen} staff={selectedStaff} />
       <StaffEditDialog open={editOpen} onOpenChange={setEditOpen} staff={selectedStaff} />
       <StaffDeleteDialog open={deleteOpen} onOpenChange={setDeleteOpen} staff={selectedStaff} />
-    </AdminLayout>
+
   );
 };
 

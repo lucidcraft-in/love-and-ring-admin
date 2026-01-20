@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -110,7 +109,7 @@ const Payment = () => {
   };
 
   return (
-    <AdminLayout>
+    <>
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -254,8 +253,8 @@ const Payment = () => {
                               txn.status === "Success"
                                 ? "bg-chart-green/10 text-chart-green"
                                 : txn.status === "Pending"
-                                ? "bg-chart-orange/10 text-chart-orange"
-                                : "bg-destructive/10 text-destructive"
+                                  ? "bg-chart-orange/10 text-chart-orange"
+                                  : "bg-destructive/10 text-destructive"
                             }
                           >
                             {txn.status}
@@ -339,7 +338,7 @@ const Payment = () => {
         onOpenChange={setViewOpen}
         transaction={selectedTransaction}
       />
-    </AdminLayout>
+    </>
   );
 };
 

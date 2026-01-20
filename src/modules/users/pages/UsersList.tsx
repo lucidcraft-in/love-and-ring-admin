@@ -1,4 +1,5 @@
-import { Card, CardContent } from "@/components/ui/card";
+import Axios from "../../../axios/axios";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -7,6 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Filter, Download, UserPlus, MoreHorizontal, Eye, Edit, Ban, CheckCircle } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useEffect } from "react";
 
 const users = [
   {
@@ -76,7 +78,22 @@ const users = [
   },
 ];
 
-export default function UsersList() {
+
+const fetchUsers = async () => {
+  try {
+    const response = await Axios.get('/api/users');
+    console.log(response.data, "data in the response users");
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching users:', error);
+    return [];
+  }
+};
+
+fetchUsers();
+
+
+const Users = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
@@ -220,8 +237,8 @@ export default function UsersList() {
                         user.status === "Active"
                           ? "border-chart-green text-chart-green"
                           : user.status === "Pending"
-                          ? "border-chart-orange text-chart-orange"
-                          : "border-destructive text-destructive"
+                            ? "border-chart-orange text-chart-orange"
+                            : "border-destructive text-destructive"
                       }
                     >
                       {user.status}
@@ -259,4 +276,6 @@ export default function UsersList() {
       </Card>
     </div>
   );
-}
+};
+
+export default Users;

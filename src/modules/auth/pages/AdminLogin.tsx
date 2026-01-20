@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Heart, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,40 +6,52 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { loginAsync, clearError } from "@/store/slices/authSlice";
 
 export default function AdminLogin() {
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
-  const { login } = useAuth();
+  const dispatch = useAppDispatch();
+  const { isLoading, error, isAuthenticated } = useAppSelector((state) => state.auth);
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const from = (location.state as any)?.from?.pathname || "/";
 
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate(from, { replace: true });
+    }
+  }, [isAuthenticated, navigate, from]);
+
+  // Show error toast when error occurs
+  useEffect(() => {
+    if (error) {
+      toast({
+        title: "Login Failed",
+        description: error,
+        variant: "destructive",
+      });
+      dispatch(clearError());
+    }
+  }, [error, toast, dispatch]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
 
-    const success = await login(email, password);
-    
-    if (success) {
+    const result = await dispatch(loginAsync({ email, password }));
+
+    if (loginAsync.fulfilled.match(result)) {
       toast({
         title: "Login Successful",
         description: "Welcome to MatchMate Admin Portal",
       });
       navigate(from, { replace: true });
-    } else {
-      toast({
-        title: "Login Failed",
-        description: "Please enter valid credentials",
-        variant: "destructive",
-      });
     }
-    setIsLoading(false);
   };
 
   return (
@@ -85,6 +97,7 @@ export default function AdminLogin() {
                     type="button"
                     variant="link"
                     className="px-0 h-auto text-xs text-primary"
+                    onClick={() => navigate('/forgot-password')}
                   >
                     Forgot Password?
                   </Button>
@@ -126,7 +139,7 @@ export default function AdminLogin() {
             </form>
 
             <div className="mt-6 text-center text-xs text-muted-foreground">
-              <p>Demo credentials: any email/password</p>
+              {/* <p>Demo credentials: [EMAIL_ADDRESS] / admin123</p> */}
             </div>
           </CardContent>
         </Card>

@@ -138,7 +138,7 @@ export default function AdminLogin() {
             </form>
 
             <div className="mt-6 text-center text-xs text-muted-foreground">
-              <p>Demo credentials: any email/password</p>
+              {/* <p>Demo credentials: [EMAIL_ADDRESS] / admin123</p> */}
             </div>
           </CardContent>
         </Card>

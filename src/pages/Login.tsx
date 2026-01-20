@@ -138,7 +138,7 @@ const Login = () => {
             </form>
 
             <div className="mt-6 text-center text-xs text-muted-foreground">
-              <p>Demo credentials: any email/password</p>
+              {/* <p>Demo credentials: any email/password</p> */}
             </div>
           </CardContent>
         </Card>

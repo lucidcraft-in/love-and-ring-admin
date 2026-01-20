@@ -4,16 +4,15 @@ const Axios: AxiosInstance = axios.create({
   baseURL: 'http://localhost:3000/',
   headers: {
     'Content-Type': 'application/json',
-    'Cache-Control': 'no-cache',
-    Pragma: 'no-cache',
-    'If-Modified-Since': '0',
   },
-}); 
+});
 
 Axios.interceptors.request.use(function (config) {
-  let token = localStorage.getItem('userInfo');
+  const token = localStorage.getItem('token');
 
-  config.headers['Authorization'] = 'Bearer ' + token;
+  if (token) {
+    config.headers['Authorization'] = 'Bearer ' + token;
+  }
   return config;
 });
 

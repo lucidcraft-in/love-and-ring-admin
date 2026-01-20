@@ -3,7 +3,6 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 
@@ -33,39 +32,37 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <AuthProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Auth Routes */}
-            <Route path="/login" element={<AdminLogin />} />
-            
-            {/* Consultant Portal Routes */}
-            <Route path="/consultant/login" element={<ConsultantLogin />} />
-            <Route path="/consultant/register" element={<ConsultantRegister />} />
-            <Route path="/consultant/dashboard" element={<ConsultantDashboard />} />
-            
-            {/* Admin Protected Routes */}
-            <Route path="/" element={<ProtectedRoute><AdminLayout><DashboardHome /></AdminLayout></ProtectedRoute>} />
-            <Route path="/users" element={<ProtectedRoute><AdminLayout><UsersList /></AdminLayout></ProtectedRoute>} />
-            <Route path="/consultants" element={<ProtectedRoute><AdminLayout><ConsultantList /></AdminLayout></ProtectedRoute>} />
-            <Route path="/staff" element={<ProtectedRoute><AdminLayout><StaffList /></AdminLayout></ProtectedRoute>} />
-            <Route path="/support" element={<ProtectedRoute><AdminLayout><SupportTickets /></AdminLayout></ProtectedRoute>} />
-            <Route path="/demographics" element={<ProtectedRoute><AdminLayout><Demographics /></AdminLayout></ProtectedRoute>} />
-            <Route path="/approvals" element={<ProtectedRoute><AdminLayout><Approvals /></AdminLayout></ProtectedRoute>} />
-            <Route path="/payment" element={<ProtectedRoute><AdminLayout><Payment /></AdminLayout></ProtectedRoute>} />
-            <Route path="/contact" element={<ProtectedRoute><AdminLayout><Contact /></AdminLayout></ProtectedRoute>} />
-            <Route path="/branches" element={<ProtectedRoute><AdminLayout><Branches /></AdminLayout></ProtectedRoute>} />
-            <Route path="/admins" element={<ProtectedRoute><AdminLayout><Admins /></AdminLayout></ProtectedRoute>} />
-            <Route path="/reports" element={<ProtectedRoute><AdminLayout><Reports /></AdminLayout></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><AdminLayout><Settings /></AdminLayout></ProtectedRoute>} />
-            <Route path="/cms" element={<ProtectedRoute><AdminLayout><CMS /></AdminLayout></ProtectedRoute>} />
-            <Route path="/master-data" element={<ProtectedRoute><AdminLayout><MasterData /></AdminLayout></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </AuthProvider>
+      <Toaster />
+      <Sonner />
+      <BrowserRouter>
+        <Routes>
+          {/* Auth Routes */}
+          <Route path="/login" element={<AdminLogin />} />
+
+          {/* Consultant Portal Routes */}
+          <Route path="/consultant/login" element={<ConsultantLogin />} />
+          <Route path="/consultant/register" element={<ConsultantRegister />} />
+          <Route path="/consultant/dashboard" element={<ConsultantDashboard />} />
+
+          {/* Admin Protected Routes */}
+          <Route path="/" element={<ProtectedRoute><AdminLayout><DashboardHome /></AdminLayout></ProtectedRoute>} />
+          <Route path="/users" element={<ProtectedRoute><AdminLayout><UsersList /></AdminLayout></ProtectedRoute>} />
+          <Route path="/consultants" element={<ProtectedRoute><AdminLayout><ConsultantList /></AdminLayout></ProtectedRoute>} />
+          <Route path="/staff" element={<ProtectedRoute><AdminLayout><StaffList /></AdminLayout></ProtectedRoute>} />
+          <Route path="/support" element={<ProtectedRoute><AdminLayout><SupportTickets /></AdminLayout></ProtectedRoute>} />
+          <Route path="/demographics" element={<ProtectedRoute><AdminLayout><Demographics /></AdminLayout></ProtectedRoute>} />
+          <Route path="/approvals" element={<ProtectedRoute><AdminLayout><Approvals /></AdminLayout></ProtectedRoute>} />
+          <Route path="/payment" element={<ProtectedRoute><AdminLayout><Payment /></AdminLayout></ProtectedRoute>} />
+          <Route path="/contact" element={<ProtectedRoute><AdminLayout><Contact /></AdminLayout></ProtectedRoute>} />
+          <Route path="/branches" element={<ProtectedRoute><AdminLayout><Branches /></AdminLayout></ProtectedRoute>} />
+          <Route path="/admins" element={<ProtectedRoute><AdminLayout><Admins /></AdminLayout></ProtectedRoute>} />
+          <Route path="/reports" element={<ProtectedRoute><AdminLayout><Reports /></AdminLayout></ProtectedRoute>} />
+          <Route path="/settings" element={<ProtectedRoute><AdminLayout><Settings /></AdminLayout></ProtectedRoute>} />
+          <Route path="/cms" element={<ProtectedRoute><AdminLayout><CMS /></AdminLayout></ProtectedRoute>} />
+          <Route path="/master-data" element={<ProtectedRoute><AdminLayout><MasterData /></AdminLayout></ProtectedRoute>} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
 );

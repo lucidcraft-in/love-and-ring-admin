@@ -97,6 +97,7 @@ export default function AdminLogin() {
                     type="button"
                     variant="link"
                     className="px-0 h-auto text-xs text-primary"
+                    onClick={() => navigate('/forgot-password')}
                   >
                     Forgot Password?
                   </Button>

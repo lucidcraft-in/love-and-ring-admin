@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -102,6 +102,35 @@ const Users = () => {
     return "N/A";
   };
 
+  const stats = useMemo(() => {
+  const totalUsers = users.length;
+
+  const activeUsers = users.filter(
+    (u) => u.approvalStatus === "APPROVED"
+  ).length;
+
+  const pendingUsers = users.filter(
+    (u) => u.approvalStatus === "PENDING"
+  ).length;
+
+  const blockedUsers = users.filter(
+    (u) => u.approvalStatus === "REJECTED"
+  ).length;
+
+  const premiumUsers = users.filter(
+    (u) => u.profileStatus === "COMPLETE"
+  ).length;
+
+  return {
+    totalUsers,
+    activeUsers,
+    premiumUsers,
+    pendingUsers,
+    blockedUsers,
+  };
+}, [users]);
+
+
   return (
     <>
       <div className="space-y-6 animate-fade-in">
@@ -122,25 +151,25 @@ const Users = () => {
           <Card className="stat-card-shadow border-0">
             <CardContent className="p-4">
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Users</p>
-              <p className="text-2xl font-semibold text-primary mt-1">42,964</p>
+              <p className="text-2xl font-semibold text-primary mt-1">{stats.totalUsers}</p>
             </CardContent>
           </Card>
           <Card className="stat-card-shadow border-0">
             <CardContent className="p-4">
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Active Users</p>
-              <p className="text-2xl font-semibold text-chart-green mt-1">38,421</p>
+              <p className="text-2xl font-semibold text-chart-green mt-1">{stats.activeUsers}</p>
             </CardContent>
           </Card>
           <Card className="stat-card-shadow border-0">
             <CardContent className="p-4">
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Premium Users</p>
-              <p className="text-2xl font-semibold text-chart-orange mt-1">8,924</p>
+              <p className="text-2xl font-semibold text-chart-orange mt-1">{stats.premiumUsers}</p>
             </CardContent>
           </Card>
           <Card className="stat-card-shadow border-0">
             <CardContent className="p-4">
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Pending Approval</p>
-              <p className="text-2xl font-semibold text-chart-purple mt-1">156</p>
+              <p className="text-2xl font-semibold text-chart-purple mt-1">{stats.pendingUsers}</p>
             </CardContent>
           </Card>
         </div>
@@ -185,12 +214,12 @@ const Users = () => {
                     <SelectItem value="blocked">Blocked</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" size="icon">
+                {/* <Button variant="outline" size="icon">
                   <Filter className="w-4 h-4" />
                 </Button>
                 <Button variant="outline" size="icon">
                   <Download className="w-4 h-4" />
-                </Button>
+                </Button> */}
               </div>
             </div>
           </CardContent>
@@ -297,9 +326,9 @@ const Users = () => {
                               <DropdownMenuItem onClick={() => handleEditUser(user)}>
                                 <Edit className="w-4 h-4 mr-2" /> Edit
                               </DropdownMenuItem>
-                              <DropdownMenuItem>
+                              {/* <DropdownMenuItem>
                                 <CheckCircle className="w-4 h-4 mr-2" /> Approve
-                              </DropdownMenuItem>
+                              </DropdownMenuItem> */}
                               <DropdownMenuItem className="text-destructive">
                                 <Ban className="w-4 h-4 mr-2" /> Block
                               </DropdownMenuItem>

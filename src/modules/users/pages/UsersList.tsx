@@ -23,10 +23,49 @@ const Users = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [genderFilter, setGenderFilter] = useState("all");
+  const [membershipFilter, setMembershipFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
     dispatch(fetchUsersAsync());
   }, [dispatch]);
+
+  const filteredUsers = useMemo(() => {
+    return users.filter((user) => {
+      // search
+      const search = searchTerm.toLowerCase();
+      const matchesSearch =
+        user.fullName?.toLowerCase().includes(search) ||
+        user.email?.toLowerCase().includes(search) ||
+        user.mobile?.includes(search);
+
+      // gender
+      const matchesGender =
+        genderFilter === "all" || user.gender === genderFilter;
+
+      // Membership
+      const matchesMembership =
+        membershipFilter === "all" ||
+        (membershipFilter === "premium" && user.profileStatus === "COMPLETE") ||
+        (membershipFilter === "free" && user.profileStatus !== "COMPLETE");
+
+      // Status
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && user.approvalStatus === "APPROVED") ||
+        (statusFilter === "pending" && user.approvalStatus === "PENDING") ||
+        (statusFilter === "blocked" && user.approvalStatus === "REJECTED");
+
+      return (
+        matchesSearch &&
+        matchesGender &&
+        matchesMembership &&
+        matchesStatus
+      );
+    })
+  }, [users, searchTerm, genderFilter, membershipFilter, statusFilter])
 
   const handleViewUser = (user: any) => {
     setSelectedUser(user);
@@ -103,32 +142,32 @@ const Users = () => {
   };
 
   const stats = useMemo(() => {
-  const totalUsers = users.length;
+    const totalUsers = users.length;
 
-  const activeUsers = users.filter(
-    (u) => u.approvalStatus === "APPROVED"
-  ).length;
+    const activeUsers = users.filter(
+      (u) => u.approvalStatus === "APPROVED"
+    ).length;
 
-  const pendingUsers = users.filter(
-    (u) => u.approvalStatus === "PENDING"
-  ).length;
+    const pendingUsers = users.filter(
+      (u) => u.approvalStatus === "PENDING"
+    ).length;
 
-  const blockedUsers = users.filter(
-    (u) => u.approvalStatus === "REJECTED"
-  ).length;
+    const blockedUsers = users.filter(
+      (u) => u.approvalStatus === "REJECTED"
+    ).length;
 
-  const premiumUsers = users.filter(
-    (u) => u.profileStatus === "COMPLETE"
-  ).length;
+    const premiumUsers = users.filter(
+      (u) => u.profileStatus === "COMPLETE"
+    ).length;
 
-  return {
-    totalUsers,
-    activeUsers,
-    premiumUsers,
-    pendingUsers,
-    blockedUsers,
-  };
-}, [users]);
+    return {
+      totalUsers,
+      activeUsers,
+      premiumUsers,
+      pendingUsers,
+      blockedUsers,
+    };
+  }, [users]);
 
 
   return (
@@ -180,35 +219,40 @@ const Users = () => {
             <div className="flex flex-col lg:flex-row gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input placeholder="Search users by name, email, or phone..." className="pl-10" />
+                <Input
+                  placeholder="Search users by name, email, or phone..."
+                  className="pl-10"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
               </div>
               <div className="flex flex-wrap gap-2">
-                <Select defaultValue="all-gender">
+                <Select defaultValue={genderFilter} onValueChange={setGenderFilter}>
                   <SelectTrigger className="w-32">
                     <SelectValue placeholder="Gender" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all-gender">All Gender</SelectItem>
-                    <SelectItem value="male">Male</SelectItem>
-                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="all">All Gender</SelectItem>
+                    <SelectItem value="Male">Male</SelectItem>
+                    <SelectItem value="Female">Female</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select defaultValue="all-membership">
+                <Select defaultValue={membershipFilter} onValueChange={setMembershipFilter}>
                   <SelectTrigger className="w-36">
                     <SelectValue placeholder="Membership" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all-membership">All Membership</SelectItem>
+                    <SelectItem value="all">All Membership</SelectItem>
                     <SelectItem value="premium">Premium</SelectItem>
                     <SelectItem value="free">Free</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select defaultValue="all-status">
+                <Select defaultValue={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-32">
                     <SelectValue placeholder="Status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all-status">All Status</SelectItem>
+                    <SelectItem value="all">All Status</SelectItem>
                     <SelectItem value="active">Active</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="blocked">Blocked</SelectItem>
@@ -261,14 +305,14 @@ const Users = () => {
                       </div>
                     </TableCell>
                   </TableRow>
-                ) : users.length === 0 ? (
+                ) : filteredUsers.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={9} className="text-center py-8">
                       <p className="text-muted-foreground">No users found</p>
                     </TableCell>
                   </TableRow>
                 ) : (
-                  users.map((user) => {
+                  filteredUsers.map((user) => {
                     const status = getStatusDisplay(user.approvalStatus);
                     return (
                       <TableRow key={user._id} className="border-border/50">

@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { AdminLayout } from "@/components/layout/AdminLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,7 +61,7 @@ const Consultants = () => {
   };
 
   return (
-    <AdminLayout>
+
       <div className="space-y-6 animate-fade-in">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
@@ -124,7 +123,7 @@ const Consultants = () => {
 
       {/* Create Dialog */}
       <Dialog open={createOpen} onOpenChange={setCreateOpen}><DialogContent><DialogHeader><DialogTitle>Add New Consultant</DialogTitle></DialogHeader><div className="space-y-4"><div className="grid grid-cols-2 gap-4"><div><Label>Username</Label><Input placeholder="broker_name" /></div><div><Label>Email</Label><Input type="email" placeholder="email@agency.com" /></div></div><div><Label>Full Name</Label><Input placeholder="Full Name" /></div><div className="grid grid-cols-2 gap-4"><div><Label>Phone</Label><Input placeholder="+91..." /></div><div><Label>Agency Name</Label><Input placeholder="Agency" /></div></div></div><DialogFooter><Button variant="outline" onClick={() => setCreateOpen(false)}>Cancel</Button><Button onClick={() => { toast({ title: "Consultant Created", description: "Notification email sent." }); setCreateOpen(false); }}>Create</Button></DialogFooter></DialogContent></Dialog>
-    </AdminLayout>
+
   );
 };
 

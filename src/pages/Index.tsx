@@ -1,4 +1,3 @@
-import { AdminLayout } from "@/components/layout/AdminLayout";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { VisitorsChart } from "@/components/dashboard/VisitorsChart";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
@@ -22,7 +21,7 @@ const newUsersData = [
 
 const Index = () => {
   return (
-    <AdminLayout>
+
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -87,7 +86,7 @@ const Index = () => {
           <Demographics />
         </div>
       </div>
-    </AdminLayout>
+
   );
 };
 

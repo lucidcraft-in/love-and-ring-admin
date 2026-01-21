@@ -22,8 +22,8 @@ interface User {
   physicallyChallenged?: boolean;
   livingWithFamily?: boolean;
   course?: string;
-  highestEducation?: string;
-  profession?: string;
+  highestEducation?: any;
+  profession?: any;
   income?: {
     amount?: number;
     type?: string;
@@ -31,10 +31,10 @@ interface User {
   interests?: string[];
   personalityTraits?: string[];
   dietPreference?: string[];
-  city?: string;
-  religion?: string;
-  caste?: string;
-  motherTongue?: string;
+  city?: any;
+  religion?: any;
+  caste?: any;
+  motherTongue?: any;
   approvalStatus?: string;
   branch?: string;
   referredBy?: string;
@@ -58,6 +58,25 @@ export const ViewUserDialog = ({ open, onOpenChange, user, onEdit }: ViewUserDia
       month: "long",
       day: "numeric",
     });
+  };
+
+  // Helper function to extract name from object or return string
+  const extractName = (field: any): string | undefined => {
+    if (!field) return undefined;
+    if (typeof field === "string") return field;
+    if (typeof field === "object" && field.name) return field.name;
+    return undefined;
+  };
+
+  // Helper function to format location
+  const formatLocation = (location: any): string | undefined => {
+    if (!location) return undefined;
+    if (typeof location === "string") return location;
+    if (typeof location === "object") {
+      const { city, state, country } = location;
+      return [city, state, country].filter(Boolean).join(", ");
+    }
+    return undefined;
   };
 
   const getApprovalStatusBadge = (status?: string) => {
@@ -178,8 +197,8 @@ export const ViewUserDialog = ({ open, onOpenChange, user, onEdit }: ViewUserDia
           <TabsContent value="education" className="space-y-4 mt-4">
             <div className="grid grid-cols-2 gap-6">
               <InfoRow label="Course" value={user.course} icon={Award} />
-              <InfoRow label="Highest Education" value={user.highestEducation} icon={Award} />
-              <InfoRow label="Profession" value={user.profession} icon={Briefcase} />
+              <InfoRow label="Highest Education" value={extractName(user.highestEducation)} icon={Award} />
+              <InfoRow label="Profession" value={extractName(user.profession)} icon={Briefcase} />
               <InfoRow
                 label="Income"
                 value={
@@ -241,10 +260,10 @@ export const ViewUserDialog = ({ open, onOpenChange, user, onEdit }: ViewUserDia
               </div>
 
               <div className="grid grid-cols-2 gap-6 pt-4 border-t">
-                <InfoRow label="City" value={user.city} icon={MapPin} />
-                <InfoRow label="Religion" value={user.religion} />
-                <InfoRow label="Caste" value={user.caste} />
-                <InfoRow label="Mother Tongue" value={user.motherTongue} />
+                <InfoRow label="City" value={formatLocation(user.city)} icon={MapPin} />
+                <InfoRow label="Religion" value={extractName(user.religion)} />
+                <InfoRow label="Caste" value={extractName(user.caste)} />
+                <InfoRow label="Mother Tongue" value={extractName(user.motherTongue)} />
                 <InfoRow label="Branch" value={user.branch} />
                 <InfoRow label="Referred By" value={user.referredBy} />
               </div>

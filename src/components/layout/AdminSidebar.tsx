@@ -29,7 +29,7 @@ export function AdminSidebar({ onClose }: AdminSidebarProps) {
   const location = useLocation();
 
   return (
-    <aside className="w-56 bg-sidebar min-h-screen flex flex-col shrink-0">
+    <aside className="w-56 bg-sidebar h-screen sticky top-0 flex flex-col shrink-0">
       {/* Header with Logo and Close button */}
       <div className="p-6 flex items-center justify-between">
         <div className="flex items-center gap-2">

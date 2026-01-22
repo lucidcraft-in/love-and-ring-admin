@@ -8,7 +8,8 @@ const Axios: AxiosInstance = axios.create({
 });
 
 Axios.interceptors.request.use(function (config) {
-  const token = localStorage.getItem('token');
+  // Check for admin token first, then consultant token
+  const token = localStorage.getItem('token') || localStorage.getItem('consultantToken');
 
   if (token) {
     config.headers['Authorization'] = 'Bearer ' + token;

@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Provider } from "react-redux";
 import { store } from "@/store/store";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { ConsultantProtectedRoute } from "@/components/ConsultantProtectedRoute";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 
 // Module imports
@@ -46,7 +47,14 @@ const App = () => (
             {/* Consultant Portal Routes */}
             <Route path="/consultant/login" element={<ConsultantLogin />} />
             <Route path="/consultant/register" element={<ConsultantRegister />} />
-            <Route path="/consultant/dashboard" element={<ConsultantDashboard />} />
+            <Route
+              path="/consultant/dashboard"
+              element={
+                <ConsultantProtectedRoute>
+                  <ConsultantDashboard />
+                </ConsultantProtectedRoute>
+              }
+            />
 
             {/* Admin Protected Routes */}
             <Route path="/" element={<ProtectedRoute><AdminLayout><DashboardHome /></AdminLayout></ProtectedRoute>} />

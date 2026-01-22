@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,44 +7,54 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { useConsultantAuth } from "../hooks/useConsultantAuth";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { loginConsultantAsync, clearConsultantError } from "@/store/slices/consultantSlice";
 
 export default function ConsultantLogin() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { login } = useConsultantAuth();
+  const dispatch = useAppDispatch();
+
+  // Redux state
+  const { loginLoading, loginError, isAuthenticated } = useAppSelector((state) => state.consultant);
+
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    username: "",
+    email: "",
     password: "",
   });
 
+  // Clear errors on mount
+  useEffect(() => {
+    dispatch(clearConsultantError());
+  }, [dispatch]);
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate("/consultant/dashboard");
+    }
+  }, [isAuthenticated, navigate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setIsLoading(true);
+    dispatch(clearConsultantError());
 
     try {
-      const result = await login(formData.username, formData.password);
-      
-      if (result.error) {
-        setError(result.error);
-        setIsLoading(false);
-        return;
-      }
+      const result = await dispatch(loginConsultantAsync({
+        email: formData.email,
+        password: formData.password,
+      })).unwrap();
 
       toast({
         title: "Login Successful",
-        description: "Welcome to your consultant dashboard!",
+        description: `Welcome back, ${result.fullName}!`,
       });
-      
+
       navigate("/consultant/dashboard");
-    } catch (err) {
-      setError("Invalid credentials. Please try again.");
-    } finally {
-      setIsLoading(false);
+    } catch (error) {
+      // Error is already set in Redux state
+      console.error("Login failed:", error);
     }
   };
 
@@ -64,23 +74,23 @@ export default function ConsultantLogin() {
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
+            {loginError && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>{loginError}</AlertDescription>
               </Alert>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="username">Username or Email</Label>
+              <Label htmlFor="email">Email</Label>
               <Input
-                id="username"
-                type="text"
-                placeholder="Enter your username or email"
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                id="email"
+                type="email"
+                placeholder="Enter your email"
+                value={formData.email}
+                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 required
-                disabled={isLoading}
+                disabled={loginLoading}
               />
             </div>
 
@@ -94,7 +104,7 @@ export default function ConsultantLogin() {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
-                  disabled={isLoading}
+                  disabled={loginLoading}
                   className="pr-10"
                 />
                 <Button
@@ -113,8 +123,8 @@ export default function ConsultantLogin() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
+            <Button type="submit" className="w-full" disabled={loginLoading}>
+              {loginLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Signing in...

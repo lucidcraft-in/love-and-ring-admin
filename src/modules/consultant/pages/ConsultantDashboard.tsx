@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
+import {
   Users, TrendingUp, Clock, Heart, Activity, Eye, Edit, Trash2, Plus, LogOut,
   Bell, Settings, Search
 } from "lucide-react";
@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useConsultantAuth } from "../hooks/useConsultantAuth";
 import { useMemberProfiles } from "../hooks/useMemberProfiles";
 import type { ConsultantUser } from "../types";
+import { AddUserDialog } from "@/components/users/AddUserDialog";
 
 export default function ConsultantDashboard() {
   const navigate = useNavigate();
@@ -30,6 +31,7 @@ export default function ConsultantDashboard() {
   const { profiles, activity } = useMemberProfiles();
   const [consultant, setConsultant] = useState<ConsultantUser | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
 
   useEffect(() => {
     const storedConsultant = getConsultant();
@@ -49,6 +51,14 @@ export default function ConsultantDashboard() {
     navigate("/consultant/login");
   };
 
+  const handleUserAdded = () => {
+    // Refresh profiles list if needed
+    toast({
+      title: "Success",
+      description: "User profile created successfully",
+    });
+  };
+
   const filteredProfiles = profiles.filter(
     (profile) =>
       profile.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -56,31 +66,31 @@ export default function ConsultantDashboard() {
   );
 
   const stats = [
-    { 
-      title: "Total Profiles", 
-      value: profiles.length, 
-      icon: Users, 
+    {
+      title: "Total Profiles",
+      value: profiles.length,
+      icon: Users,
       color: "text-blue-600 dark:text-blue-400",
       bgColor: "bg-blue-100 dark:bg-blue-900/30"
     },
-    { 
-      title: "Active Profiles", 
-      value: profiles.filter(p => p.status === "active").length, 
-      icon: TrendingUp, 
+    {
+      title: "Active Profiles",
+      value: profiles.filter(p => p.status === "active").length,
+      icon: TrendingUp,
       color: "text-green-600 dark:text-green-400",
       bgColor: "bg-green-100 dark:bg-green-900/30"
     },
-    { 
-      title: "Pending Review", 
-      value: profiles.filter(p => p.status === "pending").length, 
-      icon: Clock, 
+    {
+      title: "Pending Review",
+      value: profiles.filter(p => p.status === "pending").length,
+      icon: Clock,
       color: "text-yellow-600 dark:text-yellow-400",
       bgColor: "bg-yellow-100 dark:bg-yellow-900/30"
     },
-    { 
-      title: "Matched", 
-      value: profiles.filter(p => p.status === "matched").length, 
-      icon: Heart, 
+    {
+      title: "Matched",
+      value: profiles.filter(p => p.status === "matched").length,
+      icon: Heart,
       color: "text-pink-600 dark:text-pink-400",
       bgColor: "bg-pink-100 dark:bg-pink-900/30"
     },
@@ -154,7 +164,7 @@ export default function ConsultantDashboard() {
             <p className="text-muted-foreground">Manage your member profiles and track your activity</p>
           </div>
           {consultant.permissions.create_profile && (
-            <Button onClick={() => toast({ title: "Coming Soon", description: "Profile creation form will be available soon." })}>
+            <Button onClick={() => setAddDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Create Profile
             </Button>
@@ -307,6 +317,13 @@ export default function ConsultantDashboard() {
           </CardContent>
         </Card>
       </main>
+
+      {/* User Creation Dialog */}
+      <AddUserDialog
+        open={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+        onUserAdded={handleUserAdded}
+      />
     </div>
   );
 }

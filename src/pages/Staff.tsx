@@ -104,7 +104,7 @@ const Staff = () => {
   };
 
   return (
-
+    <>
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -302,7 +302,7 @@ const Staff = () => {
       <StaffViewDialog open={viewOpen} onOpenChange={setViewOpen} staff={selectedStaff} />
       <StaffEditDialog open={editOpen} onOpenChange={setEditOpen} staff={selectedStaff} />
       <StaffDeleteDialog open={deleteOpen} onOpenChange={setDeleteOpen} staff={selectedStaff} />
-
+    </>
   );
 };
 

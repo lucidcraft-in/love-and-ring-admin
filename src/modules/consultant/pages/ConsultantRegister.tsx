@@ -7,15 +7,17 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
-import { useConsultantAuth } from "../hooks/useConsultantAuth";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { createConsultantAsync } from "@/store/slices/consultantSlice";
 import { validatePassword } from "../validation/consultant.schema";
 
 export default function ConsultantRegister() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { register } = useConsultantAuth();
+  const dispatch = useAppDispatch();
+  const { createLoading, error: reduxError } = useAppSelector((state) => state.consultant);
+
   const [showPassword, setShowPassword] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
@@ -46,19 +48,31 @@ export default function ConsultantRegister() {
       return;
     }
 
-    setIsLoading(true);
-
     try {
-      await register(formData);
+      const result = await dispatch(createConsultantAsync({
+        username: formData.username,
+        email: formData.email,
+        fullName: formData.fullName,
+        phone: formData.phone,
+        agencyName: formData.agencyName,
+        licenseNumber: formData.licenseNumber,
+        regions: formData.regions,
+        password: formData.password,
+        confirmPassword: formData.confirmPassword,
+      })).unwrap();
+
       setIsSuccess(true);
       toast({
         title: "Registration Submitted",
         description: "Your application is pending admin approval.",
       });
-    } catch (err) {
-      setError("Registration failed. Please try again.");
-    } finally {
-      setIsLoading(false);
+    } catch (err: any) {
+      setError(err || "Registration failed. Please try again.");
+      toast({
+        title: "Registration Failed",
+        description: err || "Please check your information and try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -72,8 +86,8 @@ export default function ConsultantRegister() {
             </div>
             <h2 className="text-2xl font-bold">Registration Submitted!</h2>
             <p className="text-muted-foreground">
-              Your consultant application has been submitted successfully. 
-              An admin will review your application and you'll receive an email 
+              Your consultant application has been submitted successfully.
+              An admin will review your application and you'll receive an email
               once your account is approved.
             </p>
             <Button onClick={() => navigate("/consultant/login")} className="mt-4">
@@ -117,7 +131,7 @@ export default function ConsultantRegister() {
                   value={formData.username}
                   onChange={(e) => setFormData({ ...formData, username: e.target.value })}
                   required
-                  disabled={isLoading}
+                  disabled={createLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -129,7 +143,7 @@ export default function ConsultantRegister() {
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
-                  disabled={isLoading}
+                  disabled={createLoading}
                 />
               </div>
             </div>
@@ -142,7 +156,7 @@ export default function ConsultantRegister() {
                 value={formData.fullName}
                 onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                 required
-                disabled={isLoading}
+                disabled={createLoading}
               />
             </div>
 
@@ -154,7 +168,7 @@ export default function ConsultantRegister() {
                   placeholder="+91 98xxxxxxxx"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  disabled={isLoading}
+                  disabled={createLoading}
                 />
               </div>
               <div className="space-y-2">
@@ -164,7 +178,7 @@ export default function ConsultantRegister() {
                   placeholder="Optional"
                   value={formData.licenseNumber}
                   onChange={(e) => setFormData({ ...formData, licenseNumber: e.target.value })}
-                  disabled={isLoading}
+                  disabled={createLoading}
                 />
               </div>
             </div>
@@ -176,7 +190,7 @@ export default function ConsultantRegister() {
                 placeholder="Your agency or company name"
                 value={formData.agencyName}
                 onChange={(e) => setFormData({ ...formData, agencyName: e.target.value })}
-                disabled={isLoading}
+                disabled={createLoading}
               />
             </div>
 
@@ -187,7 +201,7 @@ export default function ConsultantRegister() {
                 placeholder="e.g., Mumbai, Pune, Delhi (comma separated)"
                 value={formData.regions}
                 onChange={(e) => setFormData({ ...formData, regions: e.target.value })}
-                disabled={isLoading}
+                disabled={createLoading}
               />
             </div>
 
@@ -201,7 +215,7 @@ export default function ConsultantRegister() {
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   required
-                  disabled={isLoading}
+                  disabled={createLoading}
                   className="pr-10"
                 />
                 <Button
@@ -245,12 +259,12 @@ export default function ConsultantRegister() {
                 value={formData.confirmPassword}
                 onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                 required
-                disabled={isLoading}
+                disabled={createLoading}
               />
             </div>
 
-            <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? (
+            <Button type="submit" className="w-full" disabled={createLoading}>
+              {createLoading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Submitting...

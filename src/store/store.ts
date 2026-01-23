@@ -3,6 +3,7 @@ import authReducer from './slices/authSlice';
 import usersReducer from './slices/usersSlice';
 import masterDataReducer from './slices/masterDataSlice';
 import consultantReducer from './slices/consultantSlice';
+import branchReducer from './slices/branchSlice';
 
 export const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ export const store = configureStore({
     users: usersReducer,
     masterData: masterDataReducer,
     consultant: consultantReducer,
+    branch: branchReducer,
   },
 });
 

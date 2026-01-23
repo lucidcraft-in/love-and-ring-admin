@@ -283,12 +283,12 @@ const Branches = () => {
                           <DropdownMenuItem onClick={() => handleEdit(branch)}>
                             <Edit className="w-4 h-4 mr-2" /> Edit
                           </DropdownMenuItem>
-                          <DropdownMenuItem
+                          {/* <DropdownMenuItem
                             className="text-destructive"
                             onClick={() => handleDelete(branch._id)}
                           >
                             <Trash2 className="w-4 h-4 mr-2" /> Delete
-                          </DropdownMenuItem>
+                          </DropdownMenuItem> */}
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </TableCell>

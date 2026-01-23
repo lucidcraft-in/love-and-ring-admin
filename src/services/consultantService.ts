@@ -158,7 +158,7 @@ export const consultantService = {
     id: string,
     permissions: Partial<ConsultantPermissions>
   ): Promise<{ message: string; permissions: ConsultantPermissions }> => {
-    const response = await Axios.patch<{ message: string; permissions: ConsultantPermissions }>(
+    const response = await Axios.put<{ message: string; permissions: ConsultantPermissions }>(
       `/api/consultants/${id}/permissions`,
       { permissions }
     );

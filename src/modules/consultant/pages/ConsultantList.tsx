@@ -16,6 +16,7 @@ import { ConsultantApproveDialog } from "../components/ConsultantApproveDialog";
 import { ConsultantRejectDialog } from "../components/ConsultantRejectDialog";
 import { ConsultantPermissionsDialog } from "../components/ConsultantPermissionsDialog";
 import { ConsultantCreateDialog } from "../components/ConsultantCreateDialog";
+import { ConsultantFilterDialog, type ConsultantFilters } from "../components/ConsultantFilterDialog";
 import type { Consultant } from "@/services/consultantService";
 
 export default function ConsultantList() {
@@ -31,8 +32,10 @@ export default function ConsultantList() {
   const [rejectOpen, setRejectOpen] = useState(false);
   const [permissionsOpen, setPermissionsOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const [filterOpen, setFilterOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("ACTIVE");
   const [searchQuery, setSearchQuery] = useState("");
+  const [advancedFilters, setAdvancedFilters] = useState<ConsultantFilters>({});
 
   // Fetch consultants on mount and when filter changes
   useEffect(() => {
@@ -51,12 +54,43 @@ export default function ConsultantList() {
     rejected: consultants.filter(c => c.status === "REJECTED").length,
   };
 
-  // Filter consultants by search query
-  const filteredConsultants = consultants.filter(c =>
-    c.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.agencyName?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  // Apply all filters to consultants
+  const filteredConsultants = consultants.filter(c => {
+    // Search query filter
+    const matchesSearch = !searchQuery ||
+      c.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      c.agencyName?.toLowerCase().includes(searchQuery.toLowerCase());
+
+    // Status filter - use advanced filter status if set, otherwise use main status filter
+    const effectiveStatus = advancedFilters.status || statusFilter;
+    const matchesStatus = effectiveStatus === "all" || c.status === effectiveStatus;
+
+    // Advanced filters
+    const matchesAgency = !advancedFilters.agencyName ||
+      c.agencyName?.toLowerCase().includes(advancedFilters.agencyName.toLowerCase());
+
+    const matchesRegions = !advancedFilters.regions || advancedFilters.regions.length === 0 ||
+      advancedFilters.regions.some(region =>
+        c.regions?.some(r => r.toLowerCase().includes(region.toLowerCase()))
+      );
+
+    const matchesMinProfiles = advancedFilters.minProfiles === undefined ||
+      (c.profilesCreated || 0) >= advancedFilters.minProfiles;
+
+    const matchesMaxProfiles = advancedFilters.maxProfiles === undefined ||
+      (c.profilesCreated || 0) <= advancedFilters.maxProfiles;
+
+    const matchesCreatedAfter = !advancedFilters.createdAfter ||
+      new Date(c.createdAt) >= new Date(advancedFilters.createdAfter);
+
+    const matchesCreatedBefore = !advancedFilters.createdBefore ||
+      new Date(c.createdAt) <= new Date(advancedFilters.createdBefore);
+
+    return matchesSearch && matchesStatus && matchesAgency && matchesRegions &&
+      matchesMinProfiles && matchesMaxProfiles &&
+      matchesCreatedAfter && matchesCreatedBefore;
+  });
 
   const getStatusBadge = (status: string) => {
     const styles: Record<string, string> = {
@@ -135,6 +169,30 @@ export default function ConsultantList() {
       status: statusFilter === "all" ? undefined : statusFilter as any,
     }));
   };
+
+  const handleApplyFilters = (filters: ConsultantFilters) => {
+    setAdvancedFilters(filters);
+    // Sync status filter with advanced filter if it's set
+    if (filters.status) {
+      setStatusFilter(filters.status);
+    }
+  };
+
+  const handleClearFilters = () => {
+    setAdvancedFilters({});
+    setStatusFilter("all");
+    setSearchQuery("");
+  };
+
+  // Count active filters (excluding status if it matches the main filter)
+  const activeFilterCount = Object.keys(advancedFilters).filter((key) => {
+    if (key === 'status') {
+      // Don't count status if it matches the main status filter
+      return advancedFilters.status && advancedFilters.status !== statusFilter;
+    }
+    const value = advancedFilters[key as keyof ConsultantFilters];
+    return value !== undefined && value !== "" && (Array.isArray(value) ? value.length > 0 : true);
+  }).length;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -223,8 +281,21 @@ export default function ConsultantList() {
                   <SelectItem value="SUSPENDED">Suspended</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="icon">
+              <Button
+                variant="outline"
+                size="icon"
+                className="relative"
+                onClick={() => setFilterOpen(true)}
+              >
                 <Filter className="w-4 h-4" />
+                {activeFilterCount > 0 && (
+                  <Badge
+                    variant="destructive"
+                    className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                  >
+                    {activeFilterCount}
+                  </Badge>
+                )}
               </Button>
             </div>
           </div>
@@ -357,6 +428,13 @@ export default function ConsultantList() {
         open={createOpen}
         onOpenChange={setCreateOpen}
         onCreate={handleCreate}
+      />
+      <ConsultantFilterDialog
+        open={filterOpen}
+        onOpenChange={setFilterOpen}
+        filters={advancedFilters}
+        onApplyFilters={handleApplyFilters}
+        onClearFilters={handleClearFilters}
       />
     </div>
   );

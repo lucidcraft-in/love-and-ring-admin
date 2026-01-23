@@ -258,10 +258,10 @@ const Users = () => {
                     <SelectItem value="blocked">Blocked</SelectItem>
                   </SelectContent>
                 </Select>
-                {/* <Button variant="outline" size="icon">
+                <Button variant="outline" size="icon">
                   <Filter className="w-4 h-4" />
                 </Button>
-                <Button variant="outline" size="icon">
+                {/* <Button variant="outline" size="icon">
                   <Download className="w-4 h-4" />
                 </Button> */}
               </div>

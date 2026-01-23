@@ -19,7 +19,12 @@ export interface Consultant {
   email: string;
   phone: string;
   licenseNumber?: string;
-  agencyName: string;
+  branch: {
+    _id: string;
+    name: string;
+    city: string;
+    state: string;
+  };
   regions: string[];
   profilesCreated: number;
   status: 'PENDING' | 'ACTIVE' | 'REJECTED' | 'SUSPENDED';
@@ -53,7 +58,7 @@ export interface CreateConsultantPayload {
   fullName: string;
   phone?: string;
   licenseNumber?: string;
-  agencyName?: string;
+  branch: string; // Branch ID
   regions?: string;
   password: string;
   confirmPassword: string;

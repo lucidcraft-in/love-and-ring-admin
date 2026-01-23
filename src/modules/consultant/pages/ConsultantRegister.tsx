@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Heart, Eye, EyeOff, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { createConsultantAsync } from "@/store/slices/consultantSlice";
+import { fetchBranchesAsync } from "@/store/slices/branchSlice";
 import { validatePassword } from "../validation/consultant.schema";
 
 export default function ConsultantRegister() {
@@ -16,6 +18,7 @@ export default function ConsultantRegister() {
   const { toast } = useToast();
   const dispatch = useAppDispatch();
   const { createLoading, error: reduxError } = useAppSelector((state) => state.consultant);
+  const { branches, listLoading: branchesLoading } = useAppSelector((state) => state.branch);
 
   const [showPassword, setShowPassword] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
@@ -25,12 +28,17 @@ export default function ConsultantRegister() {
     email: "",
     fullName: "",
     phone: "",
-    agencyName: "",
+    branch: "",
     licenseNumber: "",
     regions: "",
     password: "",
     confirmPassword: "",
   });
+
+  // Fetch branches on mount
+  useEffect(() => {
+    dispatch(fetchBranchesAsync({ skip: 0, take: 100 }));
+  }, [dispatch]);
 
   const passwordValidation = validatePassword(formData.password);
 
@@ -54,7 +62,7 @@ export default function ConsultantRegister() {
         email: formData.email,
         fullName: formData.fullName,
         phone: formData.phone,
-        agencyName: formData.agencyName,
+        branch: formData.branch,
         licenseNumber: formData.licenseNumber,
         regions: formData.regions,
         password: formData.password,
@@ -184,14 +192,24 @@ export default function ConsultantRegister() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="agencyName">Agency Name</Label>
-              <Input
-                id="agencyName"
-                placeholder="Your agency or company name"
-                value={formData.agencyName}
-                onChange={(e) => setFormData({ ...formData, agencyName: e.target.value })}
-                disabled={createLoading}
-              />
+              <Label htmlFor="branch">Branch *</Label>
+              <Select
+                value={formData.branch}
+                onValueChange={(value) => setFormData({ ...formData, branch: value })}
+                disabled={createLoading || branchesLoading}
+                required
+              >
+                <SelectTrigger id="branch">
+                  <SelectValue placeholder={branchesLoading ? "Loading branches..." : "Select a branch"} />
+                </SelectTrigger>
+                <SelectContent>
+                  {branches.map((branch) => (
+                    <SelectItem key={branch._id} value={branch._id}>
+                      {branch.name} - {branch.city}, {branch.state}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

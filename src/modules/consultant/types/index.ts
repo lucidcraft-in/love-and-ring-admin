@@ -11,7 +11,12 @@ export interface Consultant {
   email: string;
   fullName: string;
   phone: string;
-  agencyName: string;
+  branch: {
+    _id: string;
+    name: string;
+    city: string;
+    state: string;
+  };
   regions: string[];
   status: 'PENDING' | 'ACTIVE' | 'REJECTED' | 'SUSPENDED';
   permissions: ConsultantPermissions;
@@ -58,7 +63,7 @@ export interface RegisterFormData {
   email: string;
   fullName: string;
   phone: string;
-  agencyName: string;
+  branch: string;
   licenseNumber: string;
   regions: string;
   password: string;

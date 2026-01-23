@@ -1,11 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { createConsultantAsync } from "@/store/slices/consultantSlice";
+import { fetchBranchesAsync } from "@/store/slices/branchSlice";
 import { toast } from "@/hooks/use-toast";
 
 interface ConsultantCreateDialogProps {
@@ -17,18 +19,26 @@ interface ConsultantCreateDialogProps {
 export function ConsultantCreateDialog({ open, onOpenChange, onCreate }: ConsultantCreateDialogProps) {
   const dispatch = useAppDispatch();
   const { createLoading } = useAppSelector((state) => state.consultant);
+  const { branches, listLoading: branchesLoading } = useAppSelector((state) => state.branch);
 
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     fullName: "",
     phone: "",
-    agencyName: "",
+    branch: "",
     licenseNumber: "",
     regions: "",
     password: "",
     confirmPassword: "",
   });
+
+  // Fetch branches when dialog opens
+  useEffect(() => {
+    if (open) {
+      dispatch(fetchBranchesAsync({ skip: 0, take: 100 }));
+    }
+  }, [dispatch, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,6 +47,15 @@ export function ConsultantCreateDialog({ open, onOpenChange, onCreate }: Consult
       toast({
         title: "Error",
         description: "Passwords do not match",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.branch) {
+      toast({
+        title: "Error",
+        description: "Please select a branch",
         variant: "destructive",
       });
       return;
@@ -56,7 +75,7 @@ export function ConsultantCreateDialog({ open, onOpenChange, onCreate }: Consult
         email: "",
         fullName: "",
         phone: "",
-        agencyName: "",
+        branch: "",
         licenseNumber: "",
         regions: "",
         password: "",
@@ -126,13 +145,23 @@ export function ConsultantCreateDialog({ open, onOpenChange, onCreate }: Consult
                 />
               </div>
               <div>
-                <Label>Agency Name</Label>
-                <Input
-                  placeholder="Agency"
-                  value={formData.agencyName}
-                  onChange={(e) => setFormData({ ...formData, agencyName: e.target.value })}
-                  disabled={createLoading}
-                />
+                <Label>Branch *</Label>
+                <Select
+                  value={formData.branch}
+                  onValueChange={(value) => setFormData({ ...formData, branch: value })}
+                  disabled={createLoading || branchesLoading}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={branchesLoading ? "Loading..." : "Select branch"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {branches.map((branch) => (
+                      <SelectItem key={branch._id} value={branch._id}>
+                        {branch.name} - {branch.city}, {branch.state}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">

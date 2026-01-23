@@ -11,6 +11,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { AddUserDialog } from "@/components/users/AddUserDialog";
 import { EditUserDialog } from "@/components/users/EditUserDialog";
 import { ViewUserDialog } from "@/components/users/ViewUserDialog";
+import { UserFilterDialog, type UserFilters } from "@/components/users/UserFilterDialog";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchUsersAsync } from "@/store/slices/usersSlice";
 
@@ -22,15 +23,30 @@ const Users = () => {
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [genderFilter, setGenderFilter] = useState("all");
   const [membershipFilter, setMembershipFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [advancedFilters, setAdvancedFilters] = useState<UserFilters>({});
 
   useEffect(() => {
     dispatch(fetchUsersAsync());
   }, [dispatch]);
+
+    // Helper function to calculate age from date of birth
+  const calculateAge = (dateOfBirth?: string) => {
+    if (!dateOfBirth) return "N/A";
+    const today = new Date();
+    const birthDate = new Date(dateOfBirth);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
 
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
@@ -41,31 +57,67 @@ const Users = () => {
         user.email?.toLowerCase().includes(search) ||
         user.mobile?.includes(search);
 
-      // gender
-      const matchesGender =
-        genderFilter === "all" || user.gender === genderFilter;
+      // gender - use advanced filter if set, otherwise use main filter
+      const effectiveGender = advancedFilters.gender || genderFilter;
+      const matchesGender = effectiveGender === "all" || user.gender === effectiveGender;
 
-      // Membership
+      // Membership - use advanced filter if set, otherwise use main filter
+      const effectiveMembership = advancedFilters.membership || membershipFilter;
       const matchesMembership =
-        membershipFilter === "all" ||
-        (membershipFilter === "premium" && user.profileStatus === "COMPLETE") ||
-        (membershipFilter === "free" && user.profileStatus !== "COMPLETE");
+        effectiveMembership === "all" ||
+        (effectiveMembership === "premium" && user.profileStatus === "COMPLETE") ||
+        (effectiveMembership === "free" && user.profileStatus !== "COMPLETE");
 
-      // Status
+      // Status - use advanced filter if set, otherwise use main filter
+      const effectiveStatus = advancedFilters.status || statusFilter;
       const matchesStatus =
-        statusFilter === "all" ||
-        (statusFilter === "active" && user.approvalStatus === "APPROVED") ||
-        (statusFilter === "pending" && user.approvalStatus === "PENDING") ||
-        (statusFilter === "blocked" && user.approvalStatus === "REJECTED");
+        effectiveStatus === "all" ||
+        (effectiveStatus === "active" && user.approvalStatus === "APPROVED") ||
+        (effectiveStatus === "pending" && user.approvalStatus === "PENDING") ||
+        (effectiveStatus === "blocked" && user.approvalStatus === "REJECTED");
+
+      // Advanced filters
+      const matchesCity = !advancedFilters.city ||
+        user.city?.city?.toLowerCase().includes(advancedFilters.city.toLowerCase());
+
+      const matchesReligion = !advancedFilters.religion ||
+        (typeof user.religion === 'string'
+          ? user.religion.toLowerCase().includes(advancedFilters.religion.toLowerCase())
+          : (user.religion && typeof user.religion === 'object' && 'religion' in user.religion)
+            ? String((user.religion as any).religion || '').toLowerCase().includes(advancedFilters.religion.toLowerCase())
+            : false);
+
+      const matchesMaritalStatus = !advancedFilters.maritalStatus ||
+        user.maritalStatus === advancedFilters.maritalStatus;
+
+      // Age range filter
+      const userAge = user.dateOfBirth ? calculateAge(user.dateOfBirth) : null;
+      const matchesMinAge = advancedFilters.minAge === undefined ||
+        (userAge !== null && typeof userAge === 'number' && userAge >= advancedFilters.minAge);
+      const matchesMaxAge = advancedFilters.maxAge === undefined ||
+        (userAge !== null && typeof userAge === 'number' && userAge <= advancedFilters.maxAge);
+
+      // Date range filter
+      const matchesCreatedAfter = !advancedFilters.createdAfter ||
+        new Date(user.createdAt) >= new Date(advancedFilters.createdAfter);
+      const matchesCreatedBefore = !advancedFilters.createdBefore ||
+        new Date(user.createdAt) <= new Date(advancedFilters.createdBefore);
 
       return (
         matchesSearch &&
         matchesGender &&
         matchesMembership &&
-        matchesStatus
+        matchesStatus &&
+        matchesCity &&
+        matchesReligion &&
+        matchesMaritalStatus &&
+        matchesMinAge &&
+        matchesMaxAge &&
+        matchesCreatedAfter &&
+        matchesCreatedBefore
       );
     })
-  }, [users, searchTerm, genderFilter, membershipFilter, statusFilter])
+  }, [users, searchTerm, genderFilter, membershipFilter, statusFilter, advancedFilters])
 
   const handleViewUser = (user: any) => {
     setSelectedUser(user);
@@ -90,18 +142,30 @@ const Users = () => {
     dispatch(fetchUsersAsync());
   };
 
-  // Helper function to calculate age from date of birth
-  const calculateAge = (dateOfBirth?: string) => {
-    if (!dateOfBirth) return "N/A";
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
+  const handleApplyFilters = (filters: UserFilters) => {
+    setAdvancedFilters(filters);
+    // Sync main filters with advanced filters if they're set
+    if (filters.gender) setGenderFilter(filters.gender);
+    if (filters.status) setStatusFilter(filters.status);
+    if (filters.membership) setMembershipFilter(filters.membership);
   };
+
+  const handleClearFilters = () => {
+    setAdvancedFilters({});
+    setGenderFilter("all");
+    setMembershipFilter("all");
+    setStatusFilter("all");
+    setSearchTerm("");
+  };
+
+  // Count active advanced filters (excluding those that match main filters)
+  const activeFilterCount = Object.keys(advancedFilters).filter((key) => {
+    if (key === 'gender' && advancedFilters.gender === genderFilter) return false;
+    if (key === 'status' && advancedFilters.status === statusFilter) return false;
+    if (key === 'membership' && advancedFilters.membership === membershipFilter) return false;
+    const value = advancedFilters[key as keyof UserFilters];
+    return value !== undefined && value !== "" && (Array.isArray(value) ? value.length > 0 : true);
+  }).length;
 
   // Helper function to map approval status to display status
   const getStatusDisplay = (approvalStatus?: string) => {
@@ -258,8 +322,21 @@ const Users = () => {
                     <SelectItem value="blocked">Blocked</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" size="icon">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="relative"
+                  onClick={() => setFilterDialogOpen(true)}
+                >
                   <Filter className="w-4 h-4" />
+                  {activeFilterCount > 0 && (
+                    <Badge
+                      variant="destructive"
+                      className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                    >
+                      {activeFilterCount}
+                    </Badge>
+                  )}
                 </Button>
                 {/* <Button variant="outline" size="icon">
                   <Download className="w-4 h-4" />
@@ -402,6 +479,13 @@ const Users = () => {
         onOpenChange={setEditDialogOpen}
         user={selectedUser}
         onUserUpdated={handleUserUpdated}
+      />
+      <UserFilterDialog
+        open={filterDialogOpen}
+        onOpenChange={setFilterDialogOpen}
+        filters={advancedFilters}
+        onApplyFilters={handleApplyFilters}
+        onClearFilters={handleClearFilters}
       />
     </>
   );

@@ -4,21 +4,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { updateStaffAsync, clearStaffError } from "@/store/slices/staffSlice";
+import { createStaffAsync, clearStaffError } from "@/store/slices/staffSlice";
 import { fetchBranchesAsync } from "@/store/slices/branchSlice";
-import { Staff } from "@/services/staffService";
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 
-interface StaffEditDialogProps {
+interface StaffAddDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  staff: Staff | null;
 }
 
-export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogProps) {
+export function StaffAddDialog({ open, onOpenChange }: StaffAddDialogProps) {
   const dispatch = useAppDispatch();
-  const { updateLoading, error } = useAppSelector((state) => state.staff);
+  const { createLoading, error } = useAppSelector((state) => state.staff);
   const { branches } = useAppSelector((state) => state.branch);
 
   const [formData, setFormData] = useState({
@@ -37,49 +35,36 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
     }
   }, [open, branches.length, dispatch]);
 
-  // Populate form when staff changes
-  useEffect(() => {
-    if (staff) {
-      setFormData({
-        fullName: staff.fullName,
-        email: staff.email,
-        phone: staff.phone || "",
-        role: staff.role,
-        branch: staff.branch,
-        password: "",
-      });
-    }
-  }, [staff]);
-
   // Clear error when dialog closes
   useEffect(() => {
     if (!open) {
       dispatch(clearStaffError());
+      setFormData({
+        fullName: "",
+        email: "",
+        phone: "",
+        role: "",
+        branch: "",
+        password: "",
+      });
     }
   }, [open, dispatch]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!staff) return;
+    const result = await dispatch(createStaffAsync(formData));
 
-    // Only include password if it's been changed
-    const payload: any = {
-      fullName: formData.fullName,
-      email: formData.email,
-      phone: formData.phone,
-      role: formData.role,
-      branch: formData.branch,
-    };
-
-    if (formData.password) {
-      payload.password = formData.password;
-    }
-
-    const result = await dispatch(updateStaffAsync({ id: staff._id, payload }));
-
-    if (updateStaffAsync.fulfilled.match(result)) {
+    if (createStaffAsync.fulfilled.match(result)) {
       onOpenChange(false);
+      setFormData({
+        fullName: "",
+        email: "",
+        phone: "",
+        role: "",
+        branch: "",
+        password: "",
+      });
     }
   };
 
@@ -87,15 +72,13 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  if (!staff) return null;
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit Staff Member</DialogTitle>
+          <DialogTitle>Add New Staff Member</DialogTitle>
           <DialogDescription>
-            Update staff information and role assignment
+            Create a new staff account with role and branch assignment
           </DialogDescription>
         </DialogHeader>
 
@@ -107,9 +90,9 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="edit-fullName">Full Name *</Label>
+            <Label htmlFor="fullName">Full Name *</Label>
             <Input
-              id="edit-fullName"
+              id="fullName"
               value={formData.fullName}
               onChange={(e) => handleChange("fullName", e.target.value)}
               placeholder="Enter full name"
@@ -118,9 +101,9 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-email">Email *</Label>
+            <Label htmlFor="email">Email *</Label>
             <Input
-              id="edit-email"
+              id="email"
               type="email"
               value={formData.email}
               onChange={(e) => handleChange("email", e.target.value)}
@@ -130,9 +113,9 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-phone">Phone</Label>
+            <Label htmlFor="phone">Phone</Label>
             <Input
-              id="edit-phone"
+              id="phone"
               type="tel"
               value={formData.phone}
               onChange={(e) => handleChange("phone", e.target.value)}
@@ -141,20 +124,21 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-password">Password (leave blank to keep current)</Label>
+            <Label htmlFor="password">Password *</Label>
             <Input
-              id="edit-password"
+              id="password"
               type="password"
               value={formData.password}
               onChange={(e) => handleChange("password", e.target.value)}
-              placeholder="Enter new password"
+              placeholder="Enter password"
+              required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-role">Role *</Label>
+            <Label htmlFor="role">Role *</Label>
             <Select value={formData.role} onValueChange={(value) => handleChange("role", value)} required>
-              <SelectTrigger id="edit-role">
+              <SelectTrigger id="role">
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
@@ -166,9 +150,9 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="edit-branch">Branch *</Label>
+            <Label htmlFor="branch">Branch *</Label>
             <Select value={formData.branch} onValueChange={(value) => handleChange("branch", value)} required>
-              <SelectTrigger id="edit-branch">
+              <SelectTrigger id="branch">
                 <SelectValue placeholder="Select branch" />
               </SelectTrigger>
               <SelectContent>
@@ -184,12 +168,12 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={updateLoading}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={createLoading}>
               Cancel
             </Button>
-            <Button type="submit" disabled={updateLoading}>
-              {updateLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Update Staff
+            <Button type="submit" disabled={createLoading}>
+              {createLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Create Staff
             </Button>
           </DialogFooter>
         </form>

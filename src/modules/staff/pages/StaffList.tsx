@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,97 +11,80 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { StaffViewDialog } from "../components/StaffViewDialog";
 import { StaffEditDialog } from "../components/StaffEditDialog";
 import { StaffDeleteDialog } from "../components/StaffDeleteDialog";
-
-const staff = [
-  {
-    id: 1,
-    name: "Anita Desai",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face",
-    email: "anita.desai@matchmate.com",
-    phone: "+91 98765 43210",
-    role: "Branch Admin",
-    branch: "Mumbai Central",
-    profilesHandled: 245,
-    matchesSuggested: 89,
-    status: "Active",
-    lastLogin: "2 hours ago",
-  },
-  {
-    id: 2,
-    name: "Suresh Kumar",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
-    email: "suresh.kumar@matchmate.com",
-    phone: "+91 98765 43211",
-    role: "Support Staff",
-    branch: "Delhi NCR",
-    profilesHandled: 189,
-    matchesSuggested: 56,
-    status: "Active",
-    lastLogin: "30 minutes ago",
-  },
-  {
-    id: 3,
-    name: "Meera Sharma",
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face",
-    email: "meera.sharma@matchmate.com",
-    phone: "+91 98765 43212",
-    role: "Matchmaker",
-    branch: "Bangalore Tech Park",
-    profilesHandled: 312,
-    matchesSuggested: 145,
-    status: "Active",
-    lastLogin: "1 hour ago",
-  },
-  {
-    id: 4,
-    name: "Rahul Verma",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face",
-    email: "rahul.verma@matchmate.com",
-    phone: "+91 98765 43213",
-    role: "Support Staff",
-    branch: "Hyderabad Hub",
-    profilesHandled: 156,
-    matchesSuggested: 42,
-    status: "Inactive",
-    lastLogin: "3 days ago",
-  },
-  {
-    id: 5,
-    name: "Priya Nair",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face",
-    email: "priya.nair@matchmate.com",
-    phone: "+91 98765 43214",
-    role: "Branch Admin",
-    branch: "Chennai South",
-    profilesHandled: 278,
-    matchesSuggested: 98,
-    status: "Active",
-    lastLogin: "4 hours ago",
-  },
-];
-
-type StaffMember = typeof staff[0];
+import { StaffAddDialog } from "../components/StaffAddDialog";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { fetchStaffListAsync, setCurrentStaff } from "@/store/slices/staffSlice";
+import { fetchBranchesAsync } from "@/store/slices/branchSlice";
+import { Staff } from "@/services/staffService";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function StaffList() {
-  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
+  const dispatch = useAppDispatch();
+  const { staffList, total, listLoading } = useAppSelector((state) => state.staff);
+  console.log(staffList, "data in the staff list");
+  console.log(total, "data in the total");
+  console.log(listLoading, "data in the list loading");
+  const { branches } = useAppSelector((state) => state.branch);
+
+  const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
   const [viewOpen, setViewOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [addOpen, setAddOpen] = useState(false);
 
-  const handleView = (member: StaffMember) => {
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all-role");
+  const [branchFilter, setBranchFilter] = useState("all-branch");
+  const [statusFilter, setStatusFilter] = useState("all-status");
+
+  // Fetch staff list and branches on mount
+  useEffect(() => {
+    dispatch(fetchStaffListAsync({ take: 100 }));
+    dispatch(fetchBranchesAsync({ take: 100 }));
+  }, [dispatch]);
+
+  // Refetch when filters change
+  useEffect(() => {
+    const params: any = { take: 100 };
+
+    if (searchQuery) params.search = searchQuery;
+    if (roleFilter !== "all-role") params.role = roleFilter;
+    if (branchFilter !== "all-branch") params.branch = branchFilter;
+    if (statusFilter !== "all-status") params.status = statusFilter;
+
+    const debounce = setTimeout(() => {
+      dispatch(fetchStaffListAsync(params));
+    }, 300);
+
+    return () => clearTimeout(debounce);
+  }, [searchQuery, roleFilter, branchFilter, statusFilter, dispatch]);
+
+  const handleView = (member: Staff) => {
     setSelectedStaff(member);
+    dispatch(setCurrentStaff(member));
     setViewOpen(true);
   };
 
-  const handleEdit = (member: StaffMember) => {
+  const handleEdit = (member: Staff) => {
     setSelectedStaff(member);
+    dispatch(setCurrentStaff(member));
     setEditOpen(true);
   };
 
-  const handleDelete = (member: StaffMember) => {
+  const handleDelete = (member: Staff) => {
     setSelectedStaff(member);
     setDeleteOpen(true);
   };
+
+  // Get branch name from ID
+  const getBranchName = (branchId: string) => {
+    const branch = branches.find((b) => b._id === branchId);
+    return branch?.name || branchId;
+  };
+
+  // Calculate stats
+  const activeStaff = staffList.filter((s) => s.status === "Active").length;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -111,7 +94,7 @@ export default function StaffList() {
           <h1 className="text-2xl font-semibold text-foreground">Staff Management</h1>
           <p className="text-sm text-muted-foreground">Manage staff members and their roles</p>
         </div>
-        <Button className="bg-primary hover:bg-primary/90">
+        <Button className="bg-primary hover:bg-primary/90" onClick={() => setAddOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
           Add Staff
         </Button>
@@ -126,7 +109,7 @@ export default function StaffList() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Staff</p>
-              <p className="text-xl font-semibold text-foreground">48</p>
+              <p className="text-xl font-semibold text-foreground">{total}</p>
             </div>
           </CardContent>
         </Card>
@@ -137,7 +120,7 @@ export default function StaffList() {
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Active Now</p>
-              <p className="text-xl font-semibold text-foreground">32</p>
+              <p className="text-xl font-semibold text-foreground">{activeStaff}</p>
             </div>
           </CardContent>
         </Card>
@@ -147,8 +130,8 @@ export default function StaffList() {
               <Users className="w-5 h-5 text-chart-orange" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Profiles Handled</p>
-              <p className="text-xl font-semibold text-foreground">12,456</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Branches</p>
+              <p className="text-xl font-semibold text-foreground">{branches.length}</p>
             </div>
           </CardContent>
         </Card>
@@ -158,8 +141,8 @@ export default function StaffList() {
               <Award className="w-5 h-5 text-info" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Matches Made</p>
-              <p className="text-xl font-semibold text-foreground">3,892</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Roles</p>
+              <p className="text-xl font-semibold text-foreground">3</p>
             </div>
           </CardContent>
         </Card>
@@ -171,40 +154,46 @@ export default function StaffList() {
           <div className="flex flex-col lg:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Search staff..." className="pl-10" />
+              <Input
+                placeholder="Search staff..."
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
             <div className="flex flex-wrap gap-2">
-              <Select defaultValue="all-role">
+              <Select value={roleFilter} onValueChange={setRoleFilter}>
                 <SelectTrigger className="w-36">
                   <SelectValue placeholder="Role" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all-role">All Roles</SelectItem>
-                  <SelectItem value="branch-admin">Branch Admin</SelectItem>
-                  <SelectItem value="matchmaker">Matchmaker</SelectItem>
-                  <SelectItem value="support">Support Staff</SelectItem>
+                  <SelectItem value="Branch Admin">Branch Admin</SelectItem>
+                  <SelectItem value="Matchmaker">Matchmaker</SelectItem>
+                  <SelectItem value="Support Staff">Support Staff</SelectItem>
                 </SelectContent>
               </Select>
-              <Select defaultValue="all-branch">
+              <Select value={branchFilter} onValueChange={setBranchFilter}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Branch" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all-branch">All Branches</SelectItem>
-                  <SelectItem value="mumbai">Mumbai Central</SelectItem>
-                  <SelectItem value="delhi">Delhi NCR</SelectItem>
-                  <SelectItem value="bangalore">Bangalore Tech Park</SelectItem>
-                  <SelectItem value="hyderabad">Hyderabad Hub</SelectItem>
+                  {branches.map((branch) => (
+                    <SelectItem key={branch._id} value={branch._id}>
+                      {branch.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-              <Select defaultValue="all-status">
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all-status">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
               <Button variant="outline" size="icon">
@@ -225,78 +214,121 @@ export default function StaffList() {
                 <TableHead>Contact</TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Branch</TableHead>
-                <TableHead>Profiles</TableHead>
-                <TableHead>Matches</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Last Login</TableHead>
+                <TableHead>Created</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {staff.map((member) => (
-                <TableRow key={member.id} className="border-border/50">
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="w-9 h-9">
-                        <AvatarImage src={member.avatar} />
-                        <AvatarFallback>{member.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <span className="font-medium">{member.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div className="text-sm">
-                      <p>{member.email}</p>
-                      <p className="text-muted-foreground">{member.phone}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{member.role}</Badge>
-                  </TableCell>
-                  <TableCell className="text-sm">{member.branch}</TableCell>
-                  <TableCell className="font-medium">{member.profilesHandled}</TableCell>
-                  <TableCell className="font-medium text-chart-green">{member.matchesSuggested}</TableCell>
-                  <TableCell>
-                    <Badge
-                      variant="outline"
-                      className={
-                        member.status === "Active"
-                          ? "border-chart-green text-chart-green"
-                          : "border-muted-foreground text-muted-foreground"
-                      }
-                    >
-                      {member.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-muted-foreground text-sm">{member.lastLogin}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleView(member)}>
-                          <Eye className="w-4 h-4 mr-2" /> View Profile
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleEdit(member)}>
-                          <Edit className="w-4 h-4 mr-2" /> Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(member)}>
-                          <Trash2 className="w-4 h-4 mr-2" /> Remove
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+              {listLoading ? (
+                // Loading skeleton
+                Array.from({ length: 5 }).map((_, index) => (
+                  <TableRow key={index} className="border-border/50">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Skeleton className="w-9 h-9 rounded-full" />
+                        <Skeleton className="h-4 w-32" />
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-40" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-24" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-28" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-6 w-16" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-4 w-20" />
+                    </TableCell>
+                    <TableCell>
+                      <Skeleton className="h-8 w-8 ml-auto" />
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : staffList.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                    No staff members found
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                staffList.map((member) => (
+                  <TableRow key={member._id} className="border-border/50">
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar className="w-9 h-9">
+                          <AvatarImage
+                            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(member.fullName)}&background=random`}
+                          />
+                          <AvatarFallback>{member.fullName.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium">{member.fullName}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-sm">
+                        <p>{member.email}</p>
+                        {member.phone && <p className="text-muted-foreground">{member.phone}</p>}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">{member?.role?.name}</Badge>
+                    </TableCell>
+                    <TableCell className="text-sm">{getBranchName(member?.branch?.name)}</TableCell>
+                    <TableCell>
+                      <Badge
+                        variant="outline"
+                        className={
+                          member.status === "Active"
+                            ? "border-chart-green text-chart-green"
+                            : "border-muted-foreground text-muted-foreground"
+                        }
+                      >
+                        {member.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {new Date(member.createdAt).toLocaleDateString('en-IN', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleView(member)}>
+                            <Eye className="w-4 h-4 mr-2" /> View Profile
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEdit(member)}>
+                            <Edit className="w-4 h-4 mr-2" /> Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(member)}>
+                            <Trash2 className="w-4 h-4 mr-2" /> Remove
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
       </Card>
 
       {/* Dialogs */}
+      <StaffAddDialog open={addOpen} onOpenChange={setAddOpen} />
       <StaffViewDialog open={viewOpen} onOpenChange={setViewOpen} staff={selectedStaff} />
       <StaffEditDialog open={editOpen} onOpenChange={setEditOpen} staff={selectedStaff} />
       <StaffDeleteDialog open={deleteOpen} onOpenChange={setDeleteOpen} staff={selectedStaff} />

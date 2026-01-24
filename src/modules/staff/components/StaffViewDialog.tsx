@@ -2,31 +2,23 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
-import { Mail, Phone, Building2, Shield, Calendar, Activity, Users, Award } from "lucide-react";
-
-interface StaffMember {
-  id: number;
-  name: string;
-  avatar: string;
-  email: string;
-  phone: string;
-  role: string;
-  branch: string;
-  profilesHandled: number;
-  matchesSuggested: number;
-  status: string;
-  lastLogin: string;
-  joinDate?: string;
-}
+import { Mail, Phone, Building2, Shield, Calendar, Activity } from "lucide-react";
+import { Staff } from "@/services/staffService";
+import { useAppSelector } from "@/store/hooks";
 
 interface StaffViewDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  staff: StaffMember | null;
+  staff: Staff | null;
 }
 
 export function StaffViewDialog({ open, onOpenChange, staff }: StaffViewDialogProps) {
+  const { branches } = useAppSelector((state) => state.branch);
+
   if (!staff) return null;
+
+  // Get branch name from branch ID
+  const branchName = branches.find((b) => b._id === staff.branch)?.name || staff.branch;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -34,7 +26,7 @@ export function StaffViewDialog({ open, onOpenChange, staff }: StaffViewDialogPr
         <DialogHeader>
           <DialogTitle>Staff Profile</DialogTitle>
           <DialogDescription>
-            View staff member details and performance
+            View staff member details and information
           </DialogDescription>
         </DialogHeader>
 
@@ -42,19 +34,18 @@ export function StaffViewDialog({ open, onOpenChange, staff }: StaffViewDialogPr
           {/* Profile Header */}
           <div className="flex items-center gap-4 p-4 bg-muted/50 rounded-lg">
             <Avatar className="w-16 h-16">
-              <AvatarImage src={staff.avatar} />
-              <AvatarFallback className="text-lg">{staff.name.charAt(0)}</AvatarFallback>
+              <AvatarImage src={`https://ui-avatars.com/api/?name=${encodeURIComponent(staff.fullName)}&background=random`} />
+              <AvatarFallback className="text-lg">{staff.fullName.charAt(0)}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <h3 className="font-semibold text-lg">{staff.name}</h3>
+              <h3 className="font-semibold text-lg">{staff.fullName}</h3>
               <Badge variant="outline" className="mt-1">{staff.role}</Badge>
               <Badge
                 variant="outline"
-                className={`ml-2 ${
-                  staff.status === "Active"
+                className={`ml-2 ${staff.status === "Active"
                     ? "border-chart-green text-chart-green"
                     : "border-muted-foreground text-muted-foreground"
-                }`}
+                  }`}
               >
                 {staff.status}
               </Badge>
@@ -73,15 +64,17 @@ export function StaffViewDialog({ open, onOpenChange, staff }: StaffViewDialogPr
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Phone className="w-4 h-4 text-primary" />
+            {staff.phone && (
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Phone className="w-4 h-4 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm text-muted-foreground">Phone</p>
+                  <p className="font-medium">{staff.phone}</p>
+                </div>
               </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Phone</p>
-                <p className="font-medium">{staff.phone}</p>
-              </div>
-            </div>
+            )}
 
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -89,7 +82,7 @@ export function StaffViewDialog({ open, onOpenChange, staff }: StaffViewDialogPr
               </div>
               <div className="flex-1">
                 <p className="text-sm text-muted-foreground">Branch</p>
-                <p className="font-medium">{staff.branch}</p>
+                <p className="font-medium">{branchName}</p>
               </div>
             </div>
 
@@ -106,39 +99,34 @@ export function StaffViewDialog({ open, onOpenChange, staff }: StaffViewDialogPr
 
           <Separator />
 
-          {/* Performance Stats */}
-          <div>
-            <h4 className="font-medium mb-3">Performance Metrics</h4>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="p-3 bg-chart-orange/10 rounded-lg text-center">
-                <Users className="w-5 h-5 text-chart-orange mx-auto mb-1" />
-                <p className="text-2xl font-bold text-chart-orange">{staff.profilesHandled}</p>
-                <p className="text-xs text-muted-foreground">Profiles Handled</p>
-              </div>
-              <div className="p-3 bg-chart-green/10 rounded-lg text-center">
-                <Award className="w-5 h-5 text-chart-green mx-auto mb-1" />
-                <p className="text-2xl font-bold text-chart-green">{staff.matchesSuggested}</p>
-                <p className="text-xs text-muted-foreground">Matches Made</p>
-              </div>
-            </div>
-          </div>
-
-          <Separator />
-
           {/* Activity */}
           <div className="p-3 bg-muted/30 rounded-lg text-sm space-y-2">
             <div className="flex justify-between items-center">
               <span className="text-muted-foreground flex items-center gap-2">
-                <Activity className="w-4 h-4" /> Last Login
+                <Calendar className="w-4 h-4" /> Created
               </span>
-              <span className="font-medium">{staff.lastLogin}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-muted-foreground flex items-center gap-2">
-                <Calendar className="w-4 h-4" /> Join Date
+              <span className="font-medium">
+                {new Date(staff.createdAt).toLocaleDateString('en-IN', {
+                  year: 'numeric',
+                  month: 'short',
+                  day: 'numeric',
+                })}
               </span>
-              <span className="font-medium">{staff.joinDate || "Jan 2023"}</span>
             </div>
+            {staff.updatedAt && (
+              <div className="flex justify-between items-center">
+                <span className="text-muted-foreground flex items-center gap-2">
+                  <Activity className="w-4 h-4" /> Last Updated
+                </span>
+                <span className="font-medium">
+                  {new Date(staff.updatedAt).toLocaleDateString('en-IN', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                  })}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>

@@ -42,8 +42,10 @@ interface ConsultantState {
 }
 
 const initialState: ConsultantState = {
-  // Authentication
-  currentConsultant: null,
+  // Authentication - Load from localStorage
+  currentConsultant: localStorage.getItem('currentConsultant')
+    ? JSON.parse(localStorage.getItem('currentConsultant')!)
+    : null,
   token: localStorage.getItem('consultantToken'),
   isAuthenticated: !!localStorage.getItem('consultantToken'),
 
@@ -82,8 +84,9 @@ export const loginConsultantAsync = createAsyncThunk<
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await consultantService.login(credentials);
-      // Store token in localStorage
+      // Store token and consultant data in localStorage
       localStorage.setItem('consultantToken', response.token);
+      localStorage.setItem('currentConsultant', JSON.stringify(response));
       return response;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Login failed. Please try again.';
@@ -230,6 +233,7 @@ const consultantSlice = createSlice({
       state.loginError = null;
       state.error = null;
       localStorage.removeItem('consultantToken');
+      localStorage.removeItem('currentConsultant');
     },
 
     /**

@@ -77,10 +77,18 @@ export default function StaffList() {
     setDeleteOpen(true);
   };
 
-  // Get branch name from ID
-  const getBranchName = (branchId: string) => {
-    const branch = branches.find((b) => b._id === branchId);
-    return branch?.name || branchId;
+  // Get branch name from ID or nested object
+  const getBranchName = (branch: any) => {
+    // If branch is already an object with name property
+    if (typeof branch === 'object' && branch?.name) {
+      return branch.name;
+    }
+    // If branch is a string ID, find it in branches list
+    if (typeof branch === 'string') {
+      const foundBranch = branches.find((b) => b._id === branch);
+      return foundBranch?.name || branch;
+    }
+    return 'N/A';
   };
 
   // Calculate stats
@@ -279,7 +287,7 @@ export default function StaffList() {
                     <TableCell>
                       <Badge variant="outline">{member?.role?.name}</Badge>
                     </TableCell>
-                    <TableCell className="text-sm">{getBranchName(member?.branch?.name)}</TableCell>
+                    <TableCell className="text-sm">{getBranchName(member.branch)}</TableCell>
                     <TableCell>
                       <Badge
                         variant="outline"

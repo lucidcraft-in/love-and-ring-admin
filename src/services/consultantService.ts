@@ -5,10 +5,10 @@ import Axios from '@/axios/axios';
 // ============================================================================
 
 export interface ConsultantPermissions {
-  create_profile: boolean;
-  edit_profile: boolean;
-  view_profile: boolean;
-  delete_profile: boolean;
+  createProfile: boolean;
+  editProfile: boolean;
+  viewProfile: boolean;
+  deleteProfile: boolean;
 }
 
 export interface Consultant {

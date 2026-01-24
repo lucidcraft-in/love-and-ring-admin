@@ -21,8 +21,11 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { logoutConsultant } from "@/store/slices/consultantSlice";
-import { fetchUsersAsync } from "@/store/slices/usersSlice";
+import { fetchUsersAsync, deleteUserAsync, User } from "@/store/slices/usersSlice";
 import { AddUserDialog } from "@/components/users/AddUserDialog";
+import { ViewUserDialog } from "@/components/users/ViewUserDialog";
+import { EditUserDialog } from "@/components/users/EditUserDialog";
+import { DeleteUserDialog } from "@/components/users/DeleteUserDialog";
 
 export default function ConsultantDashboard() {
   const navigate = useNavigate();
@@ -31,10 +34,16 @@ export default function ConsultantDashboard() {
 
   // Redux state
   const { currentConsultant, isAuthenticated } = useAppSelector((state) => state.consultant);
-  const { users, isLoading: usersLoading } = useAppSelector((state) => state.users);
+  console.log(currentConsultant, "consultant data in the dashboard")
+  const { users, isLoading: usersLoading, deleteLoading } = useAppSelector((state) => state.users);
 
+  // Dialog state
   const [searchTerm, setSearchTerm] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [viewDialogOpen, setViewDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   // Fetch users when component mounts
   useEffect(() => {
@@ -59,6 +68,46 @@ export default function ConsultantDashboard() {
       title: "Success",
       description: "User profile created successfully",
     });
+  };
+
+  const handleViewUser = (user: User) => {
+    setSelectedUser(user);
+    setViewDialogOpen(true);
+  };
+
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user);
+    setEditDialogOpen(true);
+  };
+
+  const handleDeleteUser = (user: User) => {
+    setSelectedUser(user);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!selectedUser) return;
+
+    try {
+      await dispatch(deleteUserAsync(selectedUser._id)).unwrap();
+      toast({
+        title: "Success",
+        description: "User deleted successfully",
+      });
+      setDeleteDialogOpen(false);
+      setSelectedUser(null);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error || "Failed to delete user",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUserUpdated = () => {
+    // Refresh users list
+    dispatch(fetchUsersAsync());
   };
 
   // Filter users based on search term
@@ -182,7 +231,7 @@ export default function ConsultantDashboard() {
             <h1 className="text-2xl font-bold">Welcome back, {currentConsultant.fullName}!</h1>
             <p className="text-muted-foreground">Manage your member profiles and track your activity</p>
           </div>
-          {currentConsultant.permissions.create_profile && (
+          {currentConsultant.permissions.createProfile && (
             <Button onClick={() => setAddDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Create Profile
@@ -268,18 +317,33 @@ export default function ConsultantDashboard() {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
-                              {currentConsultant.permissions.view_profile && (
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                              {currentConsultant.permissions.viewProfile && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => handleViewUser(user)}
+                                >
                                   <Eye className="h-4 w-4" />
                                 </Button>
                               )}
-                              {currentConsultant.permissions.edit_profile && (
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                              {currentConsultant.permissions.editProfile && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => handleEditUser(user)}
+                                >
                                   <Edit className="h-4 w-4" />
                                 </Button>
                               )}
-                              {currentConsultant.permissions.delete_profile && (
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                              {currentConsultant.permissions.deleteProfile && (
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-destructive"
+                                  onClick={() => handleDeleteUser(user)}
+                                >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
                               )}
@@ -319,17 +383,17 @@ export default function ConsultantDashboard() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              <Badge variant={currentConsultant.permissions.view_profile ? "default" : "secondary"}>
-                {currentConsultant.permissions.view_profile ? "✓" : "✗"} View Profiles
+              <Badge variant={currentConsultant.permissions.viewProfile ? "default" : "secondary"}>
+                {currentConsultant.permissions.viewProfile ? "✓" : "✗"} View Profiles
               </Badge>
-              <Badge variant={currentConsultant.permissions.create_profile ? "default" : "secondary"}>
-                {currentConsultant.permissions.create_profile ? "✓" : "✗"} Create Profiles
+              <Badge variant={currentConsultant.permissions.createProfile ? "default" : "secondary"}>
+                {currentConsultant.permissions.createProfile ? "✓" : "✗"} Create Profiles
               </Badge>
-              <Badge variant={currentConsultant.permissions.edit_profile ? "default" : "secondary"}>
-                {currentConsultant.permissions.edit_profile ? "✓" : "✗"} Edit Profiles
+              <Badge variant={currentConsultant.permissions.editProfile ? "default" : "secondary"}>
+                {currentConsultant.permissions.editProfile ? "✓" : "✗"} Edit Profiles
               </Badge>
-              <Badge variant={currentConsultant.permissions.delete_profile ? "default" : "secondary"}>
-                {currentConsultant.permissions.delete_profile ? "✓" : "✗"} Delete Profiles
+              <Badge variant={currentConsultant.permissions.deleteProfile ? "default" : "secondary"}>
+                {currentConsultant.permissions.deleteProfile ? "✓" : "✗"} Delete Profiles
               </Badge>
             </div>
           </CardContent>
@@ -341,6 +405,31 @@ export default function ConsultantDashboard() {
         open={addDialogOpen}
         onOpenChange={setAddDialogOpen}
         onUserAdded={handleUserAdded}
+      />
+
+      <ViewUserDialog
+        open={viewDialogOpen}
+        onOpenChange={setViewDialogOpen}
+        user={selectedUser}
+        onEdit={() => {
+          setViewDialogOpen(false);
+          setEditDialogOpen(true);
+        }}
+      />
+
+      <EditUserDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        user={selectedUser}
+        onUserUpdated={handleUserUpdated}
+      />
+
+      <DeleteUserDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        user={selectedUser}
+        onConfirm={handleConfirmDelete}
+        loading={deleteLoading}
       />
     </div>
   );

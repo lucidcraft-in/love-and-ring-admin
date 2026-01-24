@@ -56,6 +56,7 @@ interface UsersState {
   otpSent: boolean;
   otpLoading: boolean;
   verificationLoading: boolean;
+  deleteLoading: boolean;
 }
 
 const initialState: UsersState = {
@@ -65,6 +66,7 @@ const initialState: UsersState = {
   otpSent: false,
   otpLoading: false,
   verificationLoading: false,
+  deleteLoading: false,
 };
 
 // Async thunk for fetching users
@@ -125,6 +127,24 @@ export const verifyEmailOtpAsync = createAsyncThunk<
       return response.data.user;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to verify OTP. Please try again.';
+      return rejectWithValue(message);
+    }
+  }
+);
+
+// Async thunk for deleting user
+export const deleteUserAsync = createAsyncThunk<
+  string,
+  string,
+  { rejectValue: string }
+>(
+  'users/deleteUser',
+  async (userId, { rejectWithValue }) => {
+    try {
+      await Axios.delete(`/api/users/${userId}`);
+      return userId;
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to delete user. Please try again.';
       return rejectWithValue(message);
     }
   }
@@ -194,6 +214,20 @@ const usersSlice = createSlice({
       .addCase(verifyEmailOtpAsync.rejected, (state, action) => {
         state.verificationLoading = false;
         state.error = action.payload || 'Failed to verify OTP';
+      })
+      // Delete User cases
+      .addCase(deleteUserAsync.pending, (state) => {
+        state.deleteLoading = true;
+        state.error = null;
+      })
+      .addCase(deleteUserAsync.fulfilled, (state, action: PayloadAction<string>) => {
+        state.deleteLoading = false;
+        state.users = state.users.filter(user => user._id !== action.payload);
+        state.error = null;
+      })
+      .addCase(deleteUserAsync.rejected, (state, action) => {
+        state.deleteLoading = false;
+        state.error = action.payload || 'Failed to delete user';
       });
   },
 });

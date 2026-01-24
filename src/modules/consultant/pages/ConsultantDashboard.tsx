@@ -19,31 +19,32 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
-import { useConsultantAuth } from "../hooks/useConsultantAuth";
-import { useMemberProfiles } from "../hooks/useMemberProfiles";
-import type { ConsultantUser } from "../types";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { logoutConsultant } from "@/store/slices/consultantSlice";
+import { fetchUsersAsync } from "@/store/slices/usersSlice";
 import { AddUserDialog } from "@/components/users/AddUserDialog";
 
 export default function ConsultantDashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { getConsultant, logout } = useConsultantAuth();
-  const { profiles, activity } = useMemberProfiles();
-  const [consultant, setConsultant] = useState<ConsultantUser | null>(null);
+  const dispatch = useAppDispatch();
+
+  // Redux state
+  const { currentConsultant, isAuthenticated } = useAppSelector((state) => state.consultant);
+  const { users, isLoading: usersLoading } = useAppSelector((state) => state.users);
+
   const [searchTerm, setSearchTerm] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
 
+  // Fetch users when component mounts
   useEffect(() => {
-    const storedConsultant = getConsultant();
-    if (!storedConsultant) {
-      navigate("/consultant/login");
-      return;
+    if (isAuthenticated && currentConsultant) {
+      dispatch(fetchUsersAsync());
     }
-    setConsultant(storedConsultant);
-  }, [navigate, getConsultant]);
+  }, [dispatch, isAuthenticated, currentConsultant]);
 
   const handleLogout = () => {
-    logout();
+    dispatch(logoutConsultant());
     toast({
       title: "Logged Out",
       description: "You have been successfully logged out.",
@@ -52,60 +53,78 @@ export default function ConsultantDashboard() {
   };
 
   const handleUserAdded = () => {
-    // Refresh profiles list if needed
+    // Refresh users list
+    dispatch(fetchUsersAsync());
     toast({
       title: "Success",
       description: "User profile created successfully",
     });
   };
 
-  const filteredProfiles = profiles.filter(
-    (profile) =>
-      profile.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      profile.location.toLowerCase().includes(searchTerm.toLowerCase())
+  // Filter users based on search term
+  const filteredUsers = users.filter(
+    (user) =>
+      user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.city?.city?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Calculate stats from real user data
   const stats = [
     {
       title: "Total Profiles",
-      value: profiles.length,
+      value: users.length,
       icon: Users,
       color: "text-blue-600 dark:text-blue-400",
       bgColor: "bg-blue-100 dark:bg-blue-900/30"
     },
     {
       title: "Active Profiles",
-      value: profiles.filter(p => p.status === "active").length,
+      value: users.filter(u => u.isActive && !u.isDeleted).length,
       icon: TrendingUp,
       color: "text-green-600 dark:text-green-400",
       bgColor: "bg-green-100 dark:bg-green-900/30"
     },
     {
       title: "Pending Review",
-      value: profiles.filter(p => p.status === "pending").length,
+      value: users.filter(u => u.approvalStatus === "PENDING").length,
       icon: Clock,
       color: "text-yellow-600 dark:text-yellow-400",
       bgColor: "bg-yellow-100 dark:bg-yellow-900/30"
     },
     {
-      title: "Matched",
-      value: profiles.filter(p => p.status === "matched").length,
+      title: "Approved",
+      value: users.filter(u => u.approvalStatus === "APPROVED").length,
       icon: Heart,
       color: "text-pink-600 dark:text-pink-400",
       bgColor: "bg-pink-100 dark:bg-pink-900/30"
     },
   ];
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status?: string) => {
     const styles = {
-      active: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
-      pending: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
-      matched: "bg-pink-100 text-pink-800 dark:bg-pink-900/30 dark:text-pink-400",
+      APPROVED: "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400",
+      PENDING: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400",
+      REJECTED: "bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400",
     };
-    return styles[status as keyof typeof styles] || "";
+    return styles[status as keyof typeof styles] || "bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400";
   };
 
-  if (!consultant) {
+  // Calculate age from date of birth
+  const calculateAge = (dob?: string) => {
+    if (!dob) return "N/A";
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age;
+  };
+
+  // Show loading state
+  if (!currentConsultant || usersLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -133,9 +152,9 @@ export default function ConsultantDashboard() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback>{consultant.fullName.charAt(0)}</AvatarFallback>
+                    <AvatarFallback>{currentConsultant.fullName.charAt(0)}</AvatarFallback>
                   </Avatar>
-                  <span className="hidden md:inline">{consultant.fullName}</span>
+                  <span className="hidden md:inline">{currentConsultant.fullName}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -160,10 +179,10 @@ export default function ConsultantDashboard() {
         {/* Welcome Section */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Welcome back, {consultant.fullName}!</h1>
+            <h1 className="text-2xl font-bold">Welcome back, {currentConsultant.fullName}!</h1>
             <p className="text-muted-foreground">Manage your member profiles and track your activity</p>
           </div>
-          {consultant.permissions.create_profile && (
+          {currentConsultant.permissions.create_profile && (
             <Button onClick={() => setAddDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Create Profile
@@ -223,51 +242,59 @@ export default function ConsultantDashboard() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredProfiles.map((profile) => (
-                      <TableRow key={profile.id}>
-                        <TableCell className="font-medium">
-                          <div>
-                            {profile.name}
-                            <p className="text-xs text-muted-foreground md:hidden">
-                              {profile.age}y • {profile.location}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">{profile.age}</TableCell>
-                        <TableCell className="hidden md:table-cell">{profile.location}</TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" className={getStatusBadge(profile.status)}>
-                            {profile.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
-                            {consultant.permissions.view_profile && (
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            )}
-                            {consultant.permissions.edit_profile && (
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            )}
-                            {consultant.permissions.delete_profile && (
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
+                    {filteredUsers.length === 0 ? (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                          No users found
                         </TableCell>
                       </TableRow>
-                    ))}
+                    ) : (
+                      filteredUsers.map((user) => (
+                        <TableRow key={user._id}>
+                          <TableCell className="font-medium">
+                            <div>
+                              {user.fullName || user.email}
+                              <p className="text-xs text-muted-foreground md:hidden">
+                                {calculateAge(user.dateOfBirth)}y • {user.city?.city || "N/A"}
+                              </p>
+                            </div>
+                          </TableCell>
+                          <TableCell className="hidden md:table-cell">{calculateAge(user.dateOfBirth)}</TableCell>
+                          <TableCell className="hidden md:table-cell">{user.city?.city || "N/A"}</TableCell>
+                          <TableCell>
+                            <Badge variant="secondary" className={getStatusBadge(user.approvalStatus)}>
+                              {user.approvalStatus || "PENDING"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              {currentConsultant.permissions.view_profile && (
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              )}
+                              {currentConsultant.permissions.edit_profile && (
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              )}
+                              {currentConsultant.permissions.delete_profile && (
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
                   </TableBody>
                 </Table>
               </div>
             </CardContent>
           </Card>
 
-          {/* Activity Feed */}
+          {/* Activity Feed - Coming Soon */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -277,17 +304,8 @@ export default function ConsultantDashboard() {
               <CardDescription>Your latest actions and events</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {activity.map((log) => (
-                  <div key={log.id} className="flex gap-3 pb-4 border-b last:border-0 last:pb-0">
-                    <div className="w-2 h-2 mt-2 rounded-full bg-primary shrink-0" />
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium">{log.action}</p>
-                      <p className="text-xs text-muted-foreground">{log.description}</p>
-                      <p className="text-xs text-muted-foreground">{log.timestamp}</p>
-                    </div>
-                  </div>
-                ))}
+              <div className="text-center text-muted-foreground py-8">
+                Activity tracking coming soon...
               </div>
             </CardContent>
           </Card>
@@ -301,17 +319,17 @@ export default function ConsultantDashboard() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              <Badge variant={consultant.permissions.view_profile ? "default" : "secondary"}>
-                {consultant.permissions.view_profile ? "✓" : "✗"} View Profiles
+              <Badge variant={currentConsultant.permissions.view_profile ? "default" : "secondary"}>
+                {currentConsultant.permissions.view_profile ? "✓" : "✗"} View Profiles
               </Badge>
-              <Badge variant={consultant.permissions.create_profile ? "default" : "secondary"}>
-                {consultant.permissions.create_profile ? "✓" : "✗"} Create Profiles
+              <Badge variant={currentConsultant.permissions.create_profile ? "default" : "secondary"}>
+                {currentConsultant.permissions.create_profile ? "✓" : "✗"} Create Profiles
               </Badge>
-              <Badge variant={consultant.permissions.edit_profile ? "default" : "secondary"}>
-                {consultant.permissions.edit_profile ? "✓" : "✗"} Edit Profiles
+              <Badge variant={currentConsultant.permissions.edit_profile ? "default" : "secondary"}>
+                {currentConsultant.permissions.edit_profile ? "✓" : "✗"} Edit Profiles
               </Badge>
-              <Badge variant={consultant.permissions.delete_profile ? "default" : "secondary"}>
-                {consultant.permissions.delete_profile ? "✓" : "✗"} Delete Profiles
+              <Badge variant={currentConsultant.permissions.delete_profile ? "default" : "secondary"}>
+                {currentConsultant.permissions.delete_profile ? "✓" : "✗"} Delete Profiles
               </Badge>
             </div>
           </CardContent>

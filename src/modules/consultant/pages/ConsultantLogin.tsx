@@ -18,6 +18,7 @@ export default function ConsultantLogin() {
   // Redux state
   const { loginLoading, loginError, isAuthenticated } = useAppSelector((state) => state.consultant);
 
+
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
@@ -28,13 +29,7 @@ export default function ConsultantLogin() {
   useEffect(() => {
     dispatch(clearConsultantError());
   }, [dispatch]);
-
-  // Redirect if already authenticated
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate("/consultant/dashboard");
-    }
-  }, [isAuthenticated, navigate]);
+  
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

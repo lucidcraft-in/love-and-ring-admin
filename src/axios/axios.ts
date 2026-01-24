@@ -7,14 +7,21 @@ const Axios: AxiosInstance = axios.create({
   },
 });
 
-Axios.interceptors.request.use(function (config) {
-  // Check for admin token first, then consultant token
-  const token = localStorage.getItem('token') || localStorage.getItem('consultantToken');
+Axios.interceptors.request.use((config) => {
+  const consultantToken = localStorage.getItem("consultantToken");
+  const adminToken = localStorage.getItem("token");
 
-  if (token) {
-    config.headers['Authorization'] = 'Bearer ' + token;
+  // choose token by route
+  if (window.location.pathname.startsWith("/consultant")) {
+    if (consultantToken) {
+      config.headers.Authorization = `Bearer ${consultantToken}`;
+    }
+  } else {
+    if (adminToken) {
+      config.headers.Authorization = `Bearer ${adminToken}`;
+    }
   }
+
   return config;
 });
-
 export default Axios;

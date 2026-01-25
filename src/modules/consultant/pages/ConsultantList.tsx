@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Plus, UserCheck, Clock, XCircle, Users, MoreHorizontal, Eye, CheckCircle, Ban, Shield, MapPin, Loader2 } from "lucide-react";
+import { Search, Filter, Plus, UserCheck, Clock, XCircle, Users, MoreHorizontal, Eye, CheckCircle, Ban, Shield, MapPin, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -38,14 +38,19 @@ export default function ConsultantList() {
   const [searchQuery, setSearchQuery] = useState("");
   const [advancedFilters, setAdvancedFilters] = useState<ConsultantFilters>({});
 
-  // Fetch consultants on mount and when filter changes
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Fetch consultants on mount and when filter or pagination changes
   useEffect(() => {
+    const skip = (currentPage - 1) * pageSize;
     dispatch(fetchConsultantsAsync({
-      skip: 0,
-      take: 100,
+      skip,
+      take: pageSize,
       status: statusFilter === "all" ? undefined : statusFilter as any,
     }));
-  }, [dispatch, statusFilter]);
+  }, [dispatch, statusFilter, currentPage, pageSize]);
 
   // Calculate stats from consultants
   const stats = {
@@ -163,10 +168,11 @@ export default function ConsultantList() {
       description: "Notification email sent."
     });
     setCreateOpen(false);
-    // Refresh list
+    // Reset to first page and refresh list
+    setCurrentPage(1);
     dispatch(fetchConsultantsAsync({
       skip: 0,
-      take: 100,
+      take: pageSize,
       status: statusFilter === "all" ? undefined : statusFilter as any,
     }));
   };
@@ -177,12 +183,16 @@ export default function ConsultantList() {
     if (filters.status) {
       setStatusFilter(filters.status);
     }
+    // Reset to first page when applying filters
+    setCurrentPage(1);
   };
 
   const handleClearFilters = () => {
     setAdvancedFilters({});
     setStatusFilter("all");
     setSearchQuery("");
+    // Reset to first page when clearing filters
+    setCurrentPage(1);
   };
 
   // Count active filters (excluding status if it matches the main filter)
@@ -269,8 +279,11 @@ export default function ConsultantList() {
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
+            <div className="flex flex-wrap gap-2 items-center">
+              <Select value={statusFilter} onValueChange={(value) => {
+                setStatusFilter(value);
+                setCurrentPage(1); // Reset to first page when status filter changes
+              }}>
                 <SelectTrigger className="w-32">
                   <SelectValue />
                 </SelectTrigger>
@@ -298,6 +311,46 @@ export default function ConsultantList() {
                   </Badge>
                 )}
               </Button>
+
+              {/* Compact Pagination Controls */}
+              <div className="flex items-center gap-2 border-l pl-2 ml-1">
+                <Select value={pageSize.toString()} onValueChange={(value) => {
+                  setPageSize(Number(value));
+                  setCurrentPage(1);
+                }}>
+                  <SelectTrigger className="w-16 h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="5">5</SelectItem>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9"
+                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                  disabled={currentPage === 1}
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                </Button>
+                <span className="text-sm font-medium min-w-[3rem] text-center">
+                  {currentPage}/{Math.ceil(total / pageSize)}
+                </span>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-9 w-9"
+                  onClick={() => setCurrentPage(prev => Math.min(Math.ceil(total / pageSize), prev + 1))}
+                  disabled={currentPage >= Math.ceil(total / pageSize)}
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -319,84 +372,88 @@ export default function ConsultantList() {
               <p>No consultants found</p>
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="border-border/50">
-                  <TableHead>Consultant</TableHead>
-                  <TableHead>Branch</TableHead>
-                  <TableHead>Regions</TableHead>
-                  <TableHead>Profiles</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredConsultants.map((c) => (
-                  <TableRow key={c._id} className="border-border/50">
-                    <TableCell>
-                      <div className="flex items-center gap-3">
-                        <Avatar className="w-9 h-9">
-                          <AvatarFallback>{c.fullName.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <p className="font-medium">{c.fullName}</p>
-                          <p className="text-sm text-muted-foreground">{c.email}</p>
-                        </div>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-sm">{c.branch ? c.branch.name : "-"}</TableCell>
-                    <TableCell>
-                      <div className="flex gap-1 flex-wrap">
-                        {c.regions && c.regions.length > 0 ? (
-                          c.regions.slice(0, 2).map(r => (
-                            <Badge key={r} variant="outline" className="text-xs">
-                              <MapPin className="w-3 h-3 mr-1" />{r}
-                            </Badge>
-                          ))
-                        ) : (
-                          <span className="text-sm text-muted-foreground">-</span>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{c.profilesCreated || 0}</TableCell>
-                    <TableCell>{getStatusBadge(c.status)}</TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                      {c.createdAt ? new Date(c.createdAt).toLocaleDateString() : "-"}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-8 w-8">
-                            <MoreHorizontal className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => { setSelectedConsultant(c); setViewOpen(true); }}>
-                            <Eye className="w-4 h-4 mr-2" />View Details
-                          </DropdownMenuItem>
-                          {c.status === "PENDING" && (
-                            <>
-                              <DropdownMenuItem onClick={() => { setSelectedConsultant(c); setApproveOpen(true); }}>
-                                <CheckCircle className="w-4 h-4 mr-2" />Approve
+            <div className="relative">
+              <div className="overflow-auto max-h-[calc(100vh-28rem)]">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-border/50">
+                      <TableHead className="sticky top-0 bg-background z-10 border-b">Consultant</TableHead>
+                      <TableHead className="sticky top-0 bg-background z-10 border-b">Branch</TableHead>
+                      <TableHead className="sticky top-0 bg-background z-10 border-b">Regions</TableHead>
+                      <TableHead className="sticky top-0 bg-background z-10 border-b">Profiles</TableHead>
+                      <TableHead className="sticky top-0 bg-background z-10 border-b">Status</TableHead>
+                      <TableHead className="sticky top-0 bg-background z-10 border-b">Created</TableHead>
+                      <TableHead className="sticky top-0 bg-background z-10 border-b text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredConsultants.map((c) => (
+                      <TableRow key={c._id} className="border-border/50">
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Avatar className="w-9 h-9">
+                              <AvatarFallback>{c.fullName.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <div>
+                              <p className="font-medium">{c.fullName}</p>
+                              <p className="text-sm text-muted-foreground">{c.email}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm">{c.branch ? c.branch.name : "-"}</TableCell>
+                        <TableCell>
+                          <div className="flex gap-1 flex-wrap">
+                            {c.regions && c.regions.length > 0 ? (
+                              c.regions.slice(0, 2).map(r => (
+                                <Badge key={r} variant="outline" className="text-xs">
+                                  <MapPin className="w-3 h-3 mr-1" />{r}
+                                </Badge>
+                              ))
+                            ) : (
+                              <span className="text-sm text-muted-foreground">-</span>
+                            )}
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium">{c.profilesCreated || 0}</TableCell>
+                        <TableCell>{getStatusBadge(c.status)}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {c.createdAt ? new Date(c.createdAt).toLocaleDateString() : "-"}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => { setSelectedConsultant(c); setViewOpen(true); }}>
+                                <Eye className="w-4 h-4 mr-2" />View Details
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => { setSelectedConsultant(c); setRejectOpen(true); }} className="text-destructive">
-                                <Ban className="w-4 h-4 mr-2" />Reject
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                          {c.status === "ACTIVE" && (
-                            <DropdownMenuItem onClick={() => { setSelectedConsultant(c); setPermissionsOpen(true); }}>
-                              <Shield className="w-4 h-4 mr-2" />Edit Permissions
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                              {c.status === "PENDING" && (
+                                <>
+                                  <DropdownMenuItem onClick={() => { setSelectedConsultant(c); setApproveOpen(true); }}>
+                                    <CheckCircle className="w-4 h-4 mr-2" />Approve
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => { setSelectedConsultant(c); setRejectOpen(true); }} className="text-destructive">
+                                    <Ban className="w-4 h-4 mr-2" />Reject
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                              {c.status === "ACTIVE" && (
+                                <DropdownMenuItem onClick={() => { setSelectedConsultant(c); setPermissionsOpen(true); }}>
+                                  <Shield className="w-4 h-4 mr-2" />Edit Permissions
+                                </DropdownMenuItem>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
           )}
         </CardContent>
       </Card>

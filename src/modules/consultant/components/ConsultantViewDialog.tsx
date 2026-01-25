@@ -10,6 +10,7 @@ interface ConsultantViewDialogProps {
 }
 
 export function ConsultantViewDialog({ open, onOpenChange, consultant }: ConsultantViewDialogProps) {
+
   if (!consultant) return null;
 
   const getStatusBadge = (status: string) => {
@@ -48,10 +49,10 @@ export function ConsultantViewDialog({ open, onOpenChange, consultant }: Consult
               <p className="text-muted-foreground">Phone</p>
               <p className="font-medium">{consultant.phone}</p>
             </div>
-            <div>
+            {/* <div>
               <p className="text-muted-foreground">Agency</p>
               <p className="font-medium">{consultant.agencyName}</p>
-            </div>
+            </div> */}
             <div>
               <p className="text-muted-foreground">Profiles Created</p>
               <p className="font-medium">{consultant.profilesCreated}</p>

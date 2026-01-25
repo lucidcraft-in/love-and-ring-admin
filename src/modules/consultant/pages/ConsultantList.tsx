@@ -27,6 +27,7 @@ export default function ConsultantList() {
 
   // Local state
   const [selectedConsultant, setSelectedConsultant] = useState<Consultant | null>(null);
+  console.log(selectedConsultant, "selectedConsultant")
   const [viewOpen, setViewOpen] = useState(false);
   const [approveOpen, setApproveOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);

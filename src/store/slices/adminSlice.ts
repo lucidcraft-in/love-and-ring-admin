@@ -80,7 +80,9 @@ export const createAdminAsync = createAsyncThunk<
   async (payload, { rejectWithValue }) => {
     try {
       const response = await adminService.createAdmin(payload);
-      return response;
+      // Fetch the full admin object to get the populated role
+      const fullAdmin = await adminService.getAdminById(response._id);
+      return fullAdmin;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to create admin.';
       return rejectWithValue(message);

@@ -9,10 +9,15 @@ import { Image, FileText, Heart, Plus, MoreHorizontal, Eye, Edit, Trash2, Upload
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchBannersAsync, setCurrentBanner } from "@/store/slices/bannerSlice";
+import { fetchStoriesAsync, setCurrentStory } from "@/store/slices/successStorySlice";
 import { Banner } from "@/services/bannerService";
+import { SuccessStory } from "@/services/successStoryService";
 import { BannerAddDialog } from "@/components/cms/banners/BannerAddDialog";
 import { BannerEditDialog } from "@/components/cms/banners/BannerEditDialog";
 import { BannerDeleteDialog } from "@/components/cms/banners/BannerDeleteDialog";
+import { StoryAddDialog } from "@/components/cms/stories/StoryAddDialog";
+import { StoryEditDialog } from "@/components/cms/stories/StoryEditDialog";
+import { StoryDeleteDialog } from "@/components/cms/stories/StoryDeleteDialog";
 import { useState, useEffect } from "react";
 
 
@@ -54,15 +59,23 @@ const successStories = [
 const CMS = () => {
   const dispatch = useAppDispatch();
   const { banners, listLoading: bannersLoading, currentBanner } = useAppSelector((state) => state.banner);
+  const { stories, listLoading: storiesLoading, currentStory } = useAppSelector((state) => state.successStory);
 
   const [addBannerOpen, setAddBannerOpen] = useState(false);
   const [editBannerOpen, setEditBannerOpen] = useState(false);
   const [deleteBannerOpen, setDeleteBannerOpen] = useState(false);
+
+  const [addStoryOpen, setAddStoryOpen] = useState(false);
+  const [editStoryOpen, setEditStoryOpen] = useState(false);
+  const [deleteStoryOpen, setDeleteStoryOpen] = useState(false);
+
   const [activeTab, setActiveTab] = useState("banners");
 
   useEffect(() => {
     if (activeTab === "banners") {
       dispatch(fetchBannersAsync());
+    } else if (activeTab === "stories") {
+      dispatch(fetchStoriesAsync(undefined));
     }
   }, [activeTab, dispatch]);
 
@@ -74,6 +87,16 @@ const CMS = () => {
   const handleDeleteBanner = (banner: Banner) => {
     dispatch(setCurrentBanner(banner));
     setDeleteBannerOpen(true);
+  };
+
+  const handleEditStory = (story: SuccessStory) => {
+    dispatch(setCurrentStory(story));
+    setEditStoryOpen(true);
+  };
+
+  const handleDeleteStory = (story: SuccessStory) => {
+    dispatch(setCurrentStory(story));
+    setDeleteStoryOpen(true);
   };
 
   return (
@@ -117,7 +140,7 @@ const CMS = () => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Success Stories</p>
-              <p className="text-xl font-semibold text-foreground">156</p>
+              <p className="text-xl font-semibold text-foreground">{stories.length}</p>
             </div>
           </CardContent>
         </Card>
@@ -261,57 +284,77 @@ const CMS = () => {
 
         <TabsContent value="stories" className="space-y-4">
           <div className="flex justify-end">
-            <Button className="bg-primary hover:bg-primary/90">
+            <Button className="bg-primary hover:bg-primary/90" onClick={() => setAddStoryOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Add Story
             </Button>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {successStories.map((story) => (
-              <Card key={story.id} className="stat-card-shadow border-0 overflow-hidden">
-                <div className="h-40 overflow-hidden">
-                  <img
-                    src={story.image}
-                    alt={story.coupleNames}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <h3 className="font-semibold">{story.coupleNames}</h3>
-                    <Badge
-                      variant="outline"
-                      className={
-                        story.status === "Published"
-                          ? "border-chart-green text-chart-green"
-                          : "border-chart-orange text-chart-orange"
-                      }
-                    >
-                      {story.status}
-                    </Badge>
+
+          {storiesLoading ? (
+            <div className="flex items-center justify-center p-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : stories.length === 0 ? (
+            <div className="flex items-center justify-center p-12 text-muted-foreground border border-dashed rounded-lg">
+              No success stories found.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {stories.map((story) => (
+                <Card key={story._id} className="stat-card-shadow border-0 overflow-hidden">
+                  <div className="h-40 overflow-hidden bg-muted flex items-center justify-center">
+                    {story.imageUrl ? (
+                      <img
+                        src={story.imageUrl}
+                        alt={story.coupleName}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Heart className="w-10 h-10 text-muted-foreground/30" />
+                    )}
                   </div>
-                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{story.story}</p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs text-muted-foreground">{story.date}</span>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <Edit className="w-4 h-4" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="font-semibold">{story.coupleName}</h3>
+                      <Badge
+                        variant="outline"
+                        className={
+                          story.status === "Published"
+                            ? "border-chart-green text-chart-green"
+                            : "border-chart-orange text-chart-orange"
+                        }
+                      >
+                        {story.status}
+                      </Badge>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                    <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{story.story}</p>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs text-muted-foreground">{new Date(story.date).toLocaleDateString()}</span>
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEditStory(story)}>
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleDeleteStory(story)}>
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
       </Tabs>
       {/* Banner Dialogs */}
       <BannerAddDialog open={addBannerOpen} onOpenChange={setAddBannerOpen} />
       <BannerEditDialog open={editBannerOpen} onOpenChange={setEditBannerOpen} banner={currentBanner} />
       <BannerDeleteDialog open={deleteBannerOpen} onOpenChange={setDeleteBannerOpen} banner={currentBanner} />
+
+      {/* Story Dialogs */}
+      <StoryAddDialog open={addStoryOpen} onOpenChange={setAddStoryOpen} />
+      <StoryEditDialog open={editStoryOpen} onOpenChange={setEditStoryOpen} story={currentStory} />
+      <StoryDeleteDialog open={deleteStoryOpen} onOpenChange={setDeleteStoryOpen} story={currentStory} />
     </div>
   );
 };

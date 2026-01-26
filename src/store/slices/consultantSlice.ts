@@ -10,6 +10,8 @@ import {
   ConsultantPermissions,
   GetConsultantsParams,
   GetConsultantsResponse,
+  ConsultantStats,
+  ConsultantStatsResponse,
 } from '@/services/consultantService';
 
 // ============================================================================
@@ -27,6 +29,10 @@ interface ConsultantState {
   total: number;
   skip: number;
   take: number;
+
+  // Statistics
+  stats: ConsultantStats;
+  statsLoading: boolean;
 
   // Loading States
   loginLoading: boolean;
@@ -54,6 +60,15 @@ const initialState: ConsultantState = {
   total: 0,
   skip: 0,
   take: 10,
+
+  // Statistics
+  stats: {
+    total: 0,
+    active: 0,
+    pending: 0,
+    rejected: 0,
+  },
+  statsLoading: false,
 
   // Loading States
   loginLoading: false,
@@ -210,6 +225,28 @@ export const deleteConsultantAsync = createAsyncThunk<
       return id;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to delete consultant.';
+      return rejectWithValue(message);
+    }
+  }
+);
+
+
+/**
+ * Get consultant statistics
+ */
+export const getConsultantStatsAsync = createAsyncThunk<
+  ConsultantStats,
+  void,
+  { rejectValue: string }
+>(
+  'consultant/getConsultantStats',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await consultantService.getConsultantStats();
+      console.log(response, "consultant count stats");
+      return response;
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to get consultant statistics.';
       return rejectWithValue(message);
     }
   }
@@ -402,6 +439,23 @@ const consultantSlice = createSlice({
       .addCase(deleteConsultantAsync.rejected, (state, action) => {
         state.deleteLoading = false;
         state.error = action.payload || 'Failed to delete consultant';
+      })
+
+      // ========================================================================
+      // Consultant Stats
+      // ========================================================================
+      .addCase(getConsultantStatsAsync.pending, (state) => {
+        state.statsLoading = true;
+        state.error = null;
+      })
+      .addCase(getConsultantStatsAsync.fulfilled, (state, action: PayloadAction<ConsultantStats>) => {
+        state.statsLoading = false;
+        state.stats = action.payload;
+        state.error = null;
+      })
+      .addCase(getConsultantStatsAsync.rejected, (state, action) => {
+        state.statsLoading = false;
+        state.error = action.payload || 'Failed to get consultant statistics';
       });
   },
 });

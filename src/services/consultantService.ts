@@ -11,6 +11,22 @@ export interface ConsultantPermissions {
   deleteProfile: boolean;
 }
 
+export interface ConsultantStats {
+  total: number;
+  active: number;
+  pending: number;
+  rejected: number;
+}
+
+// API Response interface for stats endpoint
+export interface ConsultantStatsResponse {
+  _id: null;
+  totalConsultants: number;
+  totalActiveConsultants: number;
+  totalPendingConsultants: number;
+  totalInactiveConsultants: number;
+}
+
 export interface Consultant {
   _id: string;
   id: string;
@@ -176,5 +192,21 @@ export const consultantService = {
   deleteConsultant: async (id: string): Promise<{ message: string }> => {
     const response = await Axios.delete<{ message: string }>(`/api/consultants/${id}`);
     return response.data;
+  },
+
+  /**
+   * Get consultant statistics (total counts for each status)
+   */
+  getConsultantStats: async (): Promise<ConsultantStats> => {
+    const response = await Axios.get<ConsultantStatsResponse>('/api/consultants/stats');
+    const data = response.data;
+
+    // Map API response to our internal format
+    return {
+      total: data.totalConsultants,
+      active: data.totalActiveConsultants,
+      pending: data.totalPendingConsultants,
+      rejected: data.totalInactiveConsultants, // Mapping inactive to rejected
+    };
   },
 };

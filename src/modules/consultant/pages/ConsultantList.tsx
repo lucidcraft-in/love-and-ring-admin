@@ -10,7 +10,7 @@ import { Search, Filter, Plus, UserCheck, Clock, XCircle, Users, MoreHorizontal,
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchConsultantsAsync, deleteConsultantAsync, updateConsultantAsync } from "@/store/slices/consultantSlice";
+import { fetchConsultantsAsync, deleteConsultantAsync, updateConsultantAsync, getConsultantStatsAsync } from "@/store/slices/consultantSlice";
 import { ConsultantViewDialog } from "../components/ConsultantViewDialog";
 import { ConsultantApproveDialog } from "../components/ConsultantApproveDialog";
 import { ConsultantRejectDialog } from "../components/ConsultantRejectDialog";
@@ -23,7 +23,7 @@ export default function ConsultantList() {
   const dispatch = useAppDispatch();
 
   // Redux state
-  const { consultants, total, listLoading, error } = useAppSelector((state) => state.consultant);
+  const { consultants, total, stats, listLoading, error } = useAppSelector((state) => state.consultant);
 
   // Local state
   const [selectedConsultant, setSelectedConsultant] = useState<Consultant | null>(null);
@@ -52,13 +52,11 @@ export default function ConsultantList() {
     }));
   }, [dispatch, statusFilter, currentPage, pageSize]);
 
-  // Calculate stats from consultants
-  const stats = {
-    total: consultants.length,
-    active: consultants.filter(c => c.status === "ACTIVE").length,
-    pending: consultants.filter(c => c.status === "PENDING").length,
-    rejected: consultants.filter(c => c.status === "REJECTED").length,
-  };
+  // Fetch stats on mount
+  useEffect(() => {
+    dispatch(getConsultantStatsAsync());
+  }, [dispatch]);
+
 
   // Apply all filters to consultants
   const filteredConsultants = consultants.filter(c => {

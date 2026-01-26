@@ -10,24 +10,22 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchBannersAsync, setCurrentBanner } from "@/store/slices/bannerSlice";
 import { fetchStoriesAsync, setCurrentStory } from "@/store/slices/successStorySlice";
+import { fetchPagesAsync, setCurrentPage } from "@/store/slices/staticPageSlice";
 import { Banner } from "@/services/bannerService";
 import { SuccessStory } from "@/services/successStoryService";
+import { StaticPage } from "@/services/staticPageService";
 import { BannerAddDialog } from "@/components/cms/banners/BannerAddDialog";
 import { BannerEditDialog } from "@/components/cms/banners/BannerEditDialog";
 import { BannerDeleteDialog } from "@/components/cms/banners/BannerDeleteDialog";
 import { StoryAddDialog } from "@/components/cms/stories/StoryAddDialog";
 import { StoryEditDialog } from "@/components/cms/stories/StoryEditDialog";
 import { StoryDeleteDialog } from "@/components/cms/stories/StoryDeleteDialog";
+import { StaticPageAddDialog } from "@/components/cms/pages/StaticPageAddDialog";
+import { StaticPageEditDialog } from "@/components/cms/pages/StaticPageEditDialog";
 import { useState, useEffect } from "react";
 
 
-const staticPages = [
-  { id: 1, title: "About Us", slug: "/about-us", lastUpdated: "2024-03-10" },
-  { id: 2, title: "Privacy Policy", slug: "/privacy-policy", lastUpdated: "2024-02-15" },
-  { id: 3, title: "Terms & Conditions", slug: "/terms-conditions", lastUpdated: "2024-02-15" },
-  { id: 4, title: "FAQ", slug: "/faq", lastUpdated: "2024-03-01" },
-  { id: 5, title: "Contact Us", slug: "/contact-us", lastUpdated: "2024-01-20" },
-];
+
 
 const successStories = [
   {
@@ -60,6 +58,7 @@ const CMS = () => {
   const dispatch = useAppDispatch();
   const { banners, listLoading: bannersLoading, currentBanner } = useAppSelector((state) => state.banner);
   const { stories, listLoading: storiesLoading, currentStory } = useAppSelector((state) => state.successStory);
+  const { pages, listLoading: pagesLoading, currentPage } = useAppSelector((state) => state.staticPage);
 
   const [addBannerOpen, setAddBannerOpen] = useState(false);
   const [editBannerOpen, setEditBannerOpen] = useState(false);
@@ -69,6 +68,9 @@ const CMS = () => {
   const [editStoryOpen, setEditStoryOpen] = useState(false);
   const [deleteStoryOpen, setDeleteStoryOpen] = useState(false);
 
+  const [addPageOpen, setAddPageOpen] = useState(false);
+  const [editPageOpen, setEditPageOpen] = useState(false);
+
   const [activeTab, setActiveTab] = useState("banners");
 
   useEffect(() => {
@@ -76,6 +78,8 @@ const CMS = () => {
       dispatch(fetchBannersAsync());
     } else if (activeTab === "stories") {
       dispatch(fetchStoriesAsync(undefined));
+    } else if (activeTab === "pages") {
+      dispatch(fetchPagesAsync());
     }
   }, [activeTab, dispatch]);
 
@@ -97,6 +101,11 @@ const CMS = () => {
   const handleDeleteStory = (story: SuccessStory) => {
     dispatch(setCurrentStory(story));
     setDeleteStoryOpen(true);
+  };
+
+  const handleEditPage = (page: StaticPage) => {
+    dispatch(setCurrentPage(page));
+    setEditPageOpen(true);
   };
 
   return (
@@ -129,7 +138,7 @@ const CMS = () => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Static Pages</p>
-              <p className="text-xl font-semibold text-foreground">5</p>
+              <p className="text-xl font-semibold text-foreground">{pages.length}</p>
             </div>
           </CardContent>
         </Card>
@@ -252,6 +261,12 @@ const CMS = () => {
         </TabsContent>
 
         <TabsContent value="pages" className="space-y-4">
+          <div className="flex justify-end">
+            <Button className="bg-primary hover:bg-primary/90" onClick={() => setAddPageOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Page
+            </Button>
+          </div>
           <Card className="stat-card-shadow border-0">
             <CardContent className="p-0">
               <Table>
@@ -264,18 +279,34 @@ const CMS = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {staticPages.map((page) => (
-                    <TableRow key={page.id} className="border-border/50">
-                      <TableCell className="font-medium">{page.title}</TableCell>
-                      <TableCell className="text-muted-foreground">{page.slug}</TableCell>
-                      <TableCell className="text-muted-foreground">{page.lastUpdated}</TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm">
-                          <Edit className="w-4 h-4 mr-1" /> Edit
-                        </Button>
+                  {pagesLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="h-24 text-center">
+                        <div className="flex justify-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        </div>
                       </TableCell>
                     </TableRow>
-                  ))}
+                  ) : pages.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                        No static pages found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    pages.map((page) => (
+                      <TableRow key={page._id} className="border-border/50">
+                        <TableCell className="font-medium">{page.title}</TableCell>
+                        <TableCell className="text-muted-foreground">{page.slug}</TableCell>
+                        <TableCell className="text-muted-foreground">{new Date(page.updatedAt).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-right">
+                          <Button variant="ghost" size="sm" onClick={() => handleEditPage(page)}>
+                            <Edit className="w-4 h-4 mr-1" /> Edit
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
@@ -355,6 +386,10 @@ const CMS = () => {
       <StoryAddDialog open={addStoryOpen} onOpenChange={setAddStoryOpen} />
       <StoryEditDialog open={editStoryOpen} onOpenChange={setEditStoryOpen} story={currentStory} />
       <StoryDeleteDialog open={deleteStoryOpen} onOpenChange={setDeleteStoryOpen} story={currentStory} />
+
+      {/* Static Page Dialogs */}
+      <StaticPageAddDialog open={addPageOpen} onOpenChange={setAddPageOpen} />
+      <StaticPageEditDialog open={editPageOpen} onOpenChange={setEditPageOpen} page={currentPage} />
     </div>
   );
 };

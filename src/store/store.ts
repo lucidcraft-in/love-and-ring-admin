@@ -9,6 +9,7 @@ import roleReducer from './slices/roleSlice';
 import adminReducer from './slices/adminSlice';
 import bannerReducer from './slices/bannerSlice';
 import successStoryReducer from './slices/successStorySlice';
+import staticPageReducer from './slices/staticPageSlice';
 
 export const store = configureStore({
   reducer: {
@@ -22,6 +23,7 @@ export const store = configureStore({
     admin: adminReducer,
     banner: bannerReducer,
     successStory: successStoryReducer,
+    staticPage: staticPageReducer,
   },
 });
 

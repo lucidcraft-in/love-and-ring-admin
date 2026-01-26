@@ -6,6 +6,7 @@ import consultantReducer from './slices/consultantSlice';
 import branchReducer from './slices/branchSlice';
 import staffReducer from './slices/staffSlice';
 import roleReducer from './slices/roleSlice';
+import adminReducer from './slices/adminSlice';
 
 export const store = configureStore({
   reducer: {
@@ -16,6 +17,7 @@ export const store = configureStore({
     branch: branchReducer,
     staff: staffReducer,
     role: roleReducer,
+    admin: adminReducer,
   },
 });
 

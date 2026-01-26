@@ -11,41 +11,18 @@ import { Search, Filter, Plus, Shield, ShieldCheck, UserCog, Settings, MoreHoriz
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchRolesAsync, setCurrentRole } from "@/store/slices/roleSlice";
+import { fetchAdminsAsync, setCurrentAdmin, deleteAdminAsync } from "@/store/slices/adminSlice";
 import { Role } from "@/services/roleService";
+import { Admin } from "@/services/adminService";
 import { RoleAddDialog } from "@/components/roles/RoleAddDialog";
 import { RoleEditDialog } from "@/components/roles/RoleEditDialog";
 import { RoleDeleteDialog } from "@/components/roles/RoleDeleteDialog";
+import { AdminAddDialog } from "@/components/admins/AdminAddDialog";
+import { AdminEditDialog } from "@/components/admins/AdminEditDialog";
+import { AdminDeleteDialog } from "@/components/admins/AdminDeleteDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const admins = [
-  {
-    id: 1,
-    name: "Super Admin",
-    avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
-    email: "superadmin@matchmate.com",
-    role: "Super Admin",
-    status: "Active",
-    lastLogin: "Online now",
-  },
-  {
-    id: 2,
-    name: "Rajesh Mehta",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
-    email: "rajesh.mehta@matchmate.com",
-    role: "Admin",
-    status: "Active",
-    lastLogin: "2 hours ago",
-  },
-  {
-    id: 3,
-    name: "Priya Kapoor",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face",
-    email: "priya.kapoor@matchmate.com",
-    role: "Branch Admin",
-    status: "Active",
-    lastLogin: "1 day ago",
-  },
-];
+
 
 const permissionLabels: Record<string, string> = {
   viewProfiles: "View Profiles",
@@ -62,20 +39,51 @@ const permissionLabels: Record<string, string> = {
 
 const Admins = () => {
   const dispatch = useAppDispatch();
-  const { roles, listLoading } = useAppSelector((state) => state.role);
+  const { roles, listLoading: rolesLoading } = useAppSelector((state) => state.role);
+  const { admins, total: totalAdmins, listLoading: adminsLoading, currentAdmin } = useAppSelector((state) => state.admin);
 
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [addRoleOpen, setAddRoleOpen] = useState(false);
   const [editRoleOpen, setEditRoleOpen] = useState(false);
   const [deleteRoleOpen, setDeleteRoleOpen] = useState(false);
+
+  const [addAdminOpen, setAddAdminOpen] = useState(false);
+  const [editAdminOpen, setEditAdminOpen] = useState(false);
+  const [deleteAdminOpen, setDeleteAdminOpen] = useState(false);
+
   const [activeTab, setActiveTab] = useState("admins");
+
+  // Admin Pagination & Filters
+  const [adminPage, setAdminPage] = useState(1);
+  const [adminPageSize, setAdminPageSize] = useState(10);
+  const [adminRoleFilter, setAdminRoleFilter] = useState("all-role");
+  const [adminSearch, setAdminSearch] = useState("");
 
   // Fetch roles when component mounts or when switching to roles tab
   useEffect(() => {
     if (activeTab === "roles") {
       dispatch(fetchRolesAsync());
+    } else if (activeTab === "admins") {
+      const skip = (adminPage - 1) * adminPageSize;
+      dispatch(fetchAdminsAsync({
+        skip,
+        take: adminPageSize,
+        role: adminRoleFilter === "all-role" ? undefined : adminRoleFilter,
+      }));
+      // We also need roles to filter and display in add/edit dialogs
+      if (roles.length === 0) dispatch(fetchRolesAsync());
     }
-  }, [activeTab, dispatch]);
+  }, [activeTab, dispatch, adminPage, adminPageSize, adminRoleFilter, roles.length]);
+
+  const handleEditAdmin = (admin: Admin) => {
+    dispatch(setCurrentAdmin(admin));
+    setEditAdminOpen(true);
+  };
+
+  const handleDeleteAdmin = (admin: Admin) => {
+    dispatch(setCurrentAdmin(admin));
+    setDeleteAdminOpen(true);
+  };
 
   const handleEditRole = (role: Role) => {
     setSelectedRole(role);
@@ -140,7 +148,7 @@ const Admins = () => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Roles Defined</p>
-              <p className="text-xl font-semibold text-foreground">{roles.length}</p>
+              <p className="text-xl font-semibold text-foreground">{totalAdmins}</p>
             </div>
           </CardContent>
         </Card>
@@ -154,7 +162,7 @@ const Admins = () => {
             <TabsTrigger value="roles">Roles & Permissions</TabsTrigger>
           </TabsList>
           {activeTab === "admins" ? (
-            <Button className="bg-primary hover:bg-primary/90">
+            <Button className="bg-primary hover:bg-primary/90" onClick={() => setAddAdminOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Add Admin
             </Button>
@@ -173,18 +181,26 @@ const Admins = () => {
               <div className="flex flex-col lg:flex-row gap-4">
                 <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input placeholder="Search admins..." className="pl-10" />
+                  <Input
+                    placeholder="Search admins..."
+                    className="pl-10"
+                    value={adminSearch}
+                    onChange={(e) => setAdminSearch(e.target.value)}
+                  />
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  <Select defaultValue="all-role">
+                  <Select value={adminRoleFilter} onValueChange={(value) => {
+                    setAdminRoleFilter(value);
+                    setAdminPage(1);
+                  }}>
                     <SelectTrigger className="w-36">
                       <SelectValue placeholder="Role" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all-role">All Roles</SelectItem>
-                      <SelectItem value="super-admin">Super Admin</SelectItem>
-                      <SelectItem value="admin">Admin</SelectItem>
-                      <SelectItem value="branch-admin">Branch Admin</SelectItem>
+                      {roles.map((role) => (
+                        <SelectItem key={role._id} value={role._id}>{role.name}</SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                   <Button variant="outline" size="icon">
@@ -198,83 +214,88 @@ const Admins = () => {
           {/* Admins Table */}
           <Card className="stat-card-shadow border-0">
             <CardContent className="p-0">
-              <Table>
-                <TableHeader>
-                  <TableRow className="border-border/50">
-                    <TableHead>Admin</TableHead>
-                    <TableHead>Email</TableHead>
-                    <TableHead>Role</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Last Login</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {admins.map((admin) => (
-                    <TableRow key={admin.id} className="border-border/50">
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          <Avatar className="w-9 h-9">
-                            <AvatarImage src={admin.avatar} />
-                            <AvatarFallback>{admin.name.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <span className="font-medium">{admin.name}</span>
-                        </div>
-                      </TableCell>
-                      <TableCell>{admin.email}</TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={
-                            admin.role === "Super Admin"
-                              ? "border-primary text-primary"
-                              : admin.role === "Admin"
-                                ? "border-chart-orange text-chart-orange"
-                                : "border-chart-green text-chart-green"
-                          }
-                        >
-                          {admin.role}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="secondary"
-                          className="bg-chart-green/10 text-chart-green"
-                        >
-                          {admin.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground text-sm">{admin.lastLogin}</TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                              <MoreHorizontal className="w-4 h-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            <DropdownMenuItem>
-                              <Eye className="w-4 h-4 mr-2" /> View
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Edit className="w-4 h-4 mr-2" /> Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="text-destructive">
-                              <Trash2 className="w-4 h-4 mr-2" /> Remove
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
+              {adminsLoading ? (
+                <div className="flex items-center justify-center p-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+              ) : admins.length === 0 ? (
+                <div className="flex items-center justify-center p-8 text-muted-foreground">
+                  No admins found.
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-border/50">
+                      <TableHead>Admin</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Last Login</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {admins.filter(a =>
+                      a.fullName.toLowerCase().includes(adminSearch.toLowerCase()) ||
+                      (a.email && a.email.toLowerCase().includes(adminSearch.toLowerCase()))
+                    ).map((admin) => (
+                      <TableRow key={admin._id} className="border-border/50">
+                        <TableCell>
+                          <div className="flex items-center gap-3">
+                            <Avatar className="w-9 h-9">
+                              <AvatarFallback>{admin.fullName.charAt(0)}</AvatarFallback>
+                            </Avatar>
+                            <span className="font-medium">{admin.fullName}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{admin.email}</TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className="border-primary text-primary"
+                          >
+                            {admin.role.name}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="secondary"
+                            className={admin.status === 'Active' ? "bg-chart-green/10 text-chart-green" : "bg-destructive/10 text-destructive"}
+                          >
+                            {admin.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-muted-foreground text-sm">
+                          {admin.lastLogin ? new Date(admin.lastLogin).toLocaleDateString() : 'Never'}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="w-4 h-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEditAdmin(admin)}>
+                                <Edit className="w-4 h-4 mr-2" /> Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteAdmin(admin)}>
+                                <Trash2 className="w-4 h-4 mr-2" /> Remove
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         <TabsContent value="roles" className="space-y-4">
-          {listLoading ? (
+          {rolesLoading ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {Array.from({ length: 4 }).map((_, index) => (
                 <Card key={index} className="stat-card-shadow border-0">
@@ -345,6 +366,11 @@ const Admins = () => {
       <RoleAddDialog open={addRoleOpen} onOpenChange={setAddRoleOpen} />
       <RoleEditDialog open={editRoleOpen} onOpenChange={setEditRoleOpen} role={selectedRole} />
       <RoleDeleteDialog open={deleteRoleOpen} onOpenChange={setDeleteRoleOpen} role={selectedRole} />
+
+      {/* Admin Dialogs */}
+      <AdminAddDialog open={addAdminOpen} onOpenChange={setAddAdminOpen} />
+      <AdminEditDialog open={editAdminOpen} onOpenChange={setEditAdminOpen} admin={currentAdmin} />
+      <AdminDeleteDialog open={deleteAdminOpen} onOpenChange={setDeleteAdminOpen} admin={currentAdmin} />
     </div>
   );
 };

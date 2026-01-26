@@ -7,39 +7,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Image, FileText, Heart, Plus, MoreHorizontal, Eye, Edit, Trash2, Upload } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { fetchBannersAsync, setCurrentBanner } from "@/store/slices/bannerSlice";
+import { Banner } from "@/services/bannerService";
+import { BannerAddDialog } from "@/components/cms/banners/BannerAddDialog";
+import { BannerEditDialog } from "@/components/cms/banners/BannerEditDialog";
+import { BannerDeleteDialog } from "@/components/cms/banners/BannerDeleteDialog";
+import { useState, useEffect } from "react";
 
-const banners = [
-  {
-    id: 1,
-    title: "Find Your Soulmate",
-    subtitle: "Join thousands of happy couples",
-    image: "banner-1.jpg",
-    targetUrl: "/register",
-    status: "Active",
-    startDate: "2024-01-01",
-    endDate: "2024-12-31",
-  },
-  {
-    id: 2,
-    title: "Premium Membership Sale",
-    subtitle: "50% off on all plans this month",
-    image: "banner-2.jpg",
-    targetUrl: "/pricing",
-    status: "Active",
-    startDate: "2024-03-01",
-    endDate: "2024-03-31",
-  },
-  {
-    id: 3,
-    title: "Valentine's Special",
-    subtitle: "Celebrate love with us",
-    image: "banner-3.jpg",
-    targetUrl: "/valentine",
-    status: "Inactive",
-    startDate: "2024-02-01",
-    endDate: "2024-02-14",
-  },
-];
 
 const staticPages = [
   { id: 1, title: "About Us", slug: "/about-us", lastUpdated: "2024-03-10" },
@@ -77,93 +52,141 @@ const successStories = [
 ];
 
 const CMS = () => {
+  const dispatch = useAppDispatch();
+  const { banners, listLoading: bannersLoading, currentBanner } = useAppSelector((state) => state.banner);
+
+  const [addBannerOpen, setAddBannerOpen] = useState(false);
+  const [editBannerOpen, setEditBannerOpen] = useState(false);
+  const [deleteBannerOpen, setDeleteBannerOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("banners");
+
+  useEffect(() => {
+    if (activeTab === "banners") {
+      dispatch(fetchBannersAsync());
+    }
+  }, [activeTab, dispatch]);
+
+  const handleEditBanner = (banner: Banner) => {
+    dispatch(setCurrentBanner(banner));
+    setEditBannerOpen(true);
+  };
+
+  const handleDeleteBanner = (banner: Banner) => {
+    dispatch(setCurrentBanner(banner));
+    setDeleteBannerOpen(true);
+  };
+
   return (
-
-      <div className="space-y-6 animate-fade-in">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-semibold text-foreground">Content Management</h1>
-            <p className="text-sm text-muted-foreground">Manage banners, pages, and success stories</p>
-          </div>
+    <div className="space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Content Management</h1>
+          <p className="text-sm text-muted-foreground">Manage banners, pages, and success stories</p>
         </div>
+      </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-          <Card className="stat-card-shadow border-0">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Image className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Active Banners</p>
-                <p className="text-xl font-semibold text-foreground">2</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="stat-card-shadow border-0">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-chart-orange/10 flex items-center justify-center">
-                <FileText className="w-5 h-5 text-chart-orange" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Static Pages</p>
-                <p className="text-xl font-semibold text-foreground">5</p>
-              </div>
-            </CardContent>
-          </Card>
-          <Card className="stat-card-shadow border-0">
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-chart-green/10 flex items-center justify-center">
-                <Heart className="w-5 h-5 text-chart-green" />
-              </div>
-              <div>
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Success Stories</p>
-                <p className="text-xl font-semibold text-foreground">156</p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Tabs */}
-        <Tabs defaultValue="banners" className="space-y-4">
-          <TabsList className="bg-muted/50">
-            <TabsTrigger value="banners">Banners</TabsTrigger>
-            <TabsTrigger value="pages">Static Pages</TabsTrigger>
-            <TabsTrigger value="stories">Success Stories</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="banners" className="space-y-4">
-            <div className="flex justify-end">
-              <Button className="bg-primary hover:bg-primary/90">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Banner
-              </Button>
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+        <Card className="stat-card-shadow border-0">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Image className="w-5 h-5 text-primary" />
             </div>
-            <Card className="stat-card-shadow border-0">
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-border/50">
-                      <TableHead>Banner</TableHead>
-                      <TableHead>Target URL</TableHead>
-                      <TableHead>Period</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Active Banners</p>
+              <p className="text-xl font-semibold text-foreground">{banners.length}</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="stat-card-shadow border-0">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-chart-orange/10 flex items-center justify-center">
+              <FileText className="w-5 h-5 text-chart-orange" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Static Pages</p>
+              <p className="text-xl font-semibold text-foreground">5</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="stat-card-shadow border-0">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-chart-green/10 flex items-center justify-center">
+              <Heart className="w-5 h-5 text-chart-green" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Success Stories</p>
+              <p className="text-xl font-semibold text-foreground">156</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="bg-muted/50">
+          <TabsTrigger value="banners">Banners</TabsTrigger>
+          <TabsTrigger value="pages">Static Pages</TabsTrigger>
+          <TabsTrigger value="stories">Success Stories</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="banners" className="space-y-4">
+          <div className="flex justify-end">
+            <Button className="bg-primary hover:bg-primary/90" onClick={() => setAddBannerOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Banner
+            </Button>
+          </div>
+          <Card className="stat-card-shadow border-0">
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-border/50">
+                    <TableHead>Banner</TableHead>
+                    <TableHead>Target URL</TableHead>
+                    <TableHead>Period</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {bannersLoading ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-24 text-center">
+                        <div className="flex justify-center">
+                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                        </div>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {banners.map((banner) => (
-                      <TableRow key={banner.id} className="border-border/50">
+                  ) : banners.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                        No banners found.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    banners.map((banner) => (
+                      <TableRow key={banner._id} className="border-border/50">
                         <TableCell>
-                          <div>
-                            <p className="font-medium">{banner.title}</p>
-                            <p className="text-sm text-muted-foreground">{banner.subtitle}</p>
+                          <div className="flex items-center gap-3">
+                            <div className="w-16 h-10 rounded overflow-hidden bg-muted">
+                              {banner.imageUrl ? (
+                                <img src={banner.imageUrl} alt={banner.title} className="w-full h-full object-cover" />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                                  <Image className="w-4 h-4" />
+                                </div>
+                              )}
+                            </div>
+                            <div>
+                              <p className="font-medium">{banner.title}</p>
+                              <p className="text-sm text-muted-foreground">{banner.subtitle}</p>
+                            </div>
                           </div>
                         </TableCell>
                         <TableCell className="text-muted-foreground">{banner.targetUrl}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {banner.startDate} - {banner.endDate}
+                          {new Date(banner.startDate).toLocaleDateString()} - {new Date(banner.endDate).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
                           <Badge
@@ -188,105 +211,108 @@ const CMS = () => {
                               <DropdownMenuItem>
                                 <Eye className="w-4 h-4 mr-2" /> Preview
                               </DropdownMenuItem>
-                              <DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => handleEditBanner(banner)}>
                                 <Edit className="w-4 h-4 mr-2" /> Edit
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="text-destructive">
+                              <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteBanner(banner)}>
                                 <Trash2 className="w-4 h-4 mr-2" /> Delete
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
                       </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                    )))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          <TabsContent value="pages" className="space-y-4">
-            <Card className="stat-card-shadow border-0">
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-border/50">
-                      <TableHead>Page Title</TableHead>
-                      <TableHead>Slug</TableHead>
-                      <TableHead>Last Updated</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+        <TabsContent value="pages" className="space-y-4">
+          <Card className="stat-card-shadow border-0">
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow className="border-border/50">
+                    <TableHead>Page Title</TableHead>
+                    <TableHead>Slug</TableHead>
+                    <TableHead>Last Updated</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {staticPages.map((page) => (
+                    <TableRow key={page.id} className="border-border/50">
+                      <TableCell className="font-medium">{page.title}</TableCell>
+                      <TableCell className="text-muted-foreground">{page.slug}</TableCell>
+                      <TableCell className="text-muted-foreground">{page.lastUpdated}</TableCell>
+                      <TableCell className="text-right">
+                        <Button variant="ghost" size="sm">
+                          <Edit className="w-4 h-4 mr-1" /> Edit
+                        </Button>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {staticPages.map((page) => (
-                      <TableRow key={page.id} className="border-border/50">
-                        <TableCell className="font-medium">{page.title}</TableCell>
-                        <TableCell className="text-muted-foreground">{page.slug}</TableCell>
-                        <TableCell className="text-muted-foreground">{page.lastUpdated}</TableCell>
-                        <TableCell className="text-right">
-                          <Button variant="ghost" size="sm">
-                            <Edit className="w-4 h-4 mr-1" /> Edit
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-          <TabsContent value="stories" className="space-y-4">
-            <div className="flex justify-end">
-              <Button className="bg-primary hover:bg-primary/90">
-                <Plus className="w-4 h-4 mr-2" />
-                Add Story
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {successStories.map((story) => (
-                <Card key={story.id} className="stat-card-shadow border-0 overflow-hidden">
-                  <div className="h-40 overflow-hidden">
-                    <img
-                      src={story.image}
-                      alt={story.coupleNames}
-                      className="w-full h-full object-cover"
-                    />
+        <TabsContent value="stories" className="space-y-4">
+          <div className="flex justify-end">
+            <Button className="bg-primary hover:bg-primary/90">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Story
+            </Button>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {successStories.map((story) => (
+              <Card key={story.id} className="stat-card-shadow border-0 overflow-hidden">
+                <div className="h-40 overflow-hidden">
+                  <img
+                    src={story.image}
+                    alt={story.coupleNames}
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h3 className="font-semibold">{story.coupleNames}</h3>
+                    <Badge
+                      variant="outline"
+                      className={
+                        story.status === "Published"
+                          ? "border-chart-green text-chart-green"
+                          : "border-chart-orange text-chart-orange"
+                      }
+                    >
+                      {story.status}
+                    </Badge>
                   </div>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <h3 className="font-semibold">{story.coupleNames}</h3>
-                      <Badge
-                        variant="outline"
-                        className={
-                          story.status === "Published"
-                            ? "border-chart-green text-chart-green"
-                            : "border-chart-orange text-chart-orange"
-                        }
-                      >
-                        {story.status}
-                      </Badge>
+                  <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{story.story}</p>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">{story.date}</span>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Edit className="w-4 h-4" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
                     </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{story.story}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs text-muted-foreground">{story.date}</span>
-                      <div className="flex gap-1">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <Edit className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
-
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+      </Tabs>
+      {/* Banner Dialogs */}
+      <BannerAddDialog open={addBannerOpen} onOpenChange={setAddBannerOpen} />
+      <BannerEditDialog open={editBannerOpen} onOpenChange={setEditBannerOpen} banner={currentBanner} />
+      <BannerDeleteDialog open={deleteBannerOpen} onOpenChange={setDeleteBannerOpen} banner={currentBanner} />
+    </div>
   );
 };
 

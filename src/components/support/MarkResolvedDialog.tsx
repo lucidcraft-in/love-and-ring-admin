@@ -5,38 +5,48 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2 } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-
-interface Ticket {
-  id: string;
-  user: { name: string; avatar: string };
-  subject: string;
-  category: string;
-  priority: string;
-  status: string;
-  createdAt: string;
-  lastUpdate: string;
-}
+import { CheckCircle2, Loader2 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { resolveTicketAsync } from "@/store/slices/supportTicketSlice";
 
 interface MarkResolvedDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  ticket: Ticket | null;
 }
 
-export function MarkResolvedDialog({ open, onOpenChange, ticket }: MarkResolvedDialogProps) {
+export function MarkResolvedDialog({ open, onOpenChange }: MarkResolvedDialogProps) {
+  const dispatch = useAppDispatch();
+  const { selectedTicket: ticket } = useAppSelector((state) => state.supportTickets);
+
   const [resolutionNote, setResolutionNote] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!ticket) return null;
 
-  const handleConfirm = () => {
-    toast({
-      title: "Ticket Resolved",
-      description: `Ticket ${ticket.id} has been marked as resolved.`,
-    });
-    setResolutionNote("");
-    onOpenChange(false);
+  const handleConfirm = async () => {
+    setIsSubmitting(true);
+    try {
+      await dispatch(resolveTicketAsync({
+        id: ticket._id,
+        resolutionNote: resolutionNote
+      })).unwrap();
+
+      toast({
+        title: "Ticket Resolved",
+        description: `Ticket has been marked as resolved.`,
+      });
+      setResolutionNote("");
+      onOpenChange(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to resolve ticket. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -56,14 +66,14 @@ export function MarkResolvedDialog({ open, onOpenChange, ticket }: MarkResolvedD
           {/* Ticket Info */}
           <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
             <Avatar className="w-10 h-10">
-              <AvatarImage src={ticket.user.avatar} />
-              <AvatarFallback>{ticket.user.name.charAt(0)}</AvatarFallback>
+              <AvatarImage src={ticket.user?.avatar} />
+              <AvatarFallback>{ticket.user?.fullName?.charAt(0) || "?"}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <p className="font-medium">{ticket.user.name}</p>
+              <p className="font-medium">{ticket.user?.fullName || "Unknown User"}</p>
               <p className="text-sm text-muted-foreground truncate">{ticket.subject}</p>
             </div>
-            <Badge variant="outline">{ticket.id}</Badge>
+            <Badge variant="outline">#{ticket._id.slice(-6).toUpperCase()}</Badge>
           </div>
 
           {/* Resolution Note */}
@@ -95,8 +105,9 @@ export function MarkResolvedDialog({ open, onOpenChange, ticket }: MarkResolvedD
           <Button
             onClick={handleConfirm}
             className="bg-chart-green hover:bg-chart-green/90 text-white"
+            disabled={isSubmitting}
           >
-            <CheckCircle2 className="w-4 h-4 mr-2" />
+            {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
             Confirm Resolution
           </Button>
         </DialogFooter>

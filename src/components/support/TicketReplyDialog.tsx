@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -6,33 +6,33 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Send } from "lucide-react";
-import { toast } from "@/hooks/use-toast";
-
-interface Ticket {
-  id: string;
-  user: { name: string; avatar: string };
-  subject: string;
-  category: string;
-  priority: string;
-  status: string;
-  createdAt: string;
-  lastUpdate: string;
-}
+import { Send, Loader2 } from "lucide-react";
+import { toast } from "@/components/ui/use-toast"; // Assuming this is the correct path for shadcn toast in this project
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { replyToTicketAsync } from "@/store/slices/supportTicketSlice";
 
 interface TicketReplyDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  ticket: Ticket | null;
 }
 
-export function TicketReplyDialog({ open, onOpenChange, ticket }: TicketReplyDialogProps) {
+export function TicketReplyDialog({ open, onOpenChange }: TicketReplyDialogProps) {
+  const dispatch = useAppDispatch();
+  const { selectedTicket: ticket } = useAppSelector((state) => state.supportTickets);
+
   const [reply, setReply] = useState("");
-  const [status, setStatus] = useState(ticket?.status || "In Progress");
+  const [status, setStatus] = useState("In Progress");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (ticket) {
+      setStatus(ticket.status || "In Progress");
+    }
+  }, [ticket]);
 
   if (!ticket) return null;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!reply.trim()) {
       toast({
         title: "Error",
@@ -42,12 +42,30 @@ export function TicketReplyDialog({ open, onOpenChange, ticket }: TicketReplyDia
       return;
     }
 
-    toast({
-      title: "Reply Sent",
-      description: `Your reply to ticket ${ticket.id} has been sent successfully.`,
-    });
-    setReply("");
-    onOpenChange(false);
+    setIsSubmitting(true);
+    try {
+      await dispatch(replyToTicketAsync({
+        id: ticket._id,
+        message: reply,
+        status: status
+      })).unwrap();
+
+      toast({
+        title: "Reply Sent",
+        description: `Your reply has been sent successfully.`,
+      });
+
+      setReply("");
+      onOpenChange(false);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send reply. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -64,14 +82,14 @@ export function TicketReplyDialog({ open, onOpenChange, ticket }: TicketReplyDia
           {/* Ticket Info */}
           <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
             <Avatar className="w-10 h-10">
-              <AvatarImage src={ticket.user.avatar} />
-              <AvatarFallback>{ticket.user.name.charAt(0)}</AvatarFallback>
+              <AvatarImage src={ticket.user?.avatar} />
+              <AvatarFallback>{ticket.user?.fullName?.charAt(0) || "?"}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <p className="font-medium">{ticket.user.name}</p>
+              <p className="font-medium">{ticket.user?.fullName || "Unknown User"}</p>
               <p className="text-sm text-muted-foreground truncate">{ticket.subject}</p>
             </div>
-            <Badge variant="outline">{ticket.id}</Badge>
+            <Badge variant="outline">#{ticket._id.slice(-6).toUpperCase()}</Badge>
           </div>
 
           {/* Reply Input */}
@@ -107,8 +125,12 @@ export function TicketReplyDialog({ open, onOpenChange, ticket }: TicketReplyDia
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} className="bg-primary hover:bg-primary/90">
-            <Send className="w-4 h-4 mr-2" />
+          <Button onClick={handleSubmit} className="bg-primary hover:bg-primary/90" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Send className="w-4 h-4 mr-2" />
+            )}
             Send Reply
           </Button>
         </DialogFooter>

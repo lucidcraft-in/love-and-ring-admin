@@ -1,50 +1,84 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, Tooltip, Legend } from "recharts";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { fetchDemographicsAsync } from "@/store/slices/demographicsSlice";
+import { useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
-const genderData = [
-  { name: "Male", value: 22500, color: "hsl(210, 80%, 55%)" },
-  { name: "Female", value: 20464, color: "hsl(348, 83%, 47%)" },
-];
-
-const ageData = [
-  { range: "18-24", male: 4500, female: 5200 },
-  { range: "25-30", male: 8200, female: 7800 },
-  { range: "31-35", male: 5500, female: 4200 },
-  { range: "36-40", male: 2800, female: 2100 },
-  { range: "40+", male: 1500, female: 1164 },
-];
-
-const religionData = [
-  { name: "Hindu", value: 25000, color: "hsl(25, 95%, 60%)" },
-  { name: "Muslim", value: 8000, color: "hsl(142, 70%, 45%)" },
-  { name: "Christian", value: 5000, color: "hsl(210, 80%, 55%)" },
-  { name: "Sikh", value: 2500, color: "hsl(270, 50%, 60%)" },
-  { name: "Others", value: 2464, color: "hsl(348, 83%, 47%)" },
-];
-
-const locationData = [
-  { city: "Mumbai", users: 8500 },
-  { city: "Delhi", users: 7200 },
-  { city: "Bangalore", users: 6800 },
-  { city: "Hyderabad", users: 5400 },
-  { city: "Chennai", users: 4200 },
-  { city: "Pune", users: 3800 },
-  { city: "Kolkata", users: 3200 },
-  { city: "Others", users: 3864 },
-];
-
-const educationData = [
-  { name: "Graduate", value: 18000 },
-  { name: "Post Graduate", value: 12000 },
-  { name: "Doctorate", value: 3500 },
-  { name: "Diploma", value: 5000 },
-  { name: "Others", value: 4464 },
+// Helper colors for charts
+const COLORS = [
+  "hsl(348, 83%, 47%)", // Main Pink/Red
+  "hsl(210, 80%, 55%)", // Blue
+  "hsl(25, 95%, 60%)",  // Orange
+  "hsl(142, 70%, 45%)", // Green
+  "hsl(270, 50%, 60%)", // Purple
+  "hsl(200, 30%, 40%)", // Slate/Teal
 ];
 
 const Demographics = () => {
+  const dispatch = useAppDispatch();
+  const { data: demographics, loading } = useAppSelector((state) => state.demographics);
+
+  useEffect(() => {
+    dispatch(fetchDemographicsAsync());
+  }, [dispatch]);
+
+  if (loading && !demographics) {
+    return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  }
+
+  // Default empty objects if data is missing locally to prevent crash
+  const genderData = (demographics?.genderDistribution || []).map((item, index) => ({
+    name: item._id || "Unknown",
+    value: item.count,
+    color: index === 0 ? "hsl(210, 80%, 55%)" : "hsl(348, 83%, 47%)" // Keep basic blue/pink for gender if 2 items
+  }));
+
+  // If more than 2 genders or flexible, apply colors cyclically
+  if (genderData.length > 2) {
+    genderData.forEach((item, index) => { item.color = COLORS[index % COLORS.length]; });
+  }
+
+  const religionData = (demographics?.religionDistribution || []).map((item, index) => ({
+    name: item._id || "Unknown",
+    value: item.count,
+    color: COLORS[index % COLORS.length]
+  }));
+
+  // Age distribution: API returns [{ _id: 18, male: X, female: Y }, ...]
+  // Need to map _id (start age) to label range (e.g., 18 -> "18-24")
+  const mapAgeLabel = (startAge: number) => {
+    if (startAge >= 41) return "41+"; // The bucket boundary was 41
+    // Boundaries: 18, 25, 31, 36, 41
+    if (startAge === 18) return "18-24";
+    if (startAge === 25) return "25-30";
+    if (startAge === 31) return "31-35";
+    if (startAge === 36) return "36-40";
+    return `${startAge}`; // Fallback
+  };
+
+  const ageData = (demographics?.ageDistribution || []).map((item) => ({
+    range: mapAgeLabel(item._id),
+    male: item.male,
+    female: item.female
+  }));
+
+  const locationData = (demographics?.topLocations || []).map((item) => ({
+    city: item._id || "Unknown",
+    users: item.count
+  }));
+
+  const educationData = (demographics?.educationLevel || []).map((item) => ({
+    name: item._id || "Unknown",
+    value: item.count
+  }));
+
+  // Calculate max for education progress bar scaling
+  const maxEducationCount = Math.max(...educationData.map(d => d.value), 100);
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in pb-10">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -214,11 +248,12 @@ const Demographics = () => {
                   <div className="h-2 bg-muted rounded-full overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-primary to-secondary rounded-full"
-                      style={{ width: `${(item.value / 20000) * 100}%` }}
+                      style={{ width: `${maxEducationCount > 0 ? (item.value / maxEducationCount) * 100 : 0}%` }}
                     />
                   </div>
                 </div>
               ))}
+              {educationData.length === 0 && <div className="text-muted-foreground text-sm">No education data available.</div>}
             </div>
           </CardContent>
         </Card>

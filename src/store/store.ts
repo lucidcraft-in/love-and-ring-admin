@@ -4,6 +4,7 @@ import usersReducer from './slices/usersSlice';
 import masterDataReducer from './slices/masterDataSlice';
 import settingsReducer from './slices/settingsSlice';
 import dashboardReducer from './slices/dashboardSlice';
+import demographicsReducer from './slices/demographicsSlice';
 import consultantReducer from './slices/consultantSlice';
 import branchReducer from './slices/branchSlice';
 import staffReducer from './slices/staffSlice';
@@ -29,6 +30,7 @@ export const store = configureStore({
     staticPage: staticPageReducer,
     settings: settingsReducer,
     dashboard: dashboardReducer,
+    demographics: demographicsReducer,
   },
 });
 

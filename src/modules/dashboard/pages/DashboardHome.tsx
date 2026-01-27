@@ -1,27 +1,38 @@
-import { StatsCard } from "../components/StatsCard";
-import { VisitorsChart } from "../components/VisitorsChart";
-import { ActivityFeed } from "../components/ActivityFeed";
-import { ChatRequests } from "../components/ChatRequests";
-import { Demographics } from "../components/Demographics";
+import { StatsCard } from "@/components/dashboard/StatsCard";
+import { VisitorsChart } from "@/components/dashboard/VisitorsChart";
+import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
+import { ChatRequests } from "@/components/dashboard/ChatRequests";
+import { Demographics } from "@/components/dashboard/Demographics";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { fetchDashboardAnalyticsAsync, fetchDashboardCmsStatsAsync } from "@/store/slices/dashboardSlice";
+import { useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
-// Sample data for stats cards
-const totalUsersData = [
+// Mock chart data for small sparklines in cards
+const mockSparklineData = [
   { value: 30 }, { value: 45 }, { value: 35 }, { value: 55 }, { value: 40 }, { value: 60 }, { value: 50 }, { value: 70 }
-];
-const paidUsersData = [
-  { value: 20 }, { value: 35 }, { value: 25 }, { value: 45 }, { value: 30 }, { value: 50 }, { value: 40 }, { value: 55 }
-];
-const freeUsersData = [
-  { value: 40 }, { value: 30 }, { value: 50 }, { value: 35 }, { value: 55 }, { value: 40 }, { value: 60 }, { value: 45 }
-];
-const newUsersData = [
-  { value: 25 }, { value: 40 }, { value: 30 }, { value: 50 }, { value: 35 }, { value: 55 }, { value: 45 }, { value: 65 }
 ];
 
 export default function DashboardHome() {
+  const dispatch = useAppDispatch();
+  const { analytics, loading } = useAppSelector((state) => state.dashboard);
+
+  useEffect(() => {
+    dispatch(fetchDashboardAnalyticsAsync());
+    dispatch(fetchDashboardCmsStatsAsync());
+  }, [dispatch]);
+
+  if (loading && !analytics) {
+    return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+  }
+
+  const cards = analytics?.cards || { totalUsers: 0, paidUsers: 0, freeUsers: 0, newUsers: 0 };
+  const visitors = analytics?.visitors || [];
+  const demographicsData = analytics?.demographics || [];
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in pb-10">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -43,29 +54,29 @@ export default function DashboardHome() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
           title="Total Users"
-          value="42,964"
-          chartData={totalUsersData}
+          value={cards.totalUsers.toLocaleString()}
+          chartData={mockSparklineData}
           chartColor="hsl(348, 83%, 47%)"
           gradientId="totalUsers"
         />
         <StatsCard
           title="Paid Users"
-          value="8,924"
-          chartData={paidUsersData}
+          value={cards.paidUsers.toLocaleString()}
+          chartData={mockSparklineData}
           chartColor="hsl(25, 95%, 60%)"
           gradientId="paidUsers"
         />
         <StatsCard
           title="Free Users"
-          value="26,846"
-          chartData={freeUsersData}
+          value={cards.freeUsers.toLocaleString()}
+          chartData={mockSparklineData}
           chartColor="hsl(142, 70%, 45%)"
           gradientId="freeUsers"
         />
         <StatsCard
-          title="New Users"
-          value="26,846"
-          chartData={newUsersData}
+          title="New Users (MoM)"
+          value={cards.newUsers.toLocaleString()}
+          chartData={mockSparklineData}
           chartColor="hsl(270, 50%, 60%)"
           gradientId="newUsers"
         />
@@ -74,7 +85,7 @@ export default function DashboardHome() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
-          <VisitorsChart />
+          <VisitorsChart data={visitors} />
         </div>
         <ActivityFeed />
       </div>
@@ -82,7 +93,7 @@ export default function DashboardHome() {
       {/* Bottom Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <ChatRequests />
-        <Demographics />
+        <Demographics data={demographicsData} />
       </div>
     </div>
   );

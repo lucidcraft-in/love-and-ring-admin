@@ -1,26 +1,27 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Area, AreaChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts";
+import { VisitorStat } from "@/services/dashboardService";
 
-const data = [
-  { date: "Jan 01", visitors: 1200 },
-  { date: "Jan 03", visitors: 1800 },
-  { date: "Jan 05", visitors: 1400 },
-  { date: "Jan 07", visitors: 2200 },
-  { date: "Jan 09", visitors: 1900 },
-  { date: "Jan 11", visitors: 2400 },
-  { date: "Jan 13", visitors: 2100 },
-  { date: "Jan 15", visitors: 2800 },
-  { date: "Jan 17", visitors: 2300 },
-  { date: "Jan 19", visitors: 2600 },
-  { date: "Jan 21", visitors: 2200 },
-  { date: "Jan 23", visitors: 2900 },
-  { date: "Jan 25", visitors: 2500 },
-  { date: "Jan 27", visitors: 2700 },
-  { date: "Jan 29", visitors: 2400 },
-];
+interface VisitorsChartProps {
+  data: VisitorStat[];
+}
 
-export function VisitorsChart() {
+export function VisitorsChart({ data }: VisitorsChartProps) {
+  // Transform API data to Chart data
+  // API: { _id: { day, month }, count }
+  // Chart: { date: "Jan 01", visitors: 1200 }
+
+  const chartData = data.map((item) => {
+    const date = new Date();
+    date.setMonth(item._id.month - 1); // Month is 1-indexed in mongo aggregate usually, date object is 0-indexed
+    date.setDate(item._id.day);
+    return {
+      date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+      visitors: item.count,
+    };
+  });
+
   return (
     <Card className="stat-card-shadow border-0">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
@@ -39,7 +40,7 @@ export function VisitorsChart() {
       <CardContent>
         <div className="h-48">
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={data}>
+            <AreaChart data={chartData.length > 0 ? chartData : []}>
               <defs>
                 <linearGradient id="visitorsGradient" x1="0" y1="0" x2="0" y2="1">
                   <stop offset="0%" stopColor="hsl(348, 83%, 47%)" stopOpacity={0.3} />

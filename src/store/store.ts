@@ -3,6 +3,7 @@ import authReducer from './slices/authSlice';
 import usersReducer from './slices/usersSlice';
 import masterDataReducer from './slices/masterDataSlice';
 import settingsReducer from './slices/settingsSlice';
+import dashboardReducer from './slices/dashboardSlice';
 import consultantReducer from './slices/consultantSlice';
 import branchReducer from './slices/branchSlice';
 import staffReducer from './slices/staffSlice';
@@ -27,6 +28,7 @@ export const store = configureStore({
     successStory: successStoryReducer,
     staticPage: staticPageReducer,
     settings: settingsReducer,
+    dashboard: dashboardReducer,
   },
 });
 

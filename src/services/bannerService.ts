@@ -17,6 +17,14 @@ export interface Banner {
   updatedAt?: string;
 }
 
+export interface DataCount {
+  data:{
+    staticPages:number;
+    successStories:number;
+    banners:number
+  }
+}
+
 export interface CreateBannerPayload {
   title: string;
   subtitle: string;
@@ -97,6 +105,14 @@ export const bannerService = {
    */
   deleteBanner: async (id: string): Promise<{ message: string }> => {
     const response = await Axios.delete<{ message: string }>(`/api/cms/banners/${id}`);
+    return response.data;
+  },
+
+    /**
+   * CMS data count
+   */
+  getDataCount: async (): Promise<DataCount> => {
+    const response = await Axios.get<DataCount>('/api/dashboard/cms-stats');
     return response.data;
   },
 };

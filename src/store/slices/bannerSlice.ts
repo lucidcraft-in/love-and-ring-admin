@@ -4,6 +4,7 @@ import {
   Banner,
   CreateBannerPayload,
   UpdateBannerPayload,
+  DataCount
 } from '@/services/bannerService';
 
 // ============================================================================
@@ -22,6 +23,7 @@ interface BannerState {
 
   // Error Handling
   error: string | null;
+  dataCount: DataCount | null;
 }
 
 const initialState: BannerState = {
@@ -34,6 +36,7 @@ const initialState: BannerState = {
   deleteLoading: false,
 
   error: null,
+  dataCount: null,
 };
 
 // ============================================================================
@@ -120,6 +123,29 @@ export const deleteBannerAsync = createAsyncThunk<
   }
 );
 
+/**
+ * CMS data count
+ */
+export const dataCountAsync = createAsyncThunk<
+  DataCount,
+  void,
+  { rejectValue: string }
+>(
+  'banner/dataCount',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await bannerService.getDataCount();
+      return response;
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to fetch data count.';
+      return rejectWithValue(message);
+    }
+  }
+)
+
+
+
+
 // ============================================================================
 // Slice
 // ============================================================================
@@ -188,24 +214,14 @@ const bannerSlice = createSlice({
         state.error = action.payload || 'Failed to update banner';
       })
 
-      // Delete Banner
-      .addCase(deleteBannerAsync.pending, (state) => {
-        state.deleteLoading = true;
-        state.error = null;
-      })
-      .addCase(deleteBannerAsync.fulfilled, (state, action: PayloadAction<string>) => {
-        state.deleteLoading = false;
-        // In this case, since delete is "soft delete" (status=Inactive) and getBanners returns only Active,
-        // we can remove it from the list.
-        state.banners = state.banners.filter(b => b._id !== action.payload);
-        if (state.currentBanner?._id === action.payload) {
-          state.currentBanner = null;
-        }
-        state.error = null;
-      })
       .addCase(deleteBannerAsync.rejected, (state, action) => {
         state.deleteLoading = false;
         state.error = action.payload || 'Failed to delete banner';
+      })
+
+      // Data Count
+      .addCase(dataCountAsync.fulfilled, (state, action: PayloadAction<DataCount>) => {
+        state.dataCount = action.payload;
       });
   },
 });

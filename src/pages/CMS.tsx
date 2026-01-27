@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Image, FileText, Heart, Plus, MoreHorizontal, Eye, Edit, Trash2, Upload } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchBannersAsync, setCurrentBanner } from "@/store/slices/bannerSlice";
+import { fetchBannersAsync, setCurrentBanner, dataCountAsync } from "@/store/slices/bannerSlice";
 import { fetchStoriesAsync, setCurrentStory } from "@/store/slices/successStorySlice";
 import { fetchPagesAsync, setCurrentPage } from "@/store/slices/staticPageSlice";
 import { Banner } from "@/services/bannerService";
@@ -26,37 +26,9 @@ import { useState, useEffect } from "react";
 
 
 
-
-const successStories = [
-  {
-    id: 1,
-    coupleNames: "Rahul & Priya",
-    image: "https://images.unsplash.com/photo-1519741497674-611481863552?w=300&h=200&fit=crop",
-    story: "We met on MatchMate and instantly connected. After 6 months of dating, we got married!",
-    date: "2024-02-14",
-    status: "Published",
-  },
-  {
-    id: 2,
-    coupleNames: "Amit & Sneha",
-    image: "https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=300&h=200&fit=crop",
-    story: "MatchMate's matchmaking helped us find each other. We're grateful for this platform!",
-    date: "2024-01-20",
-    status: "Published",
-  },
-  {
-    id: 3,
-    coupleNames: "Vikram & Anjali",
-    image: "https://images.unsplash.com/photo-1529634597503-139d3726fed5?w=300&h=200&fit=crop",
-    story: "From a simple interest to a beautiful wedding. Thank you MatchMate!",
-    date: "2024-03-05",
-    status: "Pending",
-  },
-];
-
 const CMS = () => {
   const dispatch = useAppDispatch();
-  const { banners, listLoading: bannersLoading, currentBanner } = useAppSelector((state) => state.banner);
+  const { banners, listLoading: bannersLoading, currentBanner, dataCount } = useAppSelector((state) => state.banner);
   const { stories, listLoading: storiesLoading, currentStory } = useAppSelector((state) => state.successStory);
   const { pages, listLoading: pagesLoading, currentPage } = useAppSelector((state) => state.staticPage);
 
@@ -69,9 +41,15 @@ const CMS = () => {
   const [deleteStoryOpen, setDeleteStoryOpen] = useState(false);
 
   const [addPageOpen, setAddPageOpen] = useState(false);
+
   const [editPageOpen, setEditPageOpen] = useState(false);
 
   const [activeTab, setActiveTab] = useState("banners");
+
+  useEffect(() => {
+    // Fetch counts on mount
+    dispatch(dataCountAsync());
+  }, [dispatch]);
 
   useEffect(() => {
     if (activeTab === "banners") {
@@ -127,7 +105,7 @@ const CMS = () => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Active Banners</p>
-              <p className="text-xl font-semibold text-foreground">{banners.length}</p>
+              <p className="text-xl font-semibold text-foreground">{dataCount?.data?.banners || 0}</p>
             </div>
           </CardContent>
         </Card>
@@ -138,7 +116,7 @@ const CMS = () => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Static Pages</p>
-              <p className="text-xl font-semibold text-foreground">{pages.length}</p>
+              <p className="text-xl font-semibold text-foreground">{dataCount?.data?.staticPages || 0}</p>
             </div>
           </CardContent>
         </Card>
@@ -149,7 +127,7 @@ const CMS = () => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Success Stories</p>
-              <p className="text-xl font-semibold text-foreground">{stories.length}</p>
+              <p className="text-xl font-semibold text-foreground">{dataCount?.data?.successStories || 0}</p>
             </div>
           </CardContent>
         </Card>

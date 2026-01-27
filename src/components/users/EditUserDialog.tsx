@@ -190,8 +190,8 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
         caste: extractId(user.caste),
         motherTongue: extractId(user.motherTongue),
         approvalStatus: user.approvalStatus || "PENDING",
-        branch: user.branch || "",
-        referredBy: user.referredBy || "",
+        branch: extractId(user.branch),
+        referredBy: extractId(user.referredBy),
       });
     }
   }, [user]);

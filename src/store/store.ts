@@ -6,6 +6,7 @@ import settingsReducer from './slices/settingsSlice';
 import dashboardReducer from './slices/dashboardSlice';
 import demographicsReducer from './slices/demographicsSlice';
 import supportTicketReducer from './slices/supportTicketSlice';
+import approvalReducer from './slices/approvalSlice';
 import consultantReducer from './slices/consultantSlice';
 import branchReducer from './slices/branchSlice';
 import staffReducer from './slices/staffSlice';
@@ -33,6 +34,7 @@ export const store = configureStore({
     dashboard: dashboardReducer,
     demographics: demographicsReducer,
     supportTickets: supportTicketReducer,
+    approvals: approvalReducer,
   },
 });
 

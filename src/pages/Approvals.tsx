@@ -1,47 +1,19 @@
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Filter, CheckCircle, XCircle, Eye, Clock, ImageIcon, FileText } from "lucide-react";
+import { Search, Filter, CheckCircle, XCircle, Eye, Clock, ImageIcon, FileText, Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-
-const pendingProfiles = [
-  {
-    id: 1,
-    name: "Meera Krishnan",
-    avatar: "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=100&h=100&fit=crop&crop=face",
-    age: 25,
-    location: "Chennai, India",
-    education: "MBA",
-    occupation: "Marketing Manager",
-    submittedAt: "2 hours ago",
-    type: "New Profile",
-  },
-  {
-    id: 2,
-    name: "Arjun Nair",
-    avatar: "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop&crop=face",
-    age: 29,
-    location: "Kochi, India",
-    education: "B.Tech",
-    occupation: "Software Engineer",
-    submittedAt: "4 hours ago",
-    type: "Profile Update",
-  },
-  {
-    id: 3,
-    name: "Divya Sharma",
-    avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=100&h=100&fit=crop&crop=face",
-    age: 27,
-    location: "Jaipur, India",
-    education: "B.Com",
-    occupation: "Chartered Accountant",
-    submittedAt: "6 hours ago",
-    type: "New Profile",
-  },
-];
+import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { fetchPendingProfilesAsync, fetchApprovalStatsAsync, approveProfileAsync, rejectProfileAsync, setSelectedProfile } from "@/store/slices/approvalSlice";
+import { PendingProfile } from "@/services/approvalService";
+import { formatDistanceToNow } from "date-fns";
+import { ApprovalDetailsDialog } from "@/components/approvals/ApprovalDetailsDialog";
+import { ApproveRejectDialog } from "@/components/approvals/ApproveRejectDialog";
+import { toast } from "@/components/ui/use-toast";
 
 const pendingPhotos = [
   {
@@ -78,8 +50,89 @@ const pendingDocuments = [
 ];
 
 const Approvals = () => {
+  const dispatch = useAppDispatch();
+  const { pendingProfiles, stats, loading } = useAppSelector((state) => state.approvals);
+
+  const [detailsOpen, setDetailsOpen] = useState(false);
+  const [actionDialogOpen, setActionDialogOpen] = useState(false);
+  const [actionType, setActionType] = useState<"approve" | "reject">("approve");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    dispatch(fetchPendingProfilesAsync({ take: 50, skip: 0 }));
+    dispatch(fetchApprovalStatsAsync());
+  }, [dispatch]);
+
+  const handleViewDetails = (profile: PendingProfile) => {
+    dispatch(setSelectedProfile(profile));
+    setDetailsOpen(true);
+  };
+
+  const handleApproveClick = (profile: PendingProfile) => {
+    dispatch(setSelectedProfile(profile));
+    setActionType("approve");
+    setActionDialogOpen(true);
+  };
+
+  const handleRejectClick = (profile: PendingProfile) => {
+    dispatch(setSelectedProfile(profile));
+    setActionType("reject");
+    setActionDialogOpen(true);
+  };
+
+  const handleActionConfirm = async () => {
+    // Redux state has selectedProfile
+    // We need ID from state or pass it. The dialog uses selectedProfile from state.
+    // But for thunk dispatch we need ID.
+    // Let's get it from the store state inside the component for safety, 
+    // OR rely on the dialog triggering this which implies selectedProfile is set.
+
+    // We can access it via a selector hook update or just assume it's there
+    // Since we are inside the component loop, we can't easily grab state without useSelector
+    // But we already have it in the details dialog logic? 
+    // Wait, ApproveRejectDialog is separate.
+    // Let's rely on the store's selectedProfile.
+  };
+
+  // Better implementation: pass ID or rely on global state.
+  // I need access to the selectedProfile ID here to dispatch action.
+  // I can get it from the store hook.
+  const { selectedProfile } = useAppSelector(state => state.approvals);
+
+  const onConfirmAction = async () => {
+    if (!selectedProfile) return;
+    setIsSubmitting(true);
+    try {
+      if (actionType === "approve") {
+        await dispatch(approveProfileAsync(selectedProfile._id)).unwrap();
+        toast({ title: "Approved", description: "Consultant approved successfully." });
+      } else {
+        await dispatch(rejectProfileAsync(selectedProfile._id)).unwrap();
+        toast({ title: "Rejected", description: "Consultant rejected." });
+      }
+      setActionDialogOpen(false);
+    } catch (error) {
+      toast({ title: "Error", description: "Action failed. Please try again.", variant: "destructive" });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // To support approving/rejecting directly from Details Dialog
+  const onApproveFromDetails = (id: string) => {
+    // If coming from Details, selectedProfile is already set.
+    setActionType("approve");
+    setActionDialogOpen(true);
+  };
+
+  const onRejectFromDetails = (id: string) => {
+    setActionType("reject");
+    setActionDialogOpen(true);
+  };
+
+
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in pb-10">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
@@ -97,7 +150,7 @@ const Approvals = () => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Pending Profiles</p>
-              <p className="text-xl font-semibold text-foreground">156</p>
+              <p className="text-xl font-semibold text-foreground">{stats?.pendingConsultants || 0}</p>
             </div>
           </CardContent>
         </Card>
@@ -130,7 +183,7 @@ const Approvals = () => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Approved Today</p>
-              <p className="text-xl font-semibold text-foreground">245</p>
+              <p className="text-xl font-semibold text-foreground">{stats?.approvedToday || 0}</p>
             </div>
           </CardContent>
         </Card>
@@ -166,33 +219,40 @@ const Approvals = () => {
         </div>
 
         <TabsContent value="profiles" className="space-y-4">
+          {loading && (
+            <div className="flex justify-center p-8"><Loader2 className="w-8 h-8 animate-spin text-muted-foreground" /></div>
+          )}
+          {!loading && pendingProfiles.length === 0 && (
+            <div className="text-center p-8 text-muted-foreground">No pending profiles found.</div>
+          )}
           {pendingProfiles.map((profile) => (
-            <Card key={profile.id} className="stat-card-shadow border-0">
+            <Card key={profile._id} className="stat-card-shadow border-0">
               <CardContent className="p-4">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
                   <div className="flex items-center gap-4">
                     <Avatar className="w-16 h-16">
-                      <AvatarImage src={profile.avatar} />
-                      <AvatarFallback>{profile.name.charAt(0)}</AvatarFallback>
+                      <AvatarFallback className="text-xl">{profile.fullName?.charAt(0) || "?"}</AvatarFallback>
                     </Avatar>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="font-semibold">{profile.name}</h3>
-                        <Badge variant="outline" className="text-xs">{profile.type}</Badge>
+                        <h3 className="font-semibold">{profile.fullName || "Unknown"}</h3>
+                        <Badge variant="outline" className="text-xs">New Profile</Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground">{profile.age} years • {profile.location}</p>
-                      <p className="text-sm text-muted-foreground">{profile.education} • {profile.occupation}</p>
+                      <p className="text-sm text-muted-foreground">{profile.email}</p>
+                      <p className="text-sm text-muted-foreground">{profile.agencyName || "No Agency"}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="text-xs text-muted-foreground mr-2">{profile.submittedAt}</span>
-                    <Button variant="outline" size="sm">
+                    <span className="text-xs text-muted-foreground mr-2">
+                      {profile.createdAt ? formatDistanceToNow(new Date(profile.createdAt), { addSuffix: true }) : ''}
+                    </span>
+                    <Button variant="outline" size="sm" onClick={() => handleViewDetails(profile)}>
                       <Eye className="w-4 h-4 mr-1" /> View
                     </Button>
-                    <Button variant="outline" size="sm" className="text-destructive border-destructive hover:bg-destructive/10">
+                    <Button variant="outline" size="sm" className="text-destructive border-destructive hover:bg-destructive/10" onClick={() => handleRejectClick(profile)}>
                       <XCircle className="w-4 h-4 mr-1" /> Reject
                     </Button>
-                    <Button size="sm" className="bg-chart-green hover:bg-chart-green/90">
+                    <Button size="sm" className="bg-chart-green hover:bg-chart-green/90" onClick={() => handleApproveClick(profile)}>
                       <CheckCircle className="w-4 h-4 mr-1" /> Approve
                     </Button>
                   </div>
@@ -268,6 +328,21 @@ const Approvals = () => {
           ))}
         </TabsContent>
       </Tabs>
+
+      <ApprovalDetailsDialog
+        open={detailsOpen}
+        onOpenChange={setDetailsOpen}
+        onApprove={onApproveFromDetails}
+        onReject={onRejectFromDetails}
+      />
+
+      <ApproveRejectDialog
+        open={actionDialogOpen}
+        onOpenChange={setActionDialogOpen}
+        type={actionType}
+        onConfirm={onConfirmAction}
+        isSubmitting={isSubmitting}
+      />
     </div>
   );
 };

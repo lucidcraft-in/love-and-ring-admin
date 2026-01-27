@@ -15,39 +15,6 @@ import { ApprovalDetailsDialog } from "@/components/approvals/ApprovalDetailsDia
 import { ApproveRejectDialog } from "@/components/approvals/ApproveRejectDialog";
 import { toast } from "@/components/ui/use-toast";
 
-const pendingPhotos = [
-  {
-    id: 1,
-    user: "Rahul Mehta",
-    avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face",
-    photoCount: 3,
-    submittedAt: "1 hour ago",
-  },
-  {
-    id: 2,
-    user: "Pooja Singh",
-    avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop&crop=face",
-    photoCount: 5,
-    submittedAt: "3 hours ago",
-  },
-];
-
-const pendingDocuments = [
-  {
-    id: 1,
-    user: "Karthik Reddy",
-    avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop&crop=face",
-    docType: "ID Proof",
-    submittedAt: "5 hours ago",
-  },
-  {
-    id: 2,
-    user: "Lakshmi Iyer",
-    avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&h=100&fit=crop&crop=face",
-    docType: "Education Certificate",
-    submittedAt: "8 hours ago",
-  },
-];
 
 const Approvals = () => {
   const dispatch = useAppDispatch();
@@ -154,7 +121,7 @@ const Approvals = () => {
             </div>
           </CardContent>
         </Card>
-        <Card className="stat-card-shadow border-0">
+        {/* <Card className="stat-card-shadow border-0">
           <CardContent className="p-4 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
               <ImageIcon className="w-5 h-5 text-primary" />
@@ -175,7 +142,7 @@ const Approvals = () => {
               <p className="text-xl font-semibold text-foreground">34</p>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
         <Card className="stat-card-shadow border-0">
           <CardContent className="p-4 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-chart-green/10 flex items-center justify-center">
@@ -194,8 +161,8 @@ const Approvals = () => {
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <TabsList className="bg-muted/50">
             <TabsTrigger value="profiles">Profiles</TabsTrigger>
-            <TabsTrigger value="photos">Photos</TabsTrigger>
-            <TabsTrigger value="documents">Documents</TabsTrigger>
+            {/* <TabsTrigger value="photos">Photos</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger> */}
           </TabsList>
           <div className="flex gap-2">
             <div className="relative flex-1 lg:w-64">
@@ -262,7 +229,7 @@ const Approvals = () => {
           ))}
         </TabsContent>
 
-        <TabsContent value="photos" className="space-y-4">
+        {/* <TabsContent value="photos" className="space-y-4">
           {pendingPhotos.map((item) => (
             <Card key={item.id} className="stat-card-shadow border-0">
               <CardContent className="p-4">
@@ -293,9 +260,9 @@ const Approvals = () => {
               </CardContent>
             </Card>
           ))}
-        </TabsContent>
+        </TabsContent> */}
 
-        <TabsContent value="documents" className="space-y-4">
+        {/* <TabsContent value="documents" className="space-y-4">
           {pendingDocuments.map((item) => (
             <Card key={item.id} className="stat-card-shadow border-0">
               <CardContent className="p-4">
@@ -326,7 +293,7 @@ const Approvals = () => {
               </CardContent>
             </Card>
           ))}
-        </TabsContent>
+        </TabsContent> */}
       </Tabs>
 
       <ApprovalDetailsDialog

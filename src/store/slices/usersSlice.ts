@@ -1,53 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import Axios from '../../axios/axios';
+import { userService, User, SendEmailOtpPayload, VerifyEmailOtpPayload } from '../../services/userService';
 
-export interface User {
-  _id: string;
-  accountFor?: string;
-  fullName?: string;
-  email: string;
-  countryCode?: string;
-  mobile?: string;
-  gender?: string;
-  dateOfBirth?: string;
-  preferredLanguage?: string;
-  heightCm?: number;
-  weightKg?: number;
-  maritalStatus?: string;
-  bodyType?: string;
-  physicallyChallenged?: boolean;
-  livingWithFamily?: boolean;
-  course?: string;
-  highestEducation?: string;
-  profession?: string;
-  income?: {
-    amount?: number;
-    type?: string;
-  };
-  interests?: string[];
-  personalityTraits?: string[];
-  dietPreference?: string[];
-  city: {
-    city: string;
-    state: string;
-    country: string;
-  };
-  religion?: string;
-  caste?: string;
-  motherTongue?: string;
-  approvalStatus?: string;
-  branch?: string;
-  referredBy?: string;
-  profileStatus?: string;
-  isActive?: boolean;
-  isDeleted?: boolean;
-  emailVerified?: boolean;
-  photos?: string[];
-  createdAt?: string;
-  updatedAt?: string;
-  approvedAt?: string;
-  approvedBy?: string;
-}
+export type { User, SendEmailOtpPayload, VerifyEmailOtpPayload };
+
 
 interface UsersState {
   users: User[];
@@ -78,8 +33,7 @@ export const fetchUsersAsync = createAsyncThunk<
   'users/fetchUsers',
   async (_, { rejectWithValue }) => {
     try {
-      const response = await Axios.get('/api/users');
-      return response.data;
+      return await userService.getUsers();
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to fetch users. Please try again.';
       return rejectWithValue(message);
@@ -90,14 +44,13 @@ export const fetchUsersAsync = createAsyncThunk<
 // Async thunk for sending email OTP
 export const sendEmailOtpAsync = createAsyncThunk<
   { message: string },
-  { email: string },
+  SendEmailOtpPayload,
   { rejectValue: string }
 >(
   'users/sendEmailOtp',
-  async ({ email }, { rejectWithValue }) => {
+  async (payload, { rejectWithValue }) => {
     try {
-      const response = await Axios.post('/api/users/send-otp', { email });
-      return response.data;
+      return await userService.sendEmailOtp(payload);
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to send OTP. Please try again.';
       return rejectWithValue(message);
@@ -108,23 +61,13 @@ export const sendEmailOtpAsync = createAsyncThunk<
 // Async thunk for verifying OTP and creating user
 export const verifyEmailOtpAsync = createAsyncThunk<
   User,
-  {
-    email: string;
-    otp: string;
-    password: string;
-    accountFor?: string;
-    fullName?: string;
-    mobile?: string;
-    countryCode?: string;
-    gender?: string;
-  },
+  VerifyEmailOtpPayload,
   { rejectValue: string }
 >(
   'users/verifyEmailOtp',
-  async (userData, { rejectWithValue }) => {
+  async (payload, { rejectWithValue }) => {
     try {
-      const response = await Axios.post('/api/users/verify-otp', userData);
-      return response.data.user;
+      return await userService.verifyEmailOtp(payload);
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to verify OTP. Please try again.';
       return rejectWithValue(message);
@@ -141,7 +84,7 @@ export const deleteUserAsync = createAsyncThunk<
   'users/deleteUser',
   async (userId, { rejectWithValue }) => {
     try {
-      await Axios.delete(`/api/users/${userId}`);
+      await userService.deleteUser(userId);
       return userId;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to delete user. Please try again.';

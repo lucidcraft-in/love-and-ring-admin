@@ -1,266 +1,235 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import Axios from '../../axios/axios';
+import {
+  masterDataService,
+  MasterItem,
+  MasterDataType,
+  CreateMasterItemPayload,
+  UpdateMasterItemPayload,
+  GetMasterDataParams,
+  MasterDataResponse
+} from '@/services/masterDataService';
 
-// Interfaces for master data types
-export interface Religion {
-  _id: string;
-  name: string;
-  status: string;
-}
-
-export interface Caste {
-  _id: string;
-  name: string;
-  religion?: Religion | string;
-  status: string;
-}
-
-export interface Location {
-  _id: string;
-  city: string;
-  state: string;
-  country: string;
-  status: string;
-}
-
-export interface Language {
-  _id: string;
-  name: string;
-  status: string;
-}
-
-export interface Education {
-  _id: string;
-  name: string;
-  status: string;
-}
-
-export interface Occupation {
-  _id: string;
-  name: string;
-  status: string;
-}
+// ============================================================================
+// State Interface
+// ============================================================================
 
 interface MasterDataState {
-  religions: Religion[];
-  castes: Caste[];
-  locations: Location[];
-  languages: Language[];
-  educations: Education[];
-  occupations: Occupation[];
-  isLoading: boolean;
+  data: MasterItem[];
+  total: number;
+  skip: number;
+  take: number;
+  currentItem: MasterItem | null;
+  currentType: MasterDataType | null;
+
+  // Loading States
+  listLoading: boolean;
+  createLoading: boolean;
+  updateLoading: boolean;
+  deleteLoading: boolean;
+
+  // Error Handling
   error: string | null;
 }
 
 const initialState: MasterDataState = {
-  religions: [],
-  castes: [],
-  locations: [],
-  languages: [],
-  educations: [],
-  occupations: [],
-  isLoading: false,
+  data: [],
+  total: 0,
+  skip: 0,
+  take: 10,
+  currentItem: null,
+  currentType: null,
+
+  listLoading: false,
+  createLoading: false,
+  updateLoading: false,
+  deleteLoading: false,
+
   error: null,
 };
 
-// Async thunk for fetching religions
-export const fetchReligionsAsync = createAsyncThunk<
-  Religion[],
-  void,
+// ============================================================================
+// Async Thunks
+// ============================================================================
+
+/**
+ * Fetch generic master data
+ */
+export const fetchMasterDataAsync = createAsyncThunk<
+  MasterDataResponse & { type: MasterDataType },
+  { type: MasterDataType; params?: GetMasterDataParams },
   { rejectValue: string }
 >(
-  'masterData/fetchReligions',
-  async (_, { rejectWithValue }) => {
+  'masterData/fetchData',
+  async ({ type, params }, { rejectWithValue }) => {
     try {
-      const response = await Axios.get('/api/master/religions');
-      return response.data.data;
+      const response = await masterDataService.getItems(type, params);
+      return { ...response, type };
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to fetch religions';
+      const message = error.response?.data?.message || `Failed to fetch ${type}.`;
       return rejectWithValue(message);
     }
   }
 );
 
-// Async thunk for fetching castes
-export const fetchCastesAsync = createAsyncThunk<
-  Caste[],
-  void,
+/**
+ * Create item
+ */
+export const createMasterDataAsync = createAsyncThunk<
+  MasterItem,
+  { type: MasterDataType; payload: CreateMasterItemPayload },
   { rejectValue: string }
 >(
-  'masterData/fetchCastes',
-  async (_, { rejectWithValue }) => {
+  'masterData/createItem',
+  async ({ type, payload }, { rejectWithValue }) => {
     try {
-      const response = await Axios.get('/api/master/castes');
-      return response.data.data;
+      const response = await masterDataService.createItem(type, payload);
+      return response;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to fetch castes';
+      const message = error.response?.data?.message || 'Failed to create item.';
       return rejectWithValue(message);
     }
   }
 );
 
-// Async thunk for fetching locations
-export const fetchLocationsAsync = createAsyncThunk<
-  Location[],
-  void,
+/**
+ * Update item
+ */
+export const updateMasterDataAsync = createAsyncThunk<
+  MasterItem,
+  { type: MasterDataType; id: string; payload: UpdateMasterItemPayload },
   { rejectValue: string }
 >(
-  'masterData/fetchLocations',
-  async (_, { rejectWithValue }) => {
+  'masterData/updateItem',
+  async ({ type, id, payload }, { rejectWithValue }) => {
     try {
-      const response = await Axios.get('/api/master/locations');
-      return response.data.data;
+      const response = await masterDataService.updateItem(type, id, payload);
+      return response;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to fetch locations';
+      const message = error.response?.data?.message || 'Failed to update item.';
       return rejectWithValue(message);
     }
   }
 );
 
-// Async thunk for fetching languages
-export const fetchLanguagesAsync = createAsyncThunk<
-  Language[],
-  void,
+/**
+ * Delete item
+ */
+export const deleteMasterDataAsync = createAsyncThunk<
+  string, // Return ID
+  { type: MasterDataType; id: string },
   { rejectValue: string }
 >(
-  'masterData/fetchLanguages',
-  async (_, { rejectWithValue }) => {
+  'masterData/deleteItem',
+  async ({ type, id }, { rejectWithValue }) => {
     try {
-      const response = await Axios.get('/api/master/languages');
-      return response.data.data;
+      await masterDataService.deleteItem(type, id);
+      return id;
     } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to fetch languages';
+      const message = error.response?.data?.message || 'Failed to delete item.';
       return rejectWithValue(message);
     }
   }
 );
 
-// Async thunk for fetching educations
-export const fetchEducationsAsync = createAsyncThunk<
-  Education[],
-  void,
-  { rejectValue: string }
->(
-  'masterData/fetchEducations',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await Axios.get('/api/master/educations');
-      return response.data.data;
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to fetch educations';
-      return rejectWithValue(message);
-    }
-  }
-);
-
-// Async thunk for fetching occupations
-export const fetchOccupationsAsync = createAsyncThunk<
-  Occupation[],
-  void,
-  { rejectValue: string }
->(
-  'masterData/fetchOccupations',
-  async (_, { rejectWithValue }) => {
-    try {
-      const response = await Axios.get('/api/master/occupations');
-      return response.data.data;
-    } catch (error: any) {
-      const message = error.response?.data?.message || 'Failed to fetch occupations';
-      return rejectWithValue(message);
-    }
-  }
-);
+// ============================================================================
+// Slice
+// ============================================================================
 
 const masterDataSlice = createSlice({
   name: 'masterData',
   initialState,
   reducers: {
-    clearError: (state) => {
+    clearMasterDataError: (state) => {
       state.error = null;
     },
+    setCurrentMasterItem: (state, action: PayloadAction<MasterItem | null>) => {
+      state.currentItem = action.payload;
+    },
+    setMasterDataType: (state, action: PayloadAction<MasterDataType>) => {
+      state.currentType = action.payload;
+      // Optionally clear data when type changes to avoid showing wrong data while loading
+      state.data = [];
+      state.total = 0;
+    }
   },
   extraReducers: (builder) => {
     builder
-      // Religions
-      .addCase(fetchReligionsAsync.pending, (state) => {
-        state.isLoading = true;
+      // Fetch Data
+      .addCase(fetchMasterDataAsync.pending, (state) => {
+        state.listLoading = true;
         state.error = null;
       })
-      .addCase(fetchReligionsAsync.fulfilled, (state, action: PayloadAction<Religion[]>) => {
-        state.isLoading = false;
-        state.religions = action.payload;
-      })
-      .addCase(fetchReligionsAsync.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload || 'Failed to fetch religions';
-      })
-      // Castes
-      .addCase(fetchCastesAsync.pending, (state) => {
-        state.isLoading = true;
+      .addCase(fetchMasterDataAsync.fulfilled, (state, action) => {
+        state.listLoading = false;
+        state.data = action.payload.data;
+        state.total = action.payload.total;
+        state.skip = action.payload.skip;
+        state.take = action.payload.take;
+        state.currentType = action.payload.type;
         state.error = null;
       })
-      .addCase(fetchCastesAsync.fulfilled, (state, action: PayloadAction<Caste[]>) => {
-        state.isLoading = false;
-        state.castes = action.payload;
+      .addCase(fetchMasterDataAsync.rejected, (state, action) => {
+        state.listLoading = false;
+        state.error = action.payload || 'Failed to fetch data';
       })
-      .addCase(fetchCastesAsync.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload || 'Failed to fetch castes';
-      })
-      // Locations
-      .addCase(fetchLocationsAsync.pending, (state) => {
-        state.isLoading = true;
+
+      // Create Item
+      .addCase(createMasterDataAsync.pending, (state) => {
+        state.createLoading = true;
         state.error = null;
       })
-      .addCase(fetchLocationsAsync.fulfilled, (state, action: PayloadAction<Location[]>) => {
-        state.isLoading = false;
-        state.locations = action.payload;
-      })
-      .addCase(fetchLocationsAsync.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload || 'Failed to fetch locations';
-      })
-      // Languages
-      .addCase(fetchLanguagesAsync.pending, (state) => {
-        state.isLoading = true;
+      .addCase(createMasterDataAsync.fulfilled, (state, action: PayloadAction<MasterItem>) => {
+        state.createLoading = false;
+        state.data.unshift(action.payload);
+        state.total += 1;
         state.error = null;
       })
-      .addCase(fetchLanguagesAsync.fulfilled, (state, action: PayloadAction<Language[]>) => {
-        state.isLoading = false;
-        state.languages = action.payload;
+      .addCase(createMasterDataAsync.rejected, (state, action) => {
+        state.createLoading = false;
+        state.error = action.payload || 'Failed to create item';
       })
-      .addCase(fetchLanguagesAsync.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload || 'Failed to fetch languages';
-      })
-      // Educations
-      .addCase(fetchEducationsAsync.pending, (state) => {
-        state.isLoading = true;
+
+      // Update Item
+      .addCase(updateMasterDataAsync.pending, (state) => {
+        state.updateLoading = true;
         state.error = null;
       })
-      .addCase(fetchEducationsAsync.fulfilled, (state, action: PayloadAction<Education[]>) => {
-        state.isLoading = false;
-        state.educations = action.payload;
-      })
-      .addCase(fetchEducationsAsync.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload || 'Failed to fetch educations';
-      })
-      // Occupations
-      .addCase(fetchOccupationsAsync.pending, (state) => {
-        state.isLoading = true;
+      .addCase(updateMasterDataAsync.fulfilled, (state, action: PayloadAction<MasterItem>) => {
+        state.updateLoading = false;
+        const index = state.data.findIndex(i => i._id === action.payload._id);
+        if (index !== -1) {
+          state.data[index] = action.payload;
+        }
+        if (state.currentItem?._id === action.payload._id) {
+          state.currentItem = action.payload;
+        }
         state.error = null;
       })
-      .addCase(fetchOccupationsAsync.fulfilled, (state, action: PayloadAction<Occupation[]>) => {
-        state.isLoading = false;
-        state.occupations = action.payload;
+      .addCase(updateMasterDataAsync.rejected, (state, action) => {
+        state.updateLoading = false;
+        state.error = action.payload || 'Failed to update item';
       })
-      .addCase(fetchOccupationsAsync.rejected, (state, action) => {
-        state.isLoading = false;
-        state.error = action.payload || 'Failed to fetch occupations';
+
+      // Delete Item
+      .addCase(deleteMasterDataAsync.pending, (state) => {
+        state.deleteLoading = true;
+        state.error = null;
+      })
+      .addCase(deleteMasterDataAsync.fulfilled, (state, action: PayloadAction<string>) => {
+        state.deleteLoading = false;
+        state.data = state.data.filter(i => i._id !== action.payload);
+        state.total = Math.max(0, state.total - 1);
+        if (state.currentItem?._id === action.payload) {
+          state.currentItem = null;
+        }
+        state.error = null;
+      })
+      .addCase(deleteMasterDataAsync.rejected, (state, action) => {
+        state.deleteLoading = false;
+        state.error = action.payload || 'Failed to delete item';
       });
   },
 });
 
-export const { clearError } = masterDataSlice.actions;
+export const { clearMasterDataError, setCurrentMasterItem, setMasterDataType } = masterDataSlice.actions;
 export default masterDataSlice.reducer;

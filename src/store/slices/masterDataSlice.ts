@@ -6,7 +6,8 @@ import {
   CreateMasterItemPayload,
   UpdateMasterItemPayload,
   GetMasterDataParams,
-  MasterDataResponse
+  MasterDataResponse,
+  MasterDataCountResponse
 } from '@/services/masterDataService';
 
 // ============================================================================
@@ -20,6 +21,7 @@ interface MasterDataState {
   take: number;
   currentItem: MasterItem | null;
   currentType: MasterDataType | null;
+  counts: MasterDataCountResponse | null;
 
   // Loading States
   listLoading: boolean;
@@ -38,6 +40,7 @@ const initialState: MasterDataState = {
   take: 10,
   currentItem: null,
   currentType: null,
+  counts: null,
 
   listLoading: false,
   createLoading: false,
@@ -126,6 +129,22 @@ export const deleteMasterDataAsync = createAsyncThunk<
       return id;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to delete item.';
+      return rejectWithValue(message);
+    }
+  }
+);
+
+/**
+ * Get all count
+ */
+export const fetchMasterDataCountAsync = createAsyncThunk(
+  'masterData/fetchMasterDataCount',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await masterDataService.getAllCount();
+      return response;
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to fetch master data count.';
       return rejectWithValue(message);
     }
   }
@@ -227,6 +246,11 @@ const masterDataSlice = createSlice({
       .addCase(deleteMasterDataAsync.rejected, (state, action) => {
         state.deleteLoading = false;
         state.error = action.payload || 'Failed to delete item';
+      })
+
+      // Fetch Counts
+      .addCase(fetchMasterDataCountAsync.fulfilled, (state, action) => {
+        state.counts = action.payload as MasterDataCountResponse;
       });
   },
 });

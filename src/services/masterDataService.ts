@@ -17,6 +17,15 @@ export interface MasterItem {
   updatedAt?: string;
 }
 
+export interface MasterDataCountResponse {
+  religions: number;
+  castes: number;
+  educations: number;
+  occupations: number;
+  languages: number;
+  locations: number;
+}
+
 export interface CreateMasterItemPayload {
   name: string;
   value?: string;
@@ -107,6 +116,12 @@ export const masterDataService = {
   deleteItem: async (type: MasterDataType, id: string): Promise<{ message: string }> => {
     const endpoint = `/api/master/${type}/${id}`;
     const response = await Axios.delete<{ message: string }>(endpoint);
+    return response.data;
+  },
+
+  getAllCount: async (): Promise<MasterDataCountResponse> => {
+    const endpoint = `/api/master/counts`;
+    const response = await Axios.get<MasterDataCountResponse>(endpoint);
     return response.data;
   },
 };

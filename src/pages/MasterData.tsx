@@ -10,7 +10,8 @@ import {
   fetchMasterDataAsync,
   setCurrentMasterItem,
   setMasterDataType,
-  deleteMasterDataAsync
+  deleteMasterDataAsync,
+  fetchMasterDataCountAsync,
 } from "@/store/slices/masterDataSlice";
 import { masterDataService, MasterItem, MasterDataType } from "@/services/masterDataService";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -20,7 +21,7 @@ import { useState, useEffect } from "react";
 
 const MasterData = () => {
   const dispatch = useAppDispatch();
-  const { data, listLoading, currentItem, total } = useAppSelector((state) => state.masterData);
+  const { data, listLoading, currentItem, total, counts } = useAppSelector((state) => state.masterData);
 
   const [activeTab, setActiveTab] = useState<MasterDataType>("religions");
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -31,6 +32,7 @@ const MasterData = () => {
   useEffect(() => {
     dispatch(setMasterDataType(activeTab));
     dispatch(fetchMasterDataAsync({ type: activeTab }));
+    dispatch(fetchMasterDataCountAsync());
 
     // When switching to castes, we might need religion list for dropdown
     if (activeTab === 'castes') {
@@ -52,6 +54,7 @@ const MasterData = () => {
     dispatch(setCurrentMasterItem(item));
     setDeleteOpen(true);
   };
+
 
   // Helper to render table content based on loading state
   const renderTableContent = () => {
@@ -82,23 +85,6 @@ const MasterData = () => {
         {activeTab === 'locations' ? ( // Special case for location struct
           <>
             <TableCell className="font-medium">{item.name?.split(',')[0] || item.city || item.name}</TableCell>
-            {/* 
-                NOTE: Location data structure from backend usually has city, state, country. 
-                However, generic MasterItem uses 'name'. 
-                If the backend returns specific fields for location like 'city', 'state', 'country', 
-                we should use them. Assuming 'name' might hold a combined string or we use specific fields if present.
-                Given the interface MasterItem uses `name`, I will simply use `name` and if needed cast `item` to `any` above to access extras if backend sends them.
-                Actually, looking at the user snippet: `createItem(Location)` uses `name` usually if standardized? 
-                Wait, the Location model usually has fields.
-                But `createItemService` is generic `Model.create(payload)`.
-                If Location model requires `city`, `state`, `country` separate, then `name` payload won't work perfectly generic without extra fields.
-                However, to keep it simple and generic as currently designed:
-                I will assume Location uses 'name' as primary identifier (e.g. "Mumbai, Maharashtra") OR 
-                if the backend strictly separates them, the generic dialog needs to handle generic "Values" or json.
-                
-                For this integration, I will stick to displaying `item.name` primarily, unless specific fields exist on the returned object.
-                Since I casted `item` to `any` above, I can try accessing common location fields safely.
-            */}
             <TableCell>{item.state || '-'}</TableCell>
             <TableCell>{item.country || '-'}</TableCell>
           </>
@@ -149,7 +135,7 @@ const MasterData = () => {
               <Heart className="w-4 h-4 text-primary" />
               <span className="text-xs text-muted-foreground uppercase">Religions</span>
             </div>
-            <p className="text-xl font-semibold">7</p>
+            <p className="text-xl font-semibold">{counts?.religions || 0}</p>
           </CardContent>
         </Card>
         <Card className="stat-card-shadow border-0">
@@ -158,7 +144,7 @@ const MasterData = () => {
               <Database className="w-4 h-4 text-chart-orange" />
               <span className="text-xs text-muted-foreground uppercase">Castes</span>
             </div>
-            <p className="text-xl font-semibold">156</p>
+            <p className="text-xl font-semibold">{counts?.castes || 0}</p>
           </CardContent>
         </Card>
         <Card className="stat-card-shadow border-0">
@@ -167,7 +153,7 @@ const MasterData = () => {
               <Book className="w-4 h-4 text-chart-green" />
               <span className="text-xs text-muted-foreground uppercase">Education</span>
             </div>
-            <p className="text-xl font-semibold">45</p>
+            <p className="text-xl font-semibold">{counts?.educations || 0}</p>
           </CardContent>
         </Card>
         <Card className="stat-card-shadow border-0">
@@ -176,7 +162,7 @@ const MasterData = () => {
               <Briefcase className="w-4 h-4 text-info" />
               <span className="text-xs text-muted-foreground uppercase">Occupations</span>
             </div>
-            <p className="text-xl font-semibold">89</p>
+            <p className="text-xl font-semibold">{counts?.occupations || 0}</p>
           </CardContent>
         </Card>
         <Card className="stat-card-shadow border-0">
@@ -185,7 +171,7 @@ const MasterData = () => {
               <MapPin className="w-4 h-4 text-chart-purple" />
               <span className="text-xs text-muted-foreground uppercase">Locations</span>
             </div>
-            <p className="text-xl font-semibold">520</p>
+            <p className="text-xl font-semibold">{counts?.locations || 0}</p>
           </CardContent>
         </Card>
         <Card className="stat-card-shadow border-0">
@@ -194,7 +180,7 @@ const MasterData = () => {
               <Languages className="w-4 h-4 text-chart-rose" />
               <span className="text-xs text-muted-foreground uppercase">Languages</span>
             </div>
-            <p className="text-xl font-semibold">22</p>
+            <p className="text-xl font-semibold">{counts?.languages || 0}</p>
           </CardContent>
         </Card>
       </div>

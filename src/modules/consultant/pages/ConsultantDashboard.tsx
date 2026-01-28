@@ -113,7 +113,11 @@ export default function ConsultantDashboard() {
   const filteredUsers = users.filter(
     (user) => {
       // Filter by consultant ownership
-      if (user.createdBy !== currentConsultant._id) return false;
+      const creatorId = typeof user.createdBy === 'object' && user.createdBy !== null
+        ? user.createdBy._id
+        : user.createdBy;
+
+      if (creatorId !== currentConsultant._id) return false;
 
       return (
         user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -125,7 +129,12 @@ export default function ConsultantDashboard() {
 
   // Calculate stats from real user data
   // Filter users first to ensure stats only reflect consultant's users
-  const myUsers = users.filter(u => u.createdBy === currentConsultant._id);
+  const myUsers = users.filter(u => {
+    const creatorId = typeof u.createdBy === 'object' && u.createdBy !== null
+      ? u.createdBy._id
+      : u.createdBy;
+    return creatorId === currentConsultant._id;
+  });
 
   const stats = [
     {

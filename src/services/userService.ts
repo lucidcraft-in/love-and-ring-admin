@@ -50,7 +50,7 @@ export interface User {
   updatedAt?: string;
   approvedAt?: string;
   approvedBy?: string;
-  createdBy?: string;
+  createdBy?: string | { _id: string; fullName: string };
 }
 
 export interface SendEmailOtpPayload {

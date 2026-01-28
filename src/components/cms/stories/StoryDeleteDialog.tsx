@@ -41,7 +41,7 @@ export function StoryDeleteDialog({ open, onOpenChange, story }: StoryDeleteDial
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Story?</AlertDialogTitle>
           <AlertDialogDescription>
-            This action cannot be undone. This will permanently delete the success story of <span className="font-medium text-foreground">"{story.coupleNames}"</span>.
+            This action cannot be undone. This will permanently delete the success story of <span className="font-medium text-foreground">"{story.coupleName}"</span>.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

@@ -64,7 +64,7 @@ export function StoryAddDialog({ open, onOpenChange }: StoryAddDialogProps) {
     if (!formData.image) return;
 
     const result = await dispatch(createStoryAsync({
-      coupleNames: formData.coupleNames,
+      coupleName: formData.coupleNames,
       story: formData.story,
       date: formData.date,
       status: formData.status,

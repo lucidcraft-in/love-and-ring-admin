@@ -32,10 +32,10 @@ const Users = () => {
   const [advancedFilters, setAdvancedFilters] = useState<UserFilters>({});
 
   useEffect(() => {
-    dispatch(fetchUsersAsync());
+    dispatch(fetchUsersAsync({ take: 1000 }));
   }, [dispatch]);
 
-    // Helper function to calculate age from date of birth
+  // Helper function to calculate age from date of birth
   const calculateAge = (dateOfBirth?: string) => {
     if (!dateOfBirth) return "N/A";
     const today = new Date();
@@ -135,11 +135,11 @@ const Users = () => {
   };
 
   const handleUserAdded = () => {
-    dispatch(fetchUsersAsync());
+    dispatch(fetchUsersAsync({ take: 1000 }));
   };
 
   const handleUserUpdated = () => {
-    dispatch(fetchUsersAsync());
+    dispatch(fetchUsersAsync({ take: 1000 }));
   };
 
   const handleApplyFilters = (filters: UserFilters) => {

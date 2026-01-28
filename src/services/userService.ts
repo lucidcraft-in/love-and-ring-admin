@@ -82,8 +82,13 @@ export const userService = {
   /**
    * Fetch all users
    */
-  getUsers: async (): Promise<User[]> => {
-    const response = await Axios.get<User[]>('/api/users');
+  getUsers: async (params?: { skip?: number; take?: number }): Promise<User[]> => {
+    const response = await Axios.get<User[]>('/api/users', {
+      params: {
+        skip: params?.skip || 0,
+        take: params?.take || 100, // Increase default limit to 100 to catch more users
+      },
+    });
     return response.data;
   },
 

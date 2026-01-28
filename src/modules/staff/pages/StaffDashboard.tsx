@@ -47,7 +47,7 @@ export default function StaffDashboard() {
   // Fetch users when component mounts
   useEffect(() => {
     if (isAuthenticated && currentStaffUser) {
-      dispatch(fetchUsersAsync());
+      dispatch(fetchUsersAsync({ take: 1000 }));
     }
   }, [dispatch, isAuthenticated, currentStaffUser]);
 
@@ -62,7 +62,7 @@ export default function StaffDashboard() {
 
   const handleUserAdded = () => {
     // Refresh users list
-    dispatch(fetchUsersAsync());
+    dispatch(fetchUsersAsync({ take: 1000 }));
     toast({
       title: "Success",
       description: "User profile created successfully",
@@ -106,7 +106,7 @@ export default function StaffDashboard() {
 
   const handleUserUpdated = () => {
     // Refresh users list
-    dispatch(fetchUsersAsync());
+    dispatch(fetchUsersAsync({ take: 1000 }));
   };
 
   // Filter users based on search term

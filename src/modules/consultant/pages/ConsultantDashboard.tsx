@@ -48,7 +48,7 @@ export default function ConsultantDashboard() {
   // Fetch users when component mounts
   useEffect(() => {
     if (isAuthenticated && currentConsultant) {
-      dispatch(fetchUsersAsync());
+      dispatch(fetchUsersAsync({ take: 1000 }));
     }
   }, [dispatch, isAuthenticated, currentConsultant]);
 
@@ -63,7 +63,7 @@ export default function ConsultantDashboard() {
 
   const handleUserAdded = () => {
     // Refresh users list
-    dispatch(fetchUsersAsync());
+    dispatch(fetchUsersAsync({ take: 1000 }));
     toast({
       title: "Success",
       description: "User profile created successfully",
@@ -107,7 +107,7 @@ export default function ConsultantDashboard() {
 
   const handleUserUpdated = () => {
     // Refresh users list
-    dispatch(fetchUsersAsync());
+    dispatch(fetchUsersAsync({ take: 1000 }));
   };
 
   const filteredUsers = users.filter(

@@ -11,7 +11,7 @@ export interface Consultant {
   email: string;
   fullName: string;
   phone: string;
-  branch: {
+  branch?: {
     _id: string;
     name: string;
     city: string;

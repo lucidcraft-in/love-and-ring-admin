@@ -52,13 +52,13 @@ export function ApprovalDetailsDialog({ open, onOpenChange, onApprove, onReject 
             {/* Basic Details */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <h4 className="font-medium mb-2 text-primary">Agency Details</h4>
-                <div className="space-y-3">
+                {/* <h4 className="font-medium mb-2 text-primary">Agency Details</h4>
+                 <div className="space-y-3">
                   <div>
                     <span className="text-xs text-muted-foreground block">Agency Name</span>
                     <span className="text-sm font-medium">{profile.agencyName || "N/A"}</span>
                   </div>
-                </div>
+                </div> */}
               </div>
 
               <div>

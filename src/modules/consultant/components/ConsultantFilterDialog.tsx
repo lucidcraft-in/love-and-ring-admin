@@ -105,7 +105,7 @@ export function ConsultantFilterDialog({
           </div>
 
           {/* Agency Name Filter */}
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="agencyName">Agency Name</Label>
             <Input
               id="agencyName"
@@ -115,7 +115,7 @@ export function ConsultantFilterDialog({
                 setLocalFilters({ ...localFilters, agencyName: e.target.value || undefined })
               }
             />
-          </div>
+          </div> */}
 
           {/* Regions Filter */}
           <div className="space-y-2">

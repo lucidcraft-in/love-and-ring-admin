@@ -26,7 +26,7 @@ export function ConsultantCreateDialog({ open, onOpenChange, onCreate }: Consult
     email: "",
     fullName: "",
     phone: "",
-    branch: "",
+    // branch: "",
     licenseNumber: "",
     regions: "",
     password: "",
@@ -52,14 +52,14 @@ export function ConsultantCreateDialog({ open, onOpenChange, onCreate }: Consult
       return;
     }
 
-    if (!formData.branch) {
-      toast({
-        title: "Error",
-        description: "Please select a branch",
-        variant: "destructive",
-      });
-      return;
-    }
+    // if (!formData.branch) {
+    //   toast({
+    //     title: "Error",
+    //     description: "Please select a branch",
+    //     variant: "destructive",
+    //   });
+    //   return;
+    // }
 
     try {
       await dispatch(createConsultantAsync(formData)).unwrap();
@@ -75,7 +75,7 @@ export function ConsultantCreateDialog({ open, onOpenChange, onCreate }: Consult
         email: "",
         fullName: "",
         phone: "",
-        branch: "",
+        // branch: "",
         licenseNumber: "",
         regions: "",
         password: "",
@@ -144,7 +144,7 @@ export function ConsultantCreateDialog({ open, onOpenChange, onCreate }: Consult
                   disabled={createLoading}
                 />
               </div>
-              <div>
+              {/* <div>
                 <Label>Branch *</Label>
                 <Select
                   value={formData.branch}
@@ -162,7 +162,7 @@ export function ConsultantCreateDialog({ open, onOpenChange, onCreate }: Consult
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </div> */}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>

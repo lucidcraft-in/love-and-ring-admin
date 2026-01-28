@@ -63,16 +63,17 @@ export default function ConsultantList() {
     // Search query filter
     const matchesSearch = !searchQuery ||
       c.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      c.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (c.branch && c.branch.name.toLowerCase().includes(searchQuery.toLowerCase()));
+      c.email.toLowerCase().includes(searchQuery.toLowerCase())
+      // || (c.branch && c.branch.name.toLowerCase().includes(searchQuery.toLowerCase()))
+      ;
 
     // Status filter - use advanced filter status if set, otherwise use main status filter
     const effectiveStatus = advancedFilters.status || statusFilter;
     const matchesStatus = effectiveStatus === "all" || c.status === effectiveStatus;
 
     // Advanced filters
-    const matchesBranch = !advancedFilters.agencyName ||
-      (c.branch && c.branch.name.toLowerCase().includes(advancedFilters.agencyName.toLowerCase()));
+    // const matchesBranch = !advancedFilters.agencyName ||
+    //   (c.branch && c.branch.name.toLowerCase().includes(advancedFilters.agencyName.toLowerCase()));
 
     const matchesRegions = !advancedFilters.regions || advancedFilters.regions.length === 0 ||
       advancedFilters.regions.some(region =>
@@ -91,7 +92,7 @@ export default function ConsultantList() {
     const matchesCreatedBefore = !advancedFilters.createdBefore ||
       new Date(c.createdAt) <= new Date(advancedFilters.createdBefore);
 
-    return matchesSearch && matchesStatus && matchesBranch && matchesRegions &&
+    return matchesSearch && matchesStatus && /* matchesBranch && */ matchesRegions &&
       matchesMinProfiles && matchesMaxProfiles &&
       matchesCreatedAfter && matchesCreatedBefore;
   });
@@ -376,7 +377,7 @@ export default function ConsultantList() {
                   <TableHeader>
                     <TableRow className="border-border/50">
                       <TableHead className="sticky top-0 bg-background z-10 border-b">Consultant</TableHead>
-                      <TableHead className="sticky top-0 bg-background z-10 border-b">Branch</TableHead>
+                      {/* <TableHead className="sticky top-0 bg-background z-10 border-b">Branch</TableHead> */}
                       <TableHead className="sticky top-0 bg-background z-10 border-b">Regions</TableHead>
                       <TableHead className="sticky top-0 bg-background z-10 border-b">Profiles</TableHead>
                       <TableHead className="sticky top-0 bg-background z-10 border-b">Status</TableHead>
@@ -398,7 +399,7 @@ export default function ConsultantList() {
                             </div>
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm">{c.branch ? c.branch.name : "-"}</TableCell>
+                        {/* <TableCell className="text-sm">{c.branch ? c.branch.name : "-"}</TableCell> */}
                         <TableCell>
                           <div className="flex gap-1 flex-wrap">
                             {c.regions && c.regions.length > 0 ? (

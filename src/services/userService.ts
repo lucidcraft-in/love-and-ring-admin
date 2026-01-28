@@ -20,7 +20,7 @@ export interface User {
   bodyType?: string;
   physicallyChallenged?: boolean;
   livingWithFamily?: boolean;
-  course?: string;
+  // course?: string;
   highestEducation?: string;
   profession?: string;
   income?: {
@@ -39,7 +39,7 @@ export interface User {
   caste?: string;
   motherTongue?: string;
   approvalStatus?: string;
-  branch?: string;
+  // branch?: string;
   referredBy?: string;
   profileStatus?: string;
   isActive?: boolean;

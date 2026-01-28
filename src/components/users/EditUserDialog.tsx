@@ -31,7 +31,7 @@ interface User {
   bodyType?: string;
   physicallyChallenged?: boolean;
   livingWithFamily?: boolean;
-  course?: string;
+  // course?: string;
   highestEducation?: any;
   profession?: any;
   income?: {
@@ -46,7 +46,7 @@ interface User {
   caste?: any;
   motherTongue?: any;
   approvalStatus?: string;
-  branch?: string;
+  // branch?: string;
   referredBy?: string;
 }
 
@@ -105,7 +105,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
     bodyType: "",
     physicallyChallenged: false,
     livingWithFamily: false,
-    course: "",
+    // course: "",
     highestEducation: "",
     profession: "",
     incomeAmount: "",
@@ -118,7 +118,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
     caste: "",
     motherTongue: "",
     approvalStatus: "PENDING",
-    branch: "",
+    // branch: "",
     referredBy: "",
   });
 
@@ -177,7 +177,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
         bodyType: user.bodyType || "",
         physicallyChallenged: user.physicallyChallenged || false,
         livingWithFamily: user.livingWithFamily || false,
-        course: user.course || "",
+        // course: user.course || "",
         highestEducation: extractId(user.highestEducation),
         profession: extractId(user.profession),
         incomeAmount: user.income?.amount?.toString() || "",
@@ -190,7 +190,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
         caste: extractId(user.caste),
         motherTongue: extractId(user.motherTongue),
         approvalStatus: user.approvalStatus || "PENDING",
-        branch: extractId(user.branch),
+        // branch: extractId(user.branch),
         referredBy: extractId(user.referredBy),
       });
     }
@@ -221,7 +221,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
         bodyType: formData.bodyType,
         physicallyChallenged: formData.physicallyChallenged,
         livingWithFamily: formData.livingWithFamily,
-        course: formData.course,
+        // course: formData.course,
         highestEducation: formData.highestEducation || undefined,
         profession: formData.profession || undefined,
         income: formData.incomeAmount
@@ -242,7 +242,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
         caste: formData.caste || undefined,
         motherTongue: formData.motherTongue || undefined,
         approvalStatus: formData.approvalStatus,
-        branch: formData.branch || undefined,
+        // branch: formData.branch || undefined,
         referredBy: formData.referredBy || undefined,
       };
 
@@ -443,14 +443,14 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
           {/* STEP 4: EDUCATION & WORK */}
           <TabsContent value="education" className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
+              {/* <div className="space-y-2">
                 <Label htmlFor="course">Course</Label>
                 <Input
                   id="course"
                   value={formData.course}
                   onChange={(e) => handleInputChange("course", e.target.value)}
                 />
-              </div>
+              </div> */}
 
               <div className="space-y-2">
                 <Label htmlFor="highestEducation">Highest Education</Label>
@@ -639,10 +639,10 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
                   </Select>
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="branch">Branch (ID)</Label>
                   <Input id="branch" value={formData.branch} onChange={(e) => handleInputChange("branch", e.target.value)} />
-                </div>
+                </div> */}
               </div>
             </div>
           </TabsContent>

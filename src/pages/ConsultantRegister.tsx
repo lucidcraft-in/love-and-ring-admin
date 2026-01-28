@@ -79,8 +79,8 @@ export default function ConsultantRegister() {
             </div>
             <h2 className="text-2xl font-bold">Registration Submitted!</h2>
             <p className="text-muted-foreground">
-              Your consultant application has been submitted successfully. 
-              An admin will review your application and you'll receive an email 
+              Your consultant application has been submitted successfully.
+              An admin will review your application and you'll receive an email
               once your account is approved.
             </p>
             <Button onClick={() => navigate("/consultant/login")} className="mt-4">
@@ -176,7 +176,7 @@ export default function ConsultantRegister() {
               </div>
             </div>
 
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="agencyName">Agency Name</Label>
               <Input
                 id="agencyName"
@@ -185,7 +185,7 @@ export default function ConsultantRegister() {
                 onChange={(e) => setFormData({ ...formData, agencyName: e.target.value })}
                 disabled={isLoading}
               />
-            </div>
+            </div> */}
 
             <div className="space-y-2">
               <Label htmlFor="regions">Regions Covered</Label>

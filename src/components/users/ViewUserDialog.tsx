@@ -21,7 +21,7 @@ interface User {
   bodyType?: string;
   physicallyChallenged?: boolean;
   livingWithFamily?: boolean;
-  course?: string;
+  // course?: string;
   highestEducation?: any;
   profession?: any;
   income?: {
@@ -36,7 +36,7 @@ interface User {
   caste?: any;
   motherTongue?: any;
   approvalStatus?: string;
-  branch?: string;
+  // branch?: string;
   referredBy?: string;
   createdAt?: string;
 }
@@ -196,7 +196,7 @@ export const ViewUserDialog = ({ open, onOpenChange, user, onEdit }: ViewUserDia
           {/* EDUCATION & WORK */}
           <TabsContent value="education" className="space-y-4 mt-4">
             <div className="grid grid-cols-2 gap-6">
-              <InfoRow label="Course" value={user.course} icon={Award} />
+              {/* <InfoRow label="Course" value={user.course} icon={Award} /> */}
               <InfoRow label="Highest Education" value={extractName(user.highestEducation)} icon={Award} />
               <InfoRow label="Profession" value={extractName(user.profession)} icon={Briefcase} />
               <InfoRow
@@ -264,7 +264,7 @@ export const ViewUserDialog = ({ open, onOpenChange, user, onEdit }: ViewUserDia
                 <InfoRow label="Religion" value={extractName(user.religion)} />
                 <InfoRow label="Caste" value={extractName(user.caste)} />
                 <InfoRow label="Mother Tongue" value={extractName(user.motherTongue)} />
-                <InfoRow label="Branch" value={user.branch} />
+                {/* <InfoRow label="Branch" value={user.branch} /> */}
                 <InfoRow label="Referred By" value={user.referredBy} />
               </div>
             </div>

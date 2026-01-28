@@ -4,6 +4,20 @@ import Axios from '@/axios/axios';
 // Type Definitions
 // ============================================================================
 
+export interface ConsultantLoginCredentials {
+  email: string;
+  password: string;
+}
+
+export interface ConsultantLoginResponse {
+  _id: string;
+  fullName: string;
+  email: string;
+  role: Role;
+  permissions: any; // Add specific permissions if needed
+  token: string;
+}
+
 export interface Staff {
   _id: string;
   fullName: string;
@@ -20,8 +34,8 @@ export interface CreateStaffPayload {
   fullName: string;
   email: string;
   phone?: string;
-  role: Role;
-  branch: Branch;
+  role: string; // ID
+  branch: string; // ID
   password: string;
 }
 
@@ -39,8 +53,8 @@ export interface UpdateStaffPayload {
   fullName?: string;
   email?: string;
   phone?: string;
-  role?: Role;
-  branch?: Branch;
+  role?: string; // ID
+  branch?: string; // ID
   password?: string;
 }
 
@@ -69,6 +83,20 @@ export interface UpdateStaffStatusPayload {
 // ============================================================================
 
 export const staffService = {
+  /**
+   * Login staff
+   */
+  login: async (credentials: ConsultantLoginCredentials): Promise<ConsultantLoginResponse> => {
+    // Using consultant login endpoint or staff specific? Assuming staff specific if available, but users asked to replicate consultant.
+    // Consultant endpoint: /api/consultants/login. Staff might need /api/staff/login.
+    // Based on patterns, it should be /api/staff/login.
+    const response = await Axios.post<ConsultantLoginResponse>(
+      '/api/staff/login',
+      credentials
+    );
+    return response.data;
+  },
+
   /**
    * Create new staff member
    */

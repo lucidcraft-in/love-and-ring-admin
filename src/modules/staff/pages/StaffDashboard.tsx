@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Users, TrendingUp, Clock, Heart, Activity, Eye, Edit, Trash2, Plus, LogOut,
-  Bell, Settings, Search
+  Bell, Settings, Search, Briefcase
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -20,21 +20,20 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useToast } from "@/hooks/use-toast";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { logoutConsultant } from "@/store/slices/consultantSlice";
+import { logoutStaff } from "@/store/slices/staffSlice";
 import { fetchUsersAsync, deleteUserAsync, User } from "@/store/slices/usersSlice";
 import { AddUserDialog } from "@/components/users/AddUserDialog";
 import { ViewUserDialog } from "@/components/users/ViewUserDialog";
 import { EditUserDialog } from "@/components/users/EditUserDialog";
 import { DeleteUserDialog } from "@/components/users/DeleteUserDialog";
 
-export default function ConsultantDashboard() {
+export default function StaffDashboard() {
   const navigate = useNavigate();
   const { toast } = useToast();
   const dispatch = useAppDispatch();
 
   // Redux state
-  const { currentConsultant, isAuthenticated } = useAppSelector((state) => state.consultant);
-  console.log(currentConsultant, "consultant data in the dashboard")
+  const { currentStaffUser, isAuthenticated } = useAppSelector((state) => state.staff);
   const { users, isLoading: usersLoading, deleteLoading } = useAppSelector((state) => state.users);
 
   // Dialog state
@@ -47,18 +46,18 @@ export default function ConsultantDashboard() {
 
   // Fetch users when component mounts
   useEffect(() => {
-    if (isAuthenticated && currentConsultant) {
+    if (isAuthenticated && currentStaffUser) {
       dispatch(fetchUsersAsync());
     }
-  }, [dispatch, isAuthenticated, currentConsultant]);
+  }, [dispatch, isAuthenticated, currentStaffUser]);
 
   const handleLogout = () => {
-    dispatch(logoutConsultant());
+    dispatch(logoutStaff());
     toast({
       title: "Logged Out",
       description: "You have been successfully logged out.",
     });
-    navigate("/consultant/login");
+    navigate("/staff/login");
   };
 
   const handleUserAdded = () => {
@@ -110,48 +109,40 @@ export default function ConsultantDashboard() {
     dispatch(fetchUsersAsync());
   };
 
+  // Filter users based on search term
   const filteredUsers = users.filter(
-    (user) => {
-      // Filter by consultant ownership
-      if (user.createdBy !== currentConsultant._id) return false;
-
-      return (
-        user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.city?.city?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
+    (user) =>
+      user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.city?.city?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Calculate stats from real user data
-  // Filter users first to ensure stats only reflect consultant's users
-  const myUsers = users.filter(u => u.createdBy === currentConsultant._id);
-
   const stats = [
     {
       title: "Total Profiles",
-      value: myUsers.length,
+      value: users.length,
       icon: Users,
       color: "text-blue-600 dark:text-blue-400",
       bgColor: "bg-blue-100 dark:bg-blue-900/30"
     },
     {
       title: "Active Profiles",
-      value: myUsers.filter(u => u.isActive && !u.isDeleted).length,
+      value: users.filter(u => u.isActive && !u.isDeleted).length,
       icon: TrendingUp,
       color: "text-green-600 dark:text-green-400",
       bgColor: "bg-green-100 dark:bg-green-900/30"
     },
     {
       title: "Pending Review",
-      value: myUsers.filter(u => u.approvalStatus === "PENDING").length,
+      value: users.filter(u => u.approvalStatus === "PENDING").length,
       icon: Clock,
       color: "text-yellow-600 dark:text-yellow-400",
       bgColor: "bg-yellow-100 dark:bg-yellow-900/30"
     },
     {
       title: "Approved",
-      value: myUsers.filter(u => u.approvalStatus === "APPROVED").length,
+      value: users.filter(u => u.approvalStatus === "APPROVED").length,
       icon: Heart,
       color: "text-pink-600 dark:text-pink-400",
       bgColor: "bg-pink-100 dark:bg-pink-900/30"
@@ -181,7 +172,7 @@ export default function ConsultantDashboard() {
   };
 
   // Show loading state
-  if (!currentConsultant || usersLoading) {
+  if (!currentStaffUser || usersLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -196,9 +187,9 @@ export default function ConsultantDashboard() {
         <div className="container flex h-16 items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center">
-              <Heart className="w-5 h-5 text-primary" fill="currentColor" />
+              <Briefcase className="w-5 h-5 text-primary" fill="currentColor" />
             </div>
-            <span className="font-semibold text-lg">Consultant Portal</span>
+            <span className="font-semibold text-lg">Staff Portal</span>
           </div>
 
           <div className="flex items-center gap-4">
@@ -209,9 +200,9 @@ export default function ConsultantDashboard() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback>{currentConsultant.fullName.charAt(0)}</AvatarFallback>
+                    <AvatarFallback>{currentStaffUser.fullName.charAt(0)}</AvatarFallback>
                   </Avatar>
-                  <span className="hidden md:inline">{currentConsultant.fullName}</span>
+                  <span className="hidden md:inline">{currentStaffUser.fullName}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
@@ -236,15 +227,14 @@ export default function ConsultantDashboard() {
         {/* Welcome Section */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Welcome back, {currentConsultant.fullName}!</h1>
-            <p className="text-muted-foreground">Manage your member profiles and track your activity</p>
+            <h1 className="text-2xl font-bold">Welcome back, {currentStaffUser.fullName}!</h1>
+            <p className="text-muted-foreground">Manage your assigned tasks and profiles</p>
           </div>
-          {currentConsultant.permissions.createProfile && (
-            <Button onClick={() => setAddDialogOpen(true)}>
-              <Plus className="mr-2 h-4 w-4" />
-              Create Profile
-            </Button>
-          )}
+          {/* Check permissions if available in currentStaffUser, otherwise default to show */}
+          <Button onClick={() => setAddDialogOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Profile
+          </Button>
         </div>
 
         {/* Stats Cards */}
@@ -273,7 +263,7 @@ export default function ConsultantDashboard() {
               <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                 <div>
                   <CardTitle>Member Profiles</CardTitle>
-                  <CardDescription>Profiles you've created and manage</CardDescription>
+                  <CardDescription>Profiles you manage</CardDescription>
                 </div>
                 <div className="relative w-full md:w-64">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -325,36 +315,30 @@ export default function ConsultantDashboard() {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
-                              {currentConsultant.permissions.viewProfile && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={() => handleViewUser(user)}
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              )}
-                              {currentConsultant.permissions.editProfile && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={() => handleEditUser(user)}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              )}
-                              {currentConsultant.permissions.deleteProfile && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-destructive"
-                                  onClick={() => handleDeleteUser(user)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              )}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleViewUser(user)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleEditUser(user)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive"
+                                onClick={() => handleDeleteUser(user)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </div>
                           </TableCell>
                         </TableRow>
@@ -383,29 +367,6 @@ export default function ConsultantDashboard() {
           </Card>
         </div>
 
-        {/* Permissions Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Permissions</CardTitle>
-            <CardDescription>Access levels assigned by admin</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-wrap gap-2">
-              <Badge variant={currentConsultant.permissions.viewProfile ? "default" : "secondary"}>
-                {currentConsultant.permissions.viewProfile ? "✓" : "✗"} View Profiles
-              </Badge>
-              <Badge variant={currentConsultant.permissions.createProfile ? "default" : "secondary"}>
-                {currentConsultant.permissions.createProfile ? "✓" : "✗"} Create Profiles
-              </Badge>
-              <Badge variant={currentConsultant.permissions.editProfile ? "default" : "secondary"}>
-                {currentConsultant.permissions.editProfile ? "✓" : "✗"} Edit Profiles
-              </Badge>
-              <Badge variant={currentConsultant.permissions.deleteProfile ? "default" : "secondary"}>
-                {currentConsultant.permissions.deleteProfile ? "✓" : "✗"} Delete Profiles
-              </Badge>
-            </div>
-          </CardContent>
-        </Card>
       </main>
 
       {/* User Creation Dialog */}

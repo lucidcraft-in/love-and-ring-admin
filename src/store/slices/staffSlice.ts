@@ -6,7 +6,10 @@ import {
   UpdateStaffPayload,
   GetStaffParams,
   GetStaffResponse,
+  ConsultantLoginCredentials,
+  ConsultantLoginResponse,
 } from '@/services/staffService';
+
 
 // ============================================================================
 // State Interface
@@ -29,6 +32,12 @@ interface StaffState {
   deleteLoading: boolean;
   detailLoading: boolean;
 
+  // Auth State
+  currentStaffUser: ConsultantLoginResponse | null; // The logged in staff user
+  isAuthenticated: boolean;
+  loginLoading: boolean;
+  loginError: string | null;
+
   // Error Handling
   error: string | null;
 }
@@ -50,6 +59,14 @@ const initialState: StaffState = {
   deleteLoading: false,
   detailLoading: false,
 
+  // Auth State
+  currentStaffUser: localStorage.getItem('staffUser')
+    ? JSON.parse(localStorage.getItem('staffUser') || 'null')
+    : null,
+  isAuthenticated: !!localStorage.getItem('staffToken'),
+  loginLoading: false,
+  loginError: null,
+
   // Error Handling
   error: null,
 };
@@ -57,6 +74,30 @@ const initialState: StaffState = {
 // ============================================================================
 // Async Thunks
 // ============================================================================
+
+/**
+ * Login Staff
+ */
+export const loginStaffAsync = createAsyncThunk<
+  ConsultantLoginResponse,
+  ConsultantLoginCredentials,
+  { rejectValue: string }
+>(
+  'staff/login',
+  async (credentials, { rejectWithValue }) => {
+    try {
+      const response = await staffService.login(credentials);
+      // Save to local storage
+      localStorage.setItem('staffToken', response.token);
+      localStorage.setItem('staffUser', JSON.stringify(response));
+      return response;
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Login failed. Please check your credentials.';
+      return rejectWithValue(message);
+    }
+  }
+);
+
 
 /**
  * Fetch staff list with pagination and filtering
@@ -216,10 +257,49 @@ const staffSlice = createSlice({
     clearCurrentStaff: (state) => {
       state.currentStaff = null;
     },
+
+    /**
+     * Logout Staff
+     */
+    logoutStaff: (state) => {
+      state.currentStaffUser = null;
+      state.isAuthenticated = false;
+      state.staffList = [];
+      localStorage.removeItem('staffToken');
+      localStorage.removeItem('staffUser');
+    },
+
+    /**
+     * Clear Login Error
+     */
+    clearLoginError: (state) => {
+      state.loginError = null;
+    },
+
   },
   extraReducers: (builder) => {
     builder
       // ========================================================================
+      // Login
+      // ========================================================================
+      .addCase(loginStaffAsync.pending, (state) => {
+        state.loginLoading = true;
+        state.loginError = null;
+      })
+      .addCase(loginStaffAsync.fulfilled, (state, action: PayloadAction<ConsultantLoginResponse>) => {
+        state.loginLoading = false;
+        state.isAuthenticated = true;
+        state.currentStaffUser = action.payload;
+        state.loginError = null;
+      })
+      .addCase(loginStaffAsync.rejected, (state, action) => {
+        state.loginLoading = false;
+        state.isAuthenticated = false;
+        state.loginError = action.payload || 'Login failed';
+      })
+
+      // ========================================================================
+
       // Fetch Staff List
       // ========================================================================
       .addCase(fetchStaffListAsync.pending, (state) => {
@@ -356,6 +436,8 @@ export const {
   resetStaffList,
   setCurrentStaff,
   clearCurrentStaff,
+  logoutStaff,
+  clearLoginError,
 } = staffSlice.actions;
 
 export default staffSlice.reducer;

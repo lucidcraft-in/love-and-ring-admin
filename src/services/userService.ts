@@ -50,6 +50,7 @@ export interface User {
   updatedAt?: string;
   approvedAt?: string;
   approvedBy?: string;
+  createdBy?: string;
 }
 
 export interface SendEmailOtpPayload {

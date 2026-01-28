@@ -7,6 +7,7 @@ import { Provider } from "react-redux";
 import { store } from "@/store/store";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import { ConsultantProtectedRoute } from "@/components/ConsultantProtectedRoute";
+import { StaffProtectedRoute } from "@/components/StaffProtectedRoute";
 import { AdminLayout } from "@/components/layout/AdminLayout";
 
 // Module imports
@@ -14,7 +15,7 @@ import { AdminLogin, ForgotPassword } from "@/modules/auth";
 import { DashboardHome } from "@/modules/dashboard";
 import { UsersList } from "@/modules/users";
 import { ConsultantList, ConsultantLogin, ConsultantRegister, ConsultantDashboard } from "@/modules/consultant";
-import { StaffList } from "@/modules/staff";
+import { StaffList, StaffLogin, StaffRegister, StaffDashboard } from "@/modules/staff";
 
 // Legacy pages (to be migrated to modules)
 import SupportTickets from "./pages/SupportTickets";
@@ -53,6 +54,18 @@ const App = () => (
                 <ConsultantProtectedRoute>
                   <ConsultantDashboard />
                 </ConsultantProtectedRoute>
+              }
+            />
+
+            {/* Staff Portal Routes */}
+            <Route path="/staff/login" element={<StaffLogin />} />
+            <Route path="/staff/register" element={<StaffRegister />} />
+            <Route
+              path="/staff/dashboard"
+              element={
+                <StaffProtectedRoute>
+                  <StaffDashboard />
+                </StaffProtectedRoute>
               }
             />
 

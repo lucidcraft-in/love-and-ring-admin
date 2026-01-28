@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { userService, User, SendEmailOtpPayload, VerifyEmailOtpPayload } from '../../services/userService';
+import { userService, User, SendEmailOtpPayload, VerifyEmailOtpPayload, GetUsersResponse } from '../../services/userService';
 
 export type { User, SendEmailOtpPayload, VerifyEmailOtpPayload };
 
@@ -8,6 +8,9 @@ interface UsersState {
   users: User[];
   isLoading: boolean;
   error: string | null;
+  total: number;
+  skip: number;
+  take: number;
   otpSent: boolean;
   otpLoading: boolean;
   verificationLoading: boolean;
@@ -18,6 +21,9 @@ const initialState: UsersState = {
   users: [],
   isLoading: false,
   error: null,
+  total: 0,
+  skip: 0,
+  take: 10,
   otpSent: false,
   otpLoading: false,
   verificationLoading: false,
@@ -26,7 +32,7 @@ const initialState: UsersState = {
 
 // Async thunk for fetching users
 export const fetchUsersAsync = createAsyncThunk<
-  User[],
+  GetUsersResponse,
   { skip?: number; take?: number } | undefined,
   { rejectValue: string }
 >(
@@ -102,6 +108,8 @@ const usersSlice = createSlice({
     },
     resetUsers: (state) => {
       state.users = [];
+      state.total = 0;
+      state.skip = 0;
       state.error = null;
       state.isLoading = false;
     },
@@ -118,9 +126,12 @@ const usersSlice = createSlice({
         state.isLoading = true;
         state.error = null;
       })
-      .addCase(fetchUsersAsync.fulfilled, (state, action: PayloadAction<User[]>) => {
+      .addCase(fetchUsersAsync.fulfilled, (state, action: PayloadAction<GetUsersResponse>) => {
         state.isLoading = false;
-        state.users = action.payload;
+        state.users = action.payload.data;
+        state.total = action.payload.total;
+        state.skip = action.payload.skip;
+        state.take = action.payload.take;
         state.error = null;
       })
       .addCase(fetchUsersAsync.rejected, (state, action) => {

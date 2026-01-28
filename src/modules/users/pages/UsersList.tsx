@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Download, UserPlus, MoreHorizontal, Eye, Edit, Ban, CheckCircle } from "lucide-react";
+import { Search, Filter, Download, UserPlus, MoreHorizontal, Eye, Edit, Ban, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AddUserDialog } from "@/components/users/AddUserDialog";
 import { EditUserDialog } from "@/components/users/EditUserDialog";
@@ -17,7 +17,7 @@ import { fetchUsersAsync } from "@/store/slices/usersSlice";
 
 const Users = () => {
   const dispatch = useAppDispatch();
-  const { users, isLoading, error } = useAppSelector((state) => state.users);
+  const { users, isLoading, error, total } = useAppSelector((state) => state.users);
   console.log(users, "users");
 
   const [addDialogOpen, setAddDialogOpen] = useState(false);
@@ -31,7 +31,12 @@ const Users = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [advancedFilters, setAdvancedFilters] = useState<UserFilters>({});
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
   useEffect(() => {
+    // Fetch all users for client-side pagination
     dispatch(fetchUsersAsync({ take: 1000 }));
   }, [dispatch]);
 
@@ -145,9 +150,9 @@ const Users = () => {
   const handleApplyFilters = (filters: UserFilters) => {
     setAdvancedFilters(filters);
     // Sync main filters with advanced filters if they're set
-    if (filters.gender) setGenderFilter(filters.gender);
     if (filters.status) setStatusFilter(filters.status);
     if (filters.membership) setMembershipFilter(filters.membership);
+    setCurrentPage(1);
   };
 
   const handleClearFilters = () => {
@@ -156,6 +161,7 @@ const Users = () => {
     setMembershipFilter("all");
     setStatusFilter("all");
     setSearchTerm("");
+    setCurrentPage(1);
   };
 
   // Count active advanced filters (excluding those that match main filters)
@@ -338,9 +344,45 @@ const Users = () => {
                     </Badge>
                   )}
                 </Button>
-                {/* <Button variant="outline" size="icon">
-                  <Download className="w-4 h-4" />
-                </Button> */}
+                {/* Compact Pagination Controls */}
+                <div className="flex items-center gap-2 border-l pl-2 ml-1">
+                  <Select value={pageSize.toString()} onValueChange={(value) => {
+                    setPageSize(Number(value));
+                    setCurrentPage(1);
+                  }}>
+                    <SelectTrigger className="w-16 h-9">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="5">5</SelectItem>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <span className="text-sm font-medium min-w-[3rem] text-center">
+                    {currentPage}/{Math.ceil(filteredUsers.length / pageSize)}
+                  </span>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    className="h-9 w-9"
+                    onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filteredUsers.length / pageSize), prev + 1))}
+                    disabled={currentPage >= Math.ceil(filteredUsers.length / pageSize)}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </CardContent>
@@ -389,76 +431,78 @@ const Users = () => {
                     </TableCell>
                   </TableRow>
                 ) : (
-                  filteredUsers.map((user) => {
-                    const status = getStatusDisplay(user.approvalStatus);
-                    return (
-                      <TableRow key={user._id} className="border-border/50">
-                        <TableCell>
-                          <div className="flex items-center gap-3">
-                            <Avatar className="w-9 h-9">
-                              <AvatarImage src={`https://ui-avatars.com/api/?name=${user.fullName || user.email}&size=64`} />
-                              <AvatarFallback>{user.fullName?.charAt(0) || user.email.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                            <span className="font-medium">{user.fullName || "Unnamed"}</span>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="text-sm">
-                            <p>{user.email}</p>
-                            <p className="text-muted-foreground">
-                              {user.mobile ? `${user.countryCode || ""} ${user.mobile}` : "N/A"}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell>{user.gender || "N/A"}</TableCell>
-                        <TableCell>{calculateAge(user.dateOfBirth)}</TableCell>
-                        <TableCell>{user?.city?.city}</TableCell>
-                        <TableCell>
-                          <Badge variant={user.profileStatus === "COMPLETE" ? "default" : "secondary"}>
-                            {user.profileStatus || "Basic"}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="outline"
-                            className={
-                              status === "Active"
-                                ? "border-chart-green text-chart-green"
-                                : status === "Pending"
-                                  ? "border-chart-orange text-chart-orange"
-                                  : "border-destructive text-destructive"
-                            }
-                          >
-                            {status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell>{formatDate(user.createdAt)}</TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => handleViewUser(user)}>
-                                <Eye className="w-4 h-4 mr-2" /> View Profile
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => handleEditUser(user)}>
-                                <Edit className="w-4 h-4 mr-2" /> Edit
-                              </DropdownMenuItem>
-                              {/* <DropdownMenuItem>
+                  filteredUsers
+                    .slice((currentPage - 1) * pageSize, currentPage * pageSize)
+                    .map((user) => {
+                      const status = getStatusDisplay(user.approvalStatus);
+                      return (
+                        <TableRow key={user._id} className="border-border/50">
+                          <TableCell>
+                            <div className="flex items-center gap-3">
+                              <Avatar className="w-9 h-9">
+                                <AvatarImage src={`https://ui-avatars.com/api/?name=${user.fullName || user.email}&size=64`} />
+                                <AvatarFallback>{user.fullName?.charAt(0) || user.email.charAt(0)}</AvatarFallback>
+                              </Avatar>
+                              <span className="font-medium">{user.fullName || "Unnamed"}</span>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <div className="text-sm">
+                              <p>{user.email}</p>
+                              <p className="text-muted-foreground">
+                                {user.mobile ? `${user.countryCode || ""} ${user.mobile}` : "N/A"}
+                              </p>
+                            </div>
+                          </TableCell>
+                          <TableCell>{user.gender || "N/A"}</TableCell>
+                          <TableCell>{calculateAge(user.dateOfBirth)}</TableCell>
+                          <TableCell>{user?.city?.city}</TableCell>
+                          <TableCell>
+                            <Badge variant={user.profileStatus === "COMPLETE" ? "default" : "secondary"}>
+                              {user.profileStatus || "Basic"}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant="outline"
+                              className={
+                                status === "Active"
+                                  ? "border-chart-green text-chart-green"
+                                  : status === "Pending"
+                                    ? "border-chart-orange text-chart-orange"
+                                    : "border-destructive text-destructive"
+                              }
+                            >
+                              {status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>{formatDate(user.createdAt)}</TableCell>
+                          <TableCell className="text-right">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleViewUser(user)}>
+                                  <Eye className="w-4 h-4 mr-2" /> View Profile
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleEditUser(user)}>
+                                  <Edit className="w-4 h-4 mr-2" /> Edit
+                                </DropdownMenuItem>
+                                {/* <DropdownMenuItem>
                                 <CheckCircle className="w-4 h-4 mr-2" /> Approve
                               </DropdownMenuItem> */}
-                              <DropdownMenuItem className="text-destructive">
-                                <Ban className="w-4 h-4 mr-2" /> Block
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    );
-                  })
+                                <DropdownMenuItem className="text-destructive">
+                                  <Ban className="w-4 h-4 mr-2" /> Block
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })
                 )}
               </TableBody>
             </Table>

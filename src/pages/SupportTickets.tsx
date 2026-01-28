@@ -56,7 +56,7 @@ const SupportTickets = () => {
     const matchesSearch =
       ticket._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket.user.fullName.toLowerCase().includes(searchTerm.toLowerCase());
+      ticket?.user?.fullName?.toLowerCase()?.includes(searchTerm.toLowerCase());
 
     const matchesStatus = statusFilter === "all-status" || ticket.status.toLowerCase() === statusFilter.replace("-", " ");
     const matchesPriority = priorityFilter === "all-priority" || ticket.priority.toLowerCase() === priorityFilter;
@@ -174,14 +174,14 @@ const SupportTickets = () => {
                     <SelectItem value="general">General</SelectItem>
                   </SelectContent>
                 </Select>
-                <Button variant="outline" size="icon" onClick={() => {
+                {/* <Button variant="outline" size="icon" onClick={() => {
                   setSearchTerm("");
                   setStatusFilter("all-status");
                   setPriorityFilter("all-priority");
                   setCategoryFilter("all-category");
                 }}>
                   <Filter className="w-4 h-4" />
-                </Button>
+                </Button> */}
               </div>
             </div>
           </CardContent>

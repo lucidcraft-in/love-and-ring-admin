@@ -15,6 +15,7 @@ import adminReducer from './slices/adminSlice';
 import bannerReducer from './slices/bannerSlice';
 import successStoryReducer from './slices/successStorySlice';
 import staticPageReducer from './slices/staticPageSlice';
+import reportReducer from './slices/reportSlice';
 
 
 export const store = configureStore({
@@ -35,6 +36,7 @@ export const store = configureStore({
     demographics: demographicsReducer,
     supportTickets: supportTicketReducer,
     approvals: approvalReducer,
+    reports: reportReducer,
   },
 });
 

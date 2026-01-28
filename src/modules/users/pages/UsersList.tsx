@@ -75,11 +75,12 @@ const Users = () => {
 
       // Status - use advanced filter if set, otherwise use main filter
       const effectiveStatus = advancedFilters.status || statusFilter;
+      const normalizedStatus = effectiveStatus.toLowerCase();
       const matchesStatus =
-        effectiveStatus === "all" ||
-        (effectiveStatus === "active" && user.approvalStatus === "APPROVED") ||
-        (effectiveStatus === "pending" && user.approvalStatus === "PENDING") ||
-        (effectiveStatus === "blocked" && user.approvalStatus === "REJECTED");
+        normalizedStatus === "all" ||
+        (normalizedStatus === "active" && user.approvalStatus === "APPROVED") ||
+        (normalizedStatus === "pending" && user.approvalStatus === "PENDING") ||
+        (normalizedStatus === "blocked" && user.approvalStatus === "REJECTED");
 
       // Advanced filters
       const matchesCity = !advancedFilters.city ||
@@ -295,7 +296,10 @@ const Users = () => {
                     placeholder="Search users by name, email, or phone..."
                     className="pl-10"
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setCurrentPage(1);
+                    }}
                   />
                 </div>
                 <div className="flex flex-wrap gap-2">

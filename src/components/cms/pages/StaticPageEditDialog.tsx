@@ -19,10 +19,16 @@ export function StaticPageEditDialog({ open, onOpenChange, page }: StaticPageEdi
   const dispatch = useAppDispatch();
   const { updateLoading, error } = useAppSelector((state) => state.staticPage);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    title: string;
+    slug: string;
+    content: string;
+    sections: any[];
+  }>({
     title: "",
     slug: "",
     content: "",
+    sections: [],
   });
 
   useEffect(() => {
@@ -32,6 +38,7 @@ export function StaticPageEditDialog({ open, onOpenChange, page }: StaticPageEdi
         title: page.title,
         slug: page.slug,
         content: page.content,
+        sections: page.sections || [],
       });
     }
   }, [open, page, dispatch]);
@@ -44,6 +51,8 @@ export function StaticPageEditDialog({ open, onOpenChange, page }: StaticPageEdi
       title: formData.title,
       slug: formData.slug,
       content: formData.content,
+      pageType: page.pageType,
+      sections: formData.sections,
     };
 
     const result = await dispatch(updatePageAsync({ id: page._id, payload }));
@@ -51,6 +60,48 @@ export function StaticPageEditDialog({ open, onOpenChange, page }: StaticPageEdi
     if (updatePageAsync.fulfilled.match(result)) {
       onOpenChange(false);
     }
+  };
+
+  const updateSection = (key: string, field: string, value: string) => {
+    setFormData((prev) => {
+      const newSections = [...prev.sections];
+      const sectionIndex = newSections.findIndex((s) => s.key === key);
+
+      if (sectionIndex === -1) {
+        // Create section if it doesn't exist
+        const newSection: any = { key, items: [] };
+        if (key === 'contact-info' && ['email', 'phone', 'address', 'mapEmbedUrl'].includes(field)) {
+          newSection.fields = { [field]: value };
+        } else {
+          newSection[field] = value;
+        }
+        newSections.push(newSection);
+      } else {
+        // Update existing section
+        if (key === 'contact-info' && ['email', 'phone', 'address', 'mapEmbedUrl'].includes(field)) {
+          newSections[sectionIndex] = {
+            ...newSections[sectionIndex],
+            fields: {
+              ...(newSections[sectionIndex].fields || {}),
+              [field]: value
+            }
+          };
+        } else {
+          newSections[sectionIndex] = { ...newSections[sectionIndex], [field]: value };
+        }
+      }
+      return { ...prev, sections: newSections };
+    });
+  };
+
+  const getSectionValue = (key: string, field: string) => {
+    const section = formData.sections.find(s => s.key === key);
+    if (!section) return "";
+
+    if (key === 'contact-info' && ['email', 'phone', 'address', 'mapEmbedUrl'].includes(field)) {
+      return section.fields?.[field] || "";
+    }
+    return section[field] || "";
   };
 
   if (!page) return null;
@@ -95,17 +146,75 @@ export function StaticPageEditDialog({ open, onOpenChange, page }: StaticPageEdi
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="edit-content">Content</Label>
-            <Textarea
-              id="edit-content"
-              value={formData.content}
-              onChange={(e) => setFormData((prev) => ({ ...prev, content: e.target.value }))}
-              placeholder="Enter page content..."
-              className="min-h-[300px] font-mono text-sm"
-              required
-            />
-          </div>
+          {page.pageType === 'CONTACT' ? (
+            <div className="space-y-6 border-t pt-4">
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Hero Section</h3>
+                <div className="space-y-2">
+                  <Label>Heading</Label>
+                  <Input
+                    value={getSectionValue('hero', 'heading')}
+                    onChange={(e) => updateSection('hero', 'heading', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Description</Label>
+                  <Textarea
+                    value={getSectionValue('hero', 'description')}
+                    onChange={(e) => updateSection('hero', 'description', e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Contact Information</h3>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Email</Label>
+                    <Input
+                      value={getSectionValue('contact-info', 'email')}
+                      onChange={(e) => updateSection('contact-info', 'email', e.target.value)}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Phone</Label>
+                    <Input
+                      value={getSectionValue('contact-info', 'phone')}
+                      onChange={(e) => updateSection('contact-info', 'phone', e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Address</Label>
+                  <Textarea
+                    value={getSectionValue('contact-info', 'address')}
+                    onChange={(e) => updateSection('contact-info', 'address', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Google Maps Embed URL</Label>
+                  <Input
+                    value={getSectionValue('contact-info', 'mapEmbedUrl')}
+                    onChange={(e) => updateSection('contact-info', 'mapEmbedUrl', e.target.value)}
+                    placeholder="https://www.google.com/maps/embed?..."
+                  />
+                  <p className="text-xs text-muted-foreground">Paste the 'src' attribute from Google Maps Embed HTML</p>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="edit-content">Content</Label>
+              <Textarea
+                id="edit-content"
+                value={formData.content}
+                onChange={(e) => setFormData((prev) => ({ ...prev, content: e.target.value }))}
+                placeholder="Enter page content..."
+                className="min-h-[300px] font-mono text-sm"
+                required
+              />
+            </div>
+          )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={updateLoading}>

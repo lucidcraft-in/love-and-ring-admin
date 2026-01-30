@@ -12,18 +12,24 @@ export interface StaticPage {
   createdAt: string;
   updatedAt: string;
   lastUpdatedBy?: string;
+  pageType: 'DEFAULT' | 'CONTACT';
+  sections?: any[];
 }
 
 export interface CreatePagePayload {
   title: string;
   content: string;
   slug: string;
+  pageType?: 'DEFAULT' | 'CONTACT';
+  sections?: any[];
 }
 
 export interface UpdatePagePayload {
   title?: string;
   content?: string;
   slug?: string;
+  pageType?: 'DEFAULT' | 'CONTACT';
+  sections?: any[];
 }
 
 // ============================================================================

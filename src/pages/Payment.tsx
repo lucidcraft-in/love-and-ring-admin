@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,106 +7,63 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Filter, Download, Plus, CreditCard, IndianRupee, TrendingUp, Calendar, MoreHorizontal, Eye, Edit } from "lucide-react";
+import { Search, Filter, Download, Plus, CreditCard, IndianRupee, TrendingUp, Calendar, MoreHorizontal, Eye, Edit, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { TransactionViewDialog } from "@/components/payment/TransactionViewDialog";
-
-const transactions = [
-  {
-    id: "TXN-001",
-    user: "Priya Sharma",
-    plan: "Premium 6 Months",
-    amount: 4999,
-    method: "Credit Card",
-    date: "2024-03-15",
-    status: "Success",
-  },
-  {
-    id: "TXN-002",
-    user: "Rahul Verma",
-    plan: "Premium 1 Year",
-    amount: 7999,
-    method: "UPI",
-    date: "2024-03-14",
-    status: "Success",
-  },
-  {
-    id: "TXN-003",
-    user: "Anjali Patel",
-    plan: "Premium 3 Months",
-    amount: 2999,
-    method: "Net Banking",
-    date: "2024-03-14",
-    status: "Pending",
-  },
-  {
-    id: "TXN-004",
-    user: "Vikram Singh",
-    plan: "Premium 1 Month",
-    amount: 999,
-    method: "Debit Card",
-    date: "2024-03-13",
-    status: "Failed",
-  },
-  {
-    id: "TXN-005",
-    user: "Sneha Reddy",
-    plan: "Premium 6 Months",
-    amount: 4999,
-    method: "UPI",
-    date: "2024-03-12",
-    status: "Success",
-  },
-];
-
-const plans = [
-  {
-    id: 1,
-    name: "Premium 1 Month",
-    price: 999,
-    duration: "1 Month",
-    features: ["10 Contact Views", "Profile Boost", "Chat Access"],
-    status: "Active",
-    subscribers: 1250,
-  },
-  {
-    id: 2,
-    name: "Premium 3 Months",
-    price: 2999,
-    duration: "3 Months",
-    features: ["30 Contact Views", "Profile Boost", "Chat Access", "Priority Support"],
-    status: "Active",
-    subscribers: 2800,
-  },
-  {
-    id: 3,
-    name: "Premium 6 Months",
-    price: 4999,
-    duration: "6 Months",
-    features: ["75 Contact Views", "Profile Boost", "Chat Access", "Priority Support", "Personal Matchmaking"],
-    status: "Active",
-    subscribers: 3500,
-  },
-  {
-    id: 4,
-    name: "Premium 1 Year",
-    price: 7999,
-    duration: "12 Months",
-    features: ["Unlimited Contact Views", "Profile Boost", "Chat Access", "Priority Support", "Personal Matchmaking", "Video Calls"],
-    status: "Active",
-    subscribers: 1374,
-  },
-];
-
-type Transaction = typeof transactions[0];
+import { AddOfflinePaymentDialog } from "@/components/payment/AddOfflinePaymentDialog";
+import { PlanDialog } from "@/components/payment/PlanDialog";
+import { fetchTransactions, fetchPaymentStats, fetchPlans, deletePlan } from "@/store/slices/paymentSlice";
+import { RootState, AppDispatch } from "@/store/store";
+import { MembershipPlan, Transaction } from "@/types/payment";
+import { useToast } from "@/components/ui/use-toast";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 const Payment = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const { toast } = useToast();
+  const { transactions, stats, plans, loading } = useSelector((state: RootState) => state.payment);
+
   const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
-  const [viewOpen, setViewOpen] = useState(false);
+  const [viewTransactionOpen, setViewTransactionOpen] = useState(false);
+  const [addPaymentOpen, setAddPaymentOpen] = useState(false);
+
+  // Plan State
+  const [planDialogOpen, setPlanDialogOpen] = useState(false);
+  const [selectedPlan, setSelectedPlan] = useState<MembershipPlan | null>(null);
+  const [deletePlanId, setDeletePlanId] = useState<string | null>(null);
+
+  useEffect(() => {
+    dispatch(fetchTransactions());
+    dispatch(fetchPaymentStats());
+    dispatch(fetchPlans());
+  }, [dispatch]);
 
   const handleViewTransaction = (txn: Transaction) => {
     setSelectedTransaction(txn);
-    setViewOpen(true);
+    setViewTransactionOpen(true);
+  };
+
+  const handleEditPlan = (plan: MembershipPlan) => {
+    setSelectedPlan(plan);
+    setPlanDialogOpen(true);
+  };
+
+  const handleCreatePlan = () => {
+    setSelectedPlan(null);
+    setPlanDialogOpen(true);
+  };
+
+  const confirmDeletePlan = async () => {
+    if (deletePlanId) {
+      try {
+        await dispatch(deletePlan(deletePlanId)).unwrap();
+        toast({ title: "Success", description: "Plan deleted successfully" });
+      } catch (error) {
+        toast({ variant: "destructive", title: "Error", description: "Failed to delete plan" });
+      } finally {
+        setDeletePlanId(null);
+      }
+    }
   };
 
   return (
@@ -117,7 +75,7 @@ const Payment = () => {
             <h1 className="text-2xl font-semibold text-foreground">Payment Management</h1>
             <p className="text-sm text-muted-foreground">Manage subscriptions and transactions</p>
           </div>
-          <Button className="bg-primary hover:bg-primary/90">
+          <Button className="bg-primary hover:bg-primary/90" onClick={() => setAddPaymentOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Add Offline Payment
           </Button>
@@ -132,7 +90,7 @@ const Payment = () => {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Revenue</p>
-                <p className="text-xl font-semibold text-foreground">₹24,56,890</p>
+                <p className="text-xl font-semibold text-foreground">₹{stats?.totalRevenue.toLocaleString() || 0}</p>
               </div>
             </CardContent>
           </Card>
@@ -143,7 +101,7 @@ const Payment = () => {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">This Month</p>
-                <p className="text-xl font-semibold text-foreground">₹3,45,670</p>
+                <p className="text-xl font-semibold text-foreground">₹{stats?.thisMonthRevenue.toLocaleString() || 0}</p>
               </div>
             </CardContent>
           </Card>
@@ -154,7 +112,7 @@ const Payment = () => {
               </div>
               <div>
                 <p className="text-xs text-muted-foreground uppercase tracking-wide">Transactions</p>
-                <p className="text-xl font-semibold text-foreground">8,924</p>
+                <p className="text-xl font-semibold text-foreground">{stats?.totalTransactions.toLocaleString() || 0}</p>
               </div>
             </CardContent>
           </Card>
@@ -194,9 +152,9 @@ const Payment = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all-status">All Status</SelectItem>
-                        <SelectItem value="success">Success</SelectItem>
-                        <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="failed">Failed</SelectItem>
+                        <SelectItem value="Success">Success</SelectItem>
+                        <SelectItem value="Pending">Pending</SelectItem>
+                        <SelectItem value="Failed">Failed</SelectItem>
                       </SelectContent>
                     </Select>
                     <Select defaultValue="all-method">
@@ -205,9 +163,9 @@ const Payment = () => {
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all-method">All Methods</SelectItem>
-                        <SelectItem value="card">Card</SelectItem>
-                        <SelectItem value="upi">UPI</SelectItem>
-                        <SelectItem value="netbanking">Net Banking</SelectItem>
+                        <SelectItem value="Card">Card</SelectItem>
+                        <SelectItem value="UPI">UPI</SelectItem>
+                        <SelectItem value="NetBanking">Net Banking</SelectItem>
                       </SelectContent>
                     </Select>
                     <Button variant="outline" size="icon">
@@ -239,13 +197,13 @@ const Payment = () => {
                   </TableHeader>
                   <TableBody>
                     {transactions.map((txn) => (
-                      <TableRow key={txn.id} className="border-border/50">
-                        <TableCell className="font-medium text-primary">{txn.id}</TableCell>
-                        <TableCell>{txn.user}</TableCell>
-                        <TableCell>{txn.plan}</TableCell>
+                      <TableRow key={txn._id} className="border-border/50">
+                        <TableCell className="font-medium text-primary">{txn.transactionId}</TableCell>
+                        <TableCell>{txn.user?.fullName || "Unknown"}</TableCell>
+                        <TableCell>{txn.planName}</TableCell>
                         <TableCell className="font-medium">₹{txn.amount.toLocaleString()}</TableCell>
-                        <TableCell>{txn.method}</TableCell>
-                        <TableCell>{txn.date}</TableCell>
+                        <TableCell>{txn.paymentMethod}</TableCell>
+                        <TableCell>{new Date(txn.createdAt).toLocaleDateString()}</TableCell>
                         <TableCell>
                           <Badge
                             variant="secondary"
@@ -272,6 +230,13 @@ const Payment = () => {
                         </TableCell>
                       </TableRow>
                     ))}
+                    {transactions.length === 0 && !loading && (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
+                          No transactions found
+                        </TableCell>
+                      </TableRow>
+                    )}
                   </TableBody>
                 </Table>
               </CardContent>
@@ -280,14 +245,14 @@ const Payment = () => {
 
           <TabsContent value="plans" className="space-y-4">
             <div className="flex justify-end">
-              <Button className="bg-primary hover:bg-primary/90">
+              <Button className="bg-primary hover:bg-primary/90" onClick={handleCreatePlan}>
                 <Plus className="w-4 h-4 mr-2" />
                 Add Plan
               </Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {plans.map((plan) => (
-                <Card key={plan.id} className="stat-card-shadow border-0">
+                <Card key={plan._id} className="stat-card-shadow border-0">
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
                       <CardTitle className="text-base">{plan.name}</CardTitle>
@@ -298,35 +263,48 @@ const Payment = () => {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleEditPlan(plan)}>
                             <Edit className="w-4 h-4 mr-2" /> Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive" onClick={() => setDeletePlanId(plan._id)}>
+                            <Trash2 className="w-4 h-4 mr-2" /> Delete
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
                     <div className="flex items-baseline gap-1">
                       <span className="text-3xl font-bold text-primary">₹{plan.price.toLocaleString()}</span>
-                      <span className="text-sm text-muted-foreground">/ {plan.duration}</span>
+                      <span className="text-sm text-muted-foreground">/ {typeof plan.duration === 'object' ? `${plan.duration.value} ${plan.duration.unit}` : plan.duration}</span>
                     </div>
                   </CardHeader>
                   <CardContent>
                     <ul className="space-y-2 text-sm text-muted-foreground mb-4">
-                      {plan.features.map((feature, index) => (
+                      {plan.features.slice(0, 5).map((feature, index) => (
                         <li key={index} className="flex items-center gap-2">
                           <div className="w-1.5 h-1.5 rounded-full bg-chart-green" />
-                          {feature}
+                          {typeof feature === 'string' ? feature : feature.label}
                         </li>
                       ))}
                     </ul>
                     <div className="flex items-center justify-between pt-4 border-t border-border/50">
-                      <span className="text-xs text-muted-foreground">{plan.subscribers.toLocaleString()} subscribers</span>
-                      <Badge variant="secondary" className="bg-chart-green/10 text-chart-green">
+                      <span className="text-xs text-muted-foreground">
+                        {plan.status === 'Active' ? 'Active Plan' : 'Inactive Plan'}
+                      </span>
+                      <Badge
+                        variant="secondary"
+                        className={plan.status === 'Active' ? "bg-chart-green/10 text-chart-green" : "bg-destructive/10 text-destructive"}
+                      >
                         {plan.status}
                       </Badge>
                     </div>
                   </CardContent>
                 </Card>
               ))}
+              {plans.length === 0 && !loading && (
+                <div className="col-span-full text-center py-10 text-muted-foreground">
+                  No membership plans found. Create one to get started.
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>
@@ -334,10 +312,41 @@ const Payment = () => {
 
       {/* Transaction View Dialog */}
       <TransactionViewDialog
-        open={viewOpen}
-        onOpenChange={setViewOpen}
+        open={viewTransactionOpen}
+        onOpenChange={setViewTransactionOpen}
         transaction={selectedTransaction}
       />
+
+      {/* Add Offline Payment Dialog */}
+      <AddOfflinePaymentDialog
+        open={addPaymentOpen}
+        onOpenChange={setAddPaymentOpen}
+      />
+
+      {/* Plan Dialog */}
+      <PlanDialog
+        open={planDialogOpen}
+        onOpenChange={setPlanDialogOpen}
+        plan={selectedPlan}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!deletePlanId} onOpenChange={(open) => !open && setDeletePlanId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the membership plan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={confirmDeletePlan}>
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 };

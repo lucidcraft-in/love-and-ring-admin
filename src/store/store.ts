@@ -16,6 +16,7 @@ import bannerReducer from './slices/bannerSlice';
 import successStoryReducer from './slices/successStorySlice';
 import staticPageReducer from './slices/staticPageSlice';
 import reportReducer from './slices/reportSlice';
+import paymentReducer from './slices/paymentSlice';
 
 
 export const store = configureStore({
@@ -37,6 +38,7 @@ export const store = configureStore({
     supportTickets: supportTicketReducer,
     approvals: approvalReducer,
     reports: reportReducer,
+    payment: paymentReducer,
   },
 });
 

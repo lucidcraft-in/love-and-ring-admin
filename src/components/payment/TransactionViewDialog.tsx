@@ -2,20 +2,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CreditCard, Calendar, User, FileText, CheckCircle2, XCircle, Clock } from "lucide-react";
-
-interface Transaction {
-  id: string;
-  user: string;
-  plan: string;
-  amount: number;
-  method: string;
-  date: string;
-  status: string;
-  email?: string;
-  phone?: string;
-  transactionRef?: string;
-  paymentGateway?: string;
-}
+import { Transaction } from "@/types/payment";
 
 interface TransactionViewDialogProps {
   open: boolean;
@@ -26,17 +13,17 @@ interface TransactionViewDialogProps {
 export function TransactionViewDialog({ open, onOpenChange, transaction }: TransactionViewDialogProps) {
   if (!transaction) return null;
 
-  const StatusIcon = transaction.status === "Success" 
-    ? CheckCircle2 
-    : transaction.status === "Failed" 
-    ? XCircle 
-    : Clock;
+  const StatusIcon = transaction.status === "Success"
+    ? CheckCircle2
+    : transaction.status === "Failed"
+      ? XCircle
+      : Clock;
 
   const statusColor = transaction.status === "Success"
     ? "text-chart-green"
     : transaction.status === "Failed"
-    ? "text-destructive"
-    : "text-chart-orange";
+      ? "text-destructive"
+      : "text-chart-orange";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -55,7 +42,7 @@ export function TransactionViewDialog({ open, onOpenChange, transaction }: Trans
           <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg">
             <div>
               <p className="text-sm text-muted-foreground">Transaction ID</p>
-              <p className="font-mono font-medium text-primary">{transaction.id}</p>
+              <p className="font-mono font-medium text-primary">{transaction.transactionId}</p>
             </div>
             <div className="flex items-center gap-2">
               <StatusIcon className={`w-5 h-5 ${statusColor}`} />
@@ -65,8 +52,8 @@ export function TransactionViewDialog({ open, onOpenChange, transaction }: Trans
                   transaction.status === "Success"
                     ? "bg-chart-green/10 text-chart-green"
                     : transaction.status === "Pending"
-                    ? "bg-chart-orange/10 text-chart-orange"
-                    : "bg-destructive/10 text-destructive"
+                      ? "bg-chart-orange/10 text-chart-orange"
+                      : "bg-destructive/10 text-destructive"
                 }
               >
                 {transaction.status}
@@ -90,7 +77,7 @@ export function TransactionViewDialog({ open, onOpenChange, transaction }: Trans
               </div>
               <div className="flex-1">
                 <p className="text-sm text-muted-foreground">Customer</p>
-                <p className="font-medium">{transaction.user}</p>
+                <p className="font-medium">{transaction.user?.fullName || "Unknown"}</p>
               </div>
             </div>
 
@@ -100,7 +87,7 @@ export function TransactionViewDialog({ open, onOpenChange, transaction }: Trans
               </div>
               <div className="flex-1">
                 <p className="text-sm text-muted-foreground">Plan</p>
-                <p className="font-medium">{transaction.plan}</p>
+                <p className="font-medium">{transaction.planName}</p>
               </div>
             </div>
 
@@ -110,7 +97,7 @@ export function TransactionViewDialog({ open, onOpenChange, transaction }: Trans
               </div>
               <div className="flex-1">
                 <p className="text-sm text-muted-foreground">Payment Method</p>
-                <p className="font-medium">{transaction.method}</p>
+                <p className="font-medium">{transaction.paymentMethod}</p>
               </div>
             </div>
 
@@ -120,7 +107,7 @@ export function TransactionViewDialog({ open, onOpenChange, transaction }: Trans
               </div>
               <div className="flex-1">
                 <p className="text-sm text-muted-foreground">Date & Time</p>
-                <p className="font-medium">{transaction.date}</p>
+                <p className="font-medium">{new Date(transaction.createdAt).toLocaleString()}</p>
               </div>
             </div>
           </div>
@@ -135,11 +122,18 @@ export function TransactionViewDialog({ open, onOpenChange, transaction }: Trans
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Reference No.</span>
-              <span className="font-mono text-xs">{transaction.transactionRef || `RZP${transaction.id.replace("TXN-", "")}`}</span>
+              <span className="font-mono text-xs">{transaction.referenceNo || `RZP${transaction.transactionId.replace("TXN-", "")}`}</span>
             </div>
+            {transaction.user?.email && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Email</span>
+                <span className="font-medium">{transaction.user.email}</span>
+              </div>
+            )}
           </div>
         </div>
       </DialogContent>
     </Dialog>
   );
 }
+

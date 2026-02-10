@@ -24,7 +24,7 @@ export default function StaffList() {
   console.log(staffList, "data in the staff list");
   console.log(total, "data in the total");
   console.log(listLoading, "data in the list loading");
-  const { branches } = useAppSelector((state) => state.branch);
+  // const { branches } = useAppSelector((state) => state.branch);
 
   const [selectedStaff, setSelectedStaff] = useState<Staff | null>(null);
   const [viewOpen, setViewOpen] = useState(false);
@@ -39,10 +39,10 @@ export default function StaffList() {
   const [statusFilter, setStatusFilter] = useState("all-status");
 
   // Fetch staff list and branches on mount
-  useEffect(() => {
-    dispatch(fetchStaffListAsync({ take: 100 }));
-    dispatch(fetchBranchesAsync({ take: 100 }));
-  }, [dispatch]);
+  // useEffect(() => {
+  //   dispatch(fetchStaffListAsync({ take: 100 }));
+  //   dispatch(fetchBranchesAsync({ take: 100 }));
+  // }, [dispatch]);
 
   // Refetch when filters change
   useEffect(() => {
@@ -77,19 +77,19 @@ export default function StaffList() {
     setDeleteOpen(true);
   };
 
-  // Get branch name from ID or nested object
-  const getBranchName = (branch: any) => {
-    // If branch is already an object with name property
-    if (typeof branch === 'object' && branch?.name) {
-      return branch.name;
-    }
-    // If branch is a string ID, find it in branches list
-    if (typeof branch === 'string') {
-      const foundBranch = branches.find((b) => b._id === branch);
-      return foundBranch?.name || branch;
-    }
-    return 'N/A';
-  };
+  // // Get branch name from ID or nested object
+  // const getBranchName = (branch: any) => {
+  //   // If branch is already an object with name property
+  //   if (typeof branch === 'object' && branch?.name) {
+  //     return branch.name;
+  //   }
+  //   // If branch is a string ID, find it in branches list
+  //   if (typeof branch === 'string') {
+  //     const foundBranch = branches.find((b) => b._id === branch);
+  //     return foundBranch?.name || branch;
+  //   }
+  //   return 'N/A';
+  // };
 
   // Calculate stats
   const activeStaff = staffList.filter((s) => s.status === "Active").length;
@@ -137,10 +137,10 @@ export default function StaffList() {
             <div className="w-10 h-10 rounded-lg bg-chart-orange/10 flex items-center justify-center">
               <Users className="w-5 h-5 text-chart-orange" />
             </div>
-            <div>
+            {/* <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Branches</p>
               <p className="text-xl font-semibold text-foreground">{branches.length}</p>
-            </div>
+            </div> */}
           </CardContent>
         </Card>
         <Card className="stat-card-shadow border-0">
@@ -185,14 +185,14 @@ export default function StaffList() {
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Branch" />
                 </SelectTrigger>
-                <SelectContent>
+                {/* <SelectContent>
                   <SelectItem value="all-branch">All Branches</SelectItem>
                   {branches.map((branch) => (
                     <SelectItem key={branch._id} value={branch._id}>
                       {branch.name}
                     </SelectItem>
                   ))}
-                </SelectContent>
+                </SelectContent> */}
               </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-32">
@@ -221,7 +221,7 @@ export default function StaffList() {
                 <TableHead>Staff Member</TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead>Role</TableHead>
-                <TableHead>Branch</TableHead>
+                {/* <TableHead>Branch</TableHead> */}
                 <TableHead>Status</TableHead>
                 <TableHead>Created</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
@@ -244,9 +244,9 @@ export default function StaffList() {
                     <TableCell>
                       <Skeleton className="h-6 w-24" />
                     </TableCell>
-                    <TableCell>
+                    {/* <TableCell>
                       <Skeleton className="h-4 w-28" />
-                    </TableCell>
+                    </TableCell> */}
                     <TableCell>
                       <Skeleton className="h-6 w-16" />
                     </TableCell>
@@ -287,7 +287,7 @@ export default function StaffList() {
                     <TableCell>
                       <Badge variant="outline">{member?.role?.name}</Badge>
                     </TableCell>
-                    <TableCell className="text-sm">{getBranchName(member.branch)}</TableCell>
+                    {/* <TableCell className="text-sm">{getBranchName(member.branch)}</TableCell> */}
                     <TableCell>
                       <Badge
                         variant="outline"

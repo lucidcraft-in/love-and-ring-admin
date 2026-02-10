@@ -13,12 +13,12 @@ interface StaffViewDialogProps {
 }
 
 export function StaffViewDialog({ open, onOpenChange, staff }: StaffViewDialogProps) {
-  const { branches } = useAppSelector((state) => state.branch);
+  // const { branches } = useAppSelector((state) => state.branch);
 
   if (!staff) return null;
 
   // Get branch name from branch ID
-  const branchName = branches.find((b) => b._id === staff.branch)?.name || staff.branch;
+  // const branchName = branches.find((b) => b._id === staff.branch)?.name || staff.branch;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -39,12 +39,12 @@ export function StaffViewDialog({ open, onOpenChange, staff }: StaffViewDialogPr
             </Avatar>
             <div className="flex-1">
               <h3 className="font-semibold text-lg">{staff.fullName}</h3>
-              <Badge variant="outline" className="mt-1">{staff.role}</Badge>
+              <Badge variant="outline" className="mt-1">{staff.role.name}</Badge>
               <Badge
                 variant="outline"
                 className={`ml-2 ${staff.status === "Active"
-                    ? "border-chart-green text-chart-green"
-                    : "border-muted-foreground text-muted-foreground"
+                  ? "border-chart-green text-chart-green"
+                  : "border-muted-foreground text-muted-foreground"
                   }`}
               >
                 {staff.status}
@@ -76,7 +76,7 @@ export function StaffViewDialog({ open, onOpenChange, staff }: StaffViewDialogPr
               </div>
             )}
 
-            <div className="flex items-center gap-3">
+            {/* <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Building2 className="w-4 h-4 text-primary" />
               </div>
@@ -84,7 +84,7 @@ export function StaffViewDialog({ open, onOpenChange, staff }: StaffViewDialogPr
                 <p className="text-sm text-muted-foreground">Branch</p>
                 <p className="font-medium">{branchName}</p>
               </div>
-            </div>
+            </div> */}
 
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -92,7 +92,7 @@ export function StaffViewDialog({ open, onOpenChange, staff }: StaffViewDialogPr
               </div>
               <div className="flex-1">
                 <p className="text-sm text-muted-foreground">Role</p>
-                <p className="font-medium">{staff.role}</p>
+                <p className="font-medium">{staff.role.name}</p>
               </div>
             </div>
           </div>

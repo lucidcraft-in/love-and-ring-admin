@@ -19,7 +19,7 @@ interface StaffEditDialogProps {
 export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogProps) {
   const dispatch = useAppDispatch();
   const { updateLoading, error } = useAppSelector((state) => state.staff);
-  const { branches } = useAppSelector((state) => state.branch);
+  // const { branches } = useAppSelector((state) => state.branch);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -31,11 +31,11 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
   });
 
   // Fetch branches when dialog opens
-  useEffect(() => {
-    if (open && branches.length === 0) {
-      dispatch(fetchBranchesAsync({ take: 100 }));
-    }
-  }, [open, branches.length, dispatch]);
+  // useEffect(() => {
+  //   if (open && branches.length === 0) {
+  //     dispatch(fetchBranchesAsync({ take: 100 }));
+  //   }
+  // }, [open, branches.length, dispatch]);
 
   // Populate form when staff changes
   useEffect(() => {

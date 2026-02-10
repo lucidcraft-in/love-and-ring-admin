@@ -24,7 +24,7 @@ export interface Staff {
   email: string;
   phone?: string;
   role: Role;
-  branch?: Branch;
+  // branch?: Branch;
   status: 'Active' | 'Inactive';
   createdAt: string;
   updatedAt?: string;
@@ -35,7 +35,7 @@ export interface CreateStaffPayload {
   email: string;
   phone?: string;
   role: string; // ID
-  branch?: string; // ID
+  // branch?: string; // ID
   password: string;
 }
 
@@ -44,17 +44,17 @@ export interface Role {
   name: string;
 }
 
-export interface Branch {
-  _id: string;
-  name: string;
-}
+// export interface Branch {
+//   _id: string;
+//   name: string;
+// }
 
 export interface UpdateStaffPayload {
   fullName?: string;
   email?: string;
   phone?: string;
   role?: string; // ID
-  branch?: string; // ID
+  // branch?: string; // ID
   password?: string;
 }
 
@@ -62,7 +62,7 @@ export interface GetStaffParams {
   skip?: number;
   take?: number;
   role?: Role;
-  branch?: Branch;
+  // branch?: Branch;
   status?: 'Active' | 'Inactive';
   search?: string;
 }
@@ -114,7 +114,7 @@ export const staffService = {
         skip: params?.skip || 0,
         take: params?.take || 10,
         role: params?.role,
-        branch: params?.branch,
+        // branch: params?.branch,
         status: params?.status,
         search: params?.search,
       },

@@ -13,7 +13,7 @@ const menuItems = [
   { icon: CreditCard, label: "PAYMENT", path: "/payment" },
   // { icon: MessageSquare, label: "CONTACT", path: "/contact" },
   // { icon: Building2, label: "BRANCHES", path: "/branches" },
-  { icon: UserCog, label: "STAFF", path: "/staff" },
+  { icon: UserCog, label: "STAFF", path: "/admin/staff" },
   { icon: Shield, label: "ADMINS & ROLES", path: "/admins" },
   { icon: BarChart3, label: "REPORTS", path: "/reports" },
   { icon: FileText, label: "CMS", path: "/cms" },

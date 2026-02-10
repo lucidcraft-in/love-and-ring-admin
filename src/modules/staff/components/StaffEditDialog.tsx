@@ -8,6 +8,7 @@ import { updateStaffAsync, clearStaffError } from "@/store/slices/staffSlice";
 import { fetchBranchesAsync } from "@/store/slices/branchSlice";
 import { Staff } from "@/services/staffService";
 import { useState, useEffect } from "react";
+import { fetchRolesAsync } from "@/store/slices/roleSlice";
 import { Loader2 } from "lucide-react";
 
 interface StaffEditDialogProps {
@@ -20,6 +21,7 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
   const dispatch = useAppDispatch();
   const { updateLoading, error } = useAppSelector((state) => state.staff);
   // const { branches } = useAppSelector((state) => state.branch);
+  const { roles } = useAppSelector((state) => state.role);
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -35,7 +37,12 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
   //   if (open && branches.length === 0) {
   //     dispatch(fetchBranchesAsync({ take: 100 }));
   //   }
-  // }, [open, branches.length, dispatch]);
+  // Fetch roles when dialog opens
+  useEffect(() => {
+    if (open && roles.length === 0) {
+      dispatch(fetchRolesAsync());
+    }
+  }, [open, roles.length, dispatch]);
 
   // Populate form when staff changes
   useEffect(() => {
@@ -44,7 +51,7 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
         fullName: staff.fullName,
         email: staff.email,
         phone: staff.phone || "",
-        role: staff.role.name,
+        role: staff.role._id,
         // branch: staff.branch,
         password: "",
       });
@@ -158,9 +165,11 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Branch Admin">Branch Admin</SelectItem>
-                <SelectItem value="Matchmaker">Matchmaker</SelectItem>
-                <SelectItem value="Support Staff">Support Staff</SelectItem>
+                {roles.map((role) => (
+                  <SelectItem key={role._id} value={role._id}>
+                    {role.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

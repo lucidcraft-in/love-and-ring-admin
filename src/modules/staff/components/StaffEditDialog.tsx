@@ -30,6 +30,7 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
     role: "",
     // branch: "",
     password: "",
+    status: "",
   });
 
   // Fetch branches when dialog opens
@@ -54,6 +55,7 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
         role: typeof staff.role === 'object' ? staff.role._id : staff.role as string,
         // branch: staff.branch,
         password: "",
+        status: staff.status,
       });
     }
   }, [staff]);
@@ -77,6 +79,7 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
       phone: formData.phone,
       role: formData.role,
       // branch: formData.branch,
+      status: formData.status,
     };
 
     if (formData.password) {
@@ -171,6 +174,19 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
                     {role.name}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="edit-status">Status *</Label>
+            <Select value={formData.status} onValueChange={(value) => handleChange("status", value)} required>
+              <SelectTrigger id="edit-status">
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Active">Active</SelectItem>
+                <SelectItem value="Inactive">Inactive</SelectItem>
               </SelectContent>
             </Select>
           </div>

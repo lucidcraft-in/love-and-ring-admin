@@ -61,7 +61,7 @@ export default function StaffRegister() {
         email: formData.email,
         fullName: formData.fullName,
         phone: formData.phone,
-        branch: formData.branch,
+        // branch: formData.branch,
         role: formData.role,
         password: formData.password,
       })).unwrap();

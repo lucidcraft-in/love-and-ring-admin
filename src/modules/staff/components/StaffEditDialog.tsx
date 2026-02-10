@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { updateStaffAsync, clearStaffError } from "@/store/slices/staffSlice";
+import { updateStaffAsync, clearStaffError, fetchStaffListAsync } from "@/store/slices/staffSlice";
 import { fetchBranchesAsync } from "@/store/slices/branchSlice";
 import { Staff } from "@/services/staffService";
 import { useState, useEffect } from "react";
@@ -51,7 +51,7 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
         fullName: staff.fullName,
         email: staff.email,
         phone: staff.phone || "",
-        role: staff.role._id,
+        role: typeof staff.role === 'object' ? staff.role._id : staff.role as string,
         // branch: staff.branch,
         password: "",
       });
@@ -86,6 +86,7 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
     const result = await dispatch(updateStaffAsync({ id: staff._id, payload }));
 
     if (updateStaffAsync.fulfilled.match(result)) {
+      dispatch(fetchStaffListAsync({ take: 100 }));
       onOpenChange(false);
     }
   };

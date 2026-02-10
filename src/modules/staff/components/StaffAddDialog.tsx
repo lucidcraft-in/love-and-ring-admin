@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { createStaffAsync, clearStaffError } from "@/store/slices/staffSlice";
+import { createStaffAsync, clearStaffError, fetchStaffListAsync } from "@/store/slices/staffSlice";
 // import { fetchBranchesAsync } from "@/store/slices/branchSlice";
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
@@ -64,6 +64,7 @@ export function StaffAddDialog({ open, onOpenChange }: StaffAddDialogProps) {
     const result = await dispatch(createStaffAsync(formData));
 
     if (createStaffAsync.fulfilled.match(result)) {
+      dispatch(fetchStaffListAsync({ take: 100 }));
       onOpenChange(false);
       setFormData({
         fullName: "",

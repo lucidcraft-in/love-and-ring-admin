@@ -24,7 +24,7 @@ export interface Staff {
   email: string;
   phone?: string;
   role: Role;
-  branch: Branch;
+  branch?: Branch;
   status: 'Active' | 'Inactive';
   createdAt: string;
   updatedAt?: string;
@@ -35,7 +35,7 @@ export interface CreateStaffPayload {
   email: string;
   phone?: string;
   role: string; // ID
-  branch: string; // ID
+  branch?: string; // ID
   password: string;
 }
 

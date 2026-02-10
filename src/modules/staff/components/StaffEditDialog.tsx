@@ -26,7 +26,7 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
     email: "",
     phone: "",
     role: "",
-    branch: "",
+    // branch: "",
     password: "",
   });
 
@@ -44,8 +44,8 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
         fullName: staff.fullName,
         email: staff.email,
         phone: staff.phone || "",
-        role: staff.role,
-        branch: staff.branch,
+        role: staff.role.name,
+        // branch: staff.branch,
         password: "",
       });
     }
@@ -69,7 +69,7 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
       email: formData.email,
       phone: formData.phone,
       role: formData.role,
-      branch: formData.branch,
+      // branch: formData.branch,
     };
 
     if (formData.password) {
@@ -165,7 +165,7 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
             </Select>
           </div>
 
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="edit-branch">Branch *</Label>
             <Select value={formData.branch} onValueChange={(value) => handleChange("branch", value)} required>
               <SelectTrigger id="edit-branch">
@@ -181,7 +181,7 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
                   ))}
               </SelectContent>
             </Select>
-          </div>
+          </div> */}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={updateLoading}>

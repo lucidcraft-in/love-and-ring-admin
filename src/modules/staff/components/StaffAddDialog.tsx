@@ -5,9 +5,10 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { createStaffAsync, clearStaffError } from "@/store/slices/staffSlice";
-import { fetchBranchesAsync } from "@/store/slices/branchSlice";
+// import { fetchBranchesAsync } from "@/store/slices/branchSlice";
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
+import { fetchRolesAsync } from "@/store/slices/roleSlice";
 
 interface StaffAddDialogProps {
   open: boolean;
@@ -17,23 +18,30 @@ interface StaffAddDialogProps {
 export function StaffAddDialog({ open, onOpenChange }: StaffAddDialogProps) {
   const dispatch = useAppDispatch();
   const { createLoading, error } = useAppSelector((state) => state.staff);
-  const { branches } = useAppSelector((state) => state.branch);
+  // const { branches } = useAppSelector((state) => state.branch);
+  const { roles } = useAppSelector((state) => state.role);
 
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
     phone: "",
     role: "",
-    branch: "",
+    // branch: "",
     password: "",
   });
 
   // Fetch branches when dialog opens
+  // useEffect(() => {
+  //   if (open && branches.length === 0) {
+  //     dispatch(fetchBranchesAsync({ take: 100 }));
+  //   }
+  // }, [open, branches.length, dispatch]);
+
   useEffect(() => {
-    if (open && branches.length === 0) {
-      dispatch(fetchBranchesAsync({ take: 100 }));
+    if (open && roles.length === 0) {
+      dispatch(fetchRolesAsync());
     }
-  }, [open, branches.length, dispatch]);
+  }, [open, roles.length, dispatch]);
 
   // Clear error when dialog closes
   useEffect(() => {
@@ -44,7 +52,7 @@ export function StaffAddDialog({ open, onOpenChange }: StaffAddDialogProps) {
         email: "",
         phone: "",
         role: "",
-        branch: "",
+        // branch: "",
         password: "",
       });
     }
@@ -62,7 +70,7 @@ export function StaffAddDialog({ open, onOpenChange }: StaffAddDialogProps) {
         email: "",
         phone: "",
         role: "",
-        branch: "",
+        // branch: "",
         password: "",
       });
     }
@@ -142,14 +150,16 @@ export function StaffAddDialog({ open, onOpenChange }: StaffAddDialogProps) {
                 <SelectValue placeholder="Select role" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Branch Admin">Branch Admin</SelectItem>
-                <SelectItem value="Matchmaker">Matchmaker</SelectItem>
-                <SelectItem value="Support Staff">Support Staff</SelectItem>
+                {roles.map((role) => (
+                  <SelectItem key={role._id} value={role._id}>
+                    {role.name}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="branch">Branch *</Label>
             <Select value={formData.branch} onValueChange={(value) => handleChange("branch", value)} required>
               <SelectTrigger id="branch">
@@ -165,7 +175,7 @@ export function StaffAddDialog({ open, onOpenChange }: StaffAddDialogProps) {
                   ))}
               </SelectContent>
             </Select>
-          </div>
+          </div> */}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={createLoading}>

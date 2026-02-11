@@ -42,12 +42,12 @@ export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
 
       {/* Search */}
       <div className="relative w-full max-w-xs md:max-w-sm lg:max-w-md hidden sm:block">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        {/* <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input
           type="text"
           placeholder="Search for location..."
           className="pl-10 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/30"
-        />
+        /> */}
       </div>
 
       {/* Right section */}

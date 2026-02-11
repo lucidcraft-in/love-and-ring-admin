@@ -27,18 +27,19 @@ const MasterData = () => {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [religionsList, setReligionsList] = useState<MasterItem[]>([]); // For generic dropdown
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Initialize and fetch on tab change
   useEffect(() => {
     dispatch(setMasterDataType(activeTab));
-    dispatch(fetchMasterDataAsync({ type: activeTab }));
+    dispatch(fetchMasterDataAsync({ type: activeTab, params: { search: searchQuery } }));
     dispatch(fetchMasterDataCountAsync());
 
     // When switching to castes, we might need religion list for dropdown
     if (activeTab === 'castes') {
       masterDataService.getSimpleList('religions').then(res => setReligionsList(res.data));
     }
-  }, [activeTab, dispatch]);
+  }, [activeTab, dispatch, searchQuery]);
 
   const handleCreate = () => {
     dispatch(setCurrentMasterItem(null));
@@ -186,7 +187,10 @@ const MasterData = () => {
       </div>
 
       {/* Tabs */}
-      <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)} className="space-y-4">
+      <Tabs value={activeTab} onValueChange={(v) => {
+        setActiveTab(v as any);
+        setSearchQuery("");
+      }} className="space-y-4">
         <TabsList className="bg-muted/50 flex-wrap h-auto">
           <TabsTrigger value="religions">Religion</TabsTrigger>
           <TabsTrigger value="castes">Caste</TabsTrigger>
@@ -200,7 +204,12 @@ const MasterData = () => {
           <div className="flex flex-col sm:flex-row gap-4 justify-between">
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder={`Search ${activeTab}...`} className="pl-10" />
+              <Input
+                placeholder={`Search ${activeTab}...`}
+                className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
             <Button className="bg-primary hover:bg-primary/90" onClick={handleCreate}>
               <Plus className="w-4 h-4 mr-2" />

@@ -133,7 +133,7 @@ export default function StaffList() {
               <Activity className="w-5 h-5 text-chart-green" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Active Now</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Active Staff</p>
               <p className="text-xl font-semibold text-foreground">{activeStaff}</p>
             </div>
           </CardContent>
@@ -149,7 +149,7 @@ export default function StaffList() {
             </div>
           </CardContent>
         </Card> */}
-        <Card className="stat-card-shadow border-0">
+        {/* <Card className="stat-card-shadow border-0">
           <CardContent className="p-4 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-info/10 flex items-center justify-center">
               <Award className="w-5 h-5 text-info" />
@@ -157,6 +157,17 @@ export default function StaffList() {
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Roles</p>
               <p className="text-xl font-semibold text-foreground">3</p>
+            </div>
+          </CardContent>
+        </Card> */}
+        <Card className="stat-card-shadow border-0">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-chart-green/10 flex items-center justify-center">
+              <UserCog className="w-5 h-5 text-chart-green" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Inactive Staff</p>
+              <p className="text-xl font-semibold text-foreground">{total - activeStaff}</p>
             </div>
           </CardContent>
         </Card>

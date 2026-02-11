@@ -34,7 +34,7 @@ export default function ConsultantList() {
   const [permissionsOpen, setPermissionsOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<string>("ACTIVE");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [advancedFilters, setAdvancedFilters] = useState<ConsultantFilters>({});
 

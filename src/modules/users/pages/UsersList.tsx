@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Download, UserPlus, MoreHorizontal, Eye, Edit, Ban, CheckCircle, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, Filter, Download, UserPlus, MoreHorizontal, Eye, Edit, Ban, CheckCircle, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AddUserDialog } from "@/components/users/AddUserDialog";
 import { EditUserDialog } from "@/components/users/EditUserDialog";
@@ -18,7 +18,6 @@ import { fetchUsersAsync } from "@/store/slices/usersSlice";
 const Users = () => {
   const dispatch = useAppDispatch();
   const { users, isLoading, error, total } = useAppSelector((state) => state.users);
-  console.log(users, "users");
 
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -350,6 +349,16 @@ const Users = () => {
                       </Badge>
                     )}
                   </Button>
+                  {(searchTerm || genderFilter !== "all" || membershipFilter !== "all" || statusFilter !== "all" || activeFilterCount > 0) && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={handleClearFilters}
+                      title="Reset Filters"
+                    >
+                      <RotateCcw className="w-4 h-4" />
+                    </Button>
+                  )}
                   {/* Compact Pagination Controls */}
                   <div className="flex items-center gap-2 border-l pl-2 ml-1">
                     <Select value={pageSize.toString()} onValueChange={(value) => {

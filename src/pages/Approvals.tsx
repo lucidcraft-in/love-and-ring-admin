@@ -24,6 +24,7 @@ const Approvals = () => {
   const [actionDialogOpen, setActionDialogOpen] = useState(false);
   const [actionType, setActionType] = useState<"approve" | "reject">("approve");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     dispatch(fetchPendingProfilesAsync({ take: 50, skip: 0 }));
@@ -154,6 +155,17 @@ const Approvals = () => {
             </div>
           </CardContent>
         </Card>
+        <Card className="stat-card-shadow border-0">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="w-10 h-10 rounded-lg bg-destructive/10 flex items-center justify-center">
+              <XCircle className="w-5 h-5 text-destructive" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Rejected Today</p>
+              <p className="text-xl font-semibold text-foreground">{stats?.rejectedToday || 0}</p>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Tabs */}
@@ -167,9 +179,12 @@ const Approvals = () => {
           <div className="flex gap-2">
             <div className="relative flex-1 lg:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input placeholder="Search..." className="pl-10" />
+              <Input placeholder="Search..." className="pl-10"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
             </div>
-            <Select defaultValue="all">
+            {/* <Select defaultValue="all">
               <SelectTrigger className="w-32">
                 <SelectValue />
               </SelectTrigger>
@@ -178,10 +193,10 @@ const Approvals = () => {
                 <SelectItem value="new">New Profile</SelectItem>
                 <SelectItem value="update">Profile Update</SelectItem>
               </SelectContent>
-            </Select>
-            <Button variant="outline" size="icon">
+            </Select> */}
+            {/* <Button variant="outline" size="icon">
               <Filter className="w-4 h-4" />
-            </Button>
+            </Button> */}
           </div>
         </div>
 
@@ -192,7 +207,7 @@ const Approvals = () => {
           {!loading && pendingProfiles.length === 0 && (
             <div className="text-center p-8 text-muted-foreground">No pending profiles found.</div>
           )}
-          {pendingProfiles.map((profile) => (
+          {pendingProfiles.filter((profile) => profile.fullName.toLowerCase().includes(searchQuery.toLowerCase())).map((profile) => (
             <Card key={profile._id} className="stat-card-shadow border-0">
               <CardContent className="p-4">
                 <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">

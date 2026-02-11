@@ -19,6 +19,7 @@ export interface PaginationResult<T> {
 export interface ApprovalStats {
   pendingConsultants: number;
   approvedToday: number;
+  rejectedToday: number;
 }
 
 export const approvalService = {

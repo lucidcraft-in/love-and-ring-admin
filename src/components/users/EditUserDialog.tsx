@@ -7,8 +7,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
+import { Upload, Trash2, Star, X } from "lucide-react";
 import Axios from "../../axios/axios";
 import { masterDataService } from "@/services/masterDataService";
+import { userService } from "@/services/userService";
 import { useToast } from "@/hooks/use-toast";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
@@ -16,6 +18,11 @@ import {
 } from "@/store/slices/masterDataSlice";
 
 interface User {
+  photos?: {
+    url: string;
+    isPrimary: boolean;
+    _id?: string;
+  }[];
   _id: string;
   accountFor?: string;
   fullName?: string;
@@ -88,6 +95,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
   console.log("religions", religions);
 
   const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [currentTab, setCurrentTab] = useState("basic");
 
   const [formData, setFormData] = useState({
@@ -121,6 +129,8 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
     // branch: "",
     referredBy: "",
   });
+
+  const [photos, setPhotos] = useState<any[]>([]);
 
   // Fetch master data when dialog opens
   // Fetch master data when dialog opens
@@ -193,6 +203,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
         // branch: extractId(user.branch),
         referredBy: extractId(user.referredBy),
       });
+      setPhotos(user.photos || []);
     }
   }, [user]);
 
@@ -263,6 +274,61 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files.length || !user?._id) return;
+
+    try {
+      setUploading(true);
+      const formData = new FormData();
+      Array.from(e.target.files).forEach((file) => {
+        formData.append("photos", file);
+      });
+
+      const newPhotos = await userService.uploadUserPhotos(user._id, formData);
+
+      // setPhotos(newPhotos); // Assuming backend returns updated list or we append. 
+      // usersService.uploadUserPhotos returns User['photos'] which is the array.
+      if (newPhotos) {
+        setPhotos(newPhotos);
+      }
+
+      toast({
+        title: "Success",
+        description: "Photos uploaded successfully",
+      });
+
+      onUserUpdated?.();
+      // onOpenChange(false); // Validated: Keep dialog open to show uploaded photos
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.response?.data?.message || "Failed to upload photos",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDeletePhoto = async (photoUrl: string) => {
+    if (!user?._id) return;
+    try {
+      const updatedPhotos = await userService.deleteUserPhoto(user._id, photoUrl);
+      setPhotos(updatedPhotos);
+      toast({
+        title: "Success",
+        description: "Photo deleted successfully",
+      });
+      onUserUpdated?.();
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: "Failed to delete photo",
+        variant: "destructive",
+      });
     }
   };
 
@@ -530,120 +596,164 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
                   value={formData.interests}
                   onChange={(e) => handleInputChange("interests", e.target.value)}
                 />
+
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>User Photos</Label>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                {photos.map((photo, index) => (
+                  <div key={index} className="relative group aspect-square rounded-lg overflow-hidden border bg-muted">
+                    <img
+                      src={photo.url}
+                      alt={`User photo ${index + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                    <div
+                      className="absolute top-1 right-1 bg-destructive/80 hover:bg-destructive text-destructive-foreground rounded-full p-1 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity z-10"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeletePhoto(photo.url);
+                      }}
+                    >
+                      <X className="w-3 h-3" />
+                    </div>
+                    {photo.isPrimary && (
+                      <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                        <Star className="w-3 h-3 fill-current" /> Primary
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <div className="col-span-1 md:col-span-1 aspect-square rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors relative">
+                  <input
+                    type="file"
+                    multiple
+                    accept="image/*"
+                    className="absolute inset-0 opacity-0 cursor-pointer z-10"
+                    onChange={handlePhotoUpload}
+                    disabled={uploading}
+                  />
+                  <Upload className="w-8 h-8 text-muted-foreground mb-2" />
+                  <span className="text-xs font-medium text-center px-2">
+                    {uploading ? "Uploading..." : "Click to upload"}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="personalityTraits">Personality Traits (comma-separated)</Label>
+              <Textarea
+                id="personalityTraits"
+                value={formData.personalityTraits}
+                onChange={(e) => handleInputChange("personalityTraits", e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="dietPreference">Diet Preference (comma-separated)</Label>
+              <Input
+                id="dietPreference"
+                value={formData.dietPreference}
+                onChange={(e) => handleInputChange("dietPreference", e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="city">City</Label>
+                <Select value={formData.city} onValueChange={(val) => handleInputChange("city", val)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select city" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.isArray(locations) &&
+                      locations.map((location) => (
+                        <SelectItem key={location._id} value={location._id}>
+                          {location.city}, {location.state}, {location.country}
+                        </SelectItem>
+                      ))
+                    }
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="personalityTraits">Personality Traits (comma-separated)</Label>
-                <Textarea
-                  id="personalityTraits"
-                  value={formData.personalityTraits}
-                  onChange={(e) => handleInputChange("personalityTraits", e.target.value)}
-                />
+                <Label htmlFor="religion">Religion</Label>
+                <Select value={formData.religion} onValueChange={(val) => handleInputChange("religion", val)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select religion" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.isArray(religions) &&
+                      religions.map((religion) => (
+                        <SelectItem key={religion._id} value={religion._id}>
+                          {religion.name}
+                        </SelectItem>
+                      ))
+                    }
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="dietPreference">Diet Preference (comma-separated)</Label>
-                <Input
-                  id="dietPreference"
-                  value={formData.dietPreference}
-                  onChange={(e) => handleInputChange("dietPreference", e.target.value)}
-                />
+                <Label htmlFor="caste">Caste</Label>
+                <Select value={formData.caste} onValueChange={(val) => handleInputChange("caste", val)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select caste" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.isArray(castes) &&
+                      castes.map((caste) => (
+                        <SelectItem key={caste._id} value={caste._id}>
+                          {caste.name}
+                        </SelectItem>
+                      ))
+                    }
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="city">City</Label>
-                  <Select value={formData.city} onValueChange={(val) => handleInputChange("city", val)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select city" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.isArray(locations) &&
-                        locations.map((location) => (
-                          <SelectItem key={location._id} value={location._id}>
-                            {location.city}, {location.state}, {location.country}
-                          </SelectItem>
-                        ))
-                      }
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="motherTongue">Mother Tongue</Label>
+                <Select value={formData.motherTongue} onValueChange={(val) => handleInputChange("motherTongue", val)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.isArray(languages) &&
+                      languages.map((language) => (
+                        <SelectItem key={language._id} value={language._id}>
+                          {language.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="religion">Religion</Label>
-                  <Select value={formData.religion} onValueChange={(val) => handleInputChange("religion", val)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select religion" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.isArray(religions) &&
-                        religions.map((religion) => (
-                          <SelectItem key={religion._id} value={religion._id}>
-                            {religion.name}
-                          </SelectItem>
-                        ))
-                      }
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="approvalStatus">Approval Status</Label>
+                <Select
+                  value={formData.approvalStatus}
+                  onValueChange={(val) => handleInputChange("approvalStatus", val)}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="APPROVED">Approved</SelectItem>
+                    <SelectItem value="REJECTED">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="caste">Caste</Label>
-                  <Select value={formData.caste} onValueChange={(val) => handleInputChange("caste", val)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select caste" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.isArray(castes) &&
-                        castes.map((caste) => (
-                          <SelectItem key={caste._id} value={caste._id}>
-                            {caste.name}
-                          </SelectItem>
-                        ))
-                      }
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="motherTongue">Mother Tongue</Label>
-                  <Select value={formData.motherTongue} onValueChange={(val) => handleInputChange("motherTongue", val)}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select language" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {Array.isArray(languages) &&
-                        languages.map((language) => (
-                          <SelectItem key={language._id} value={language._id}>
-                            {language.name}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="approvalStatus">Approval Status</Label>
-                  <Select
-                    value={formData.approvalStatus}
-                    onValueChange={(val) => handleInputChange("approvalStatus", val)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="PENDING">Pending</SelectItem>
-                      <SelectItem value="APPROVED">Approved</SelectItem>
-                      <SelectItem value="REJECTED">Rejected</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* <div className="space-y-2">
+              {/* <div className="space-y-2">
                   <Label htmlFor="branch">Branch (ID)</Label>
                   <Input id="branch" value={formData.branch} onChange={(e) => handleInputChange("branch", e.target.value)} />
                 </div> */}
-              </div>
             </div>
           </TabsContent>
         </Tabs>
@@ -657,6 +767,6 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog>
+    </Dialog >
   );
 };

@@ -45,7 +45,13 @@ export interface User {
   isActive?: boolean;
   isDeleted?: boolean;
   emailVerified?: boolean;
-  photos?: string[];
+  photos?: {
+    url: string;
+    isPrimary: boolean;
+    uploadedAt: string;
+    approvalStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
+    _id?: string;
+  }[];
   createdAt?: string;
   updatedAt?: string;
   approvedAt?: string;
@@ -157,5 +163,34 @@ export const userService = {
   updateUser: async (id: string, payload: Partial<User>): Promise<User> => {
     const response = await Axios.put<User>(`/api/users/${id}`, payload);
     return response.data;
+  },
+
+  /**
+   * Upload User Photos
+   */
+  uploadUserPhotos: async (userId: string, formData: FormData): Promise<User['photos']> => {
+    const response = await Axios.post<{ message: string; photos: User['photos'] }>(
+      `/api/users/${userId}/photos`,
+      formData,
+      {
+        headers: {
+          'Content-Type': undefined,
+        },
+      }
+    );
+    return response.data.photos;
+  },
+
+  /**
+   * Delete User Photo
+   */
+  deleteUserPhoto: async (userId: string, photoUrl: string): Promise<User['photos']> => {
+    const response = await Axios.delete<{ message: string; photos: User['photos'] }>(
+      `/api/users/${userId}/photos`,
+      {
+        data: { photoUrl }
+      }
+    );
+    return response.data.photos;
   },
 };

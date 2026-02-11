@@ -6,6 +6,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Mail, Phone, Calendar, MapPin, User, Briefcase, Heart, Award, CheckCircle, XCircle, Clock } from "lucide-react";
 
 interface User {
+  photos?: {
+    url: string;
+    isPrimary: boolean;
+    _id?: string;
+  }[];
   _id: string;
   accountFor?: string;
   fullName?: string;
@@ -121,8 +126,11 @@ export const ViewUserDialog = ({ open, onOpenChange, user, onEdit }: ViewUserDia
         <DialogHeader>
           <div className="flex items-center gap-4">
             <Avatar className="w-16 h-16">
-              <AvatarImage src={`https://ui-avatars.com/api/?name=${user.fullName || user.email}&size=128`} />
-              <AvatarFallback>{user.fullName?.charAt(0) || user.email.charAt(0)}</AvatarFallback>
+              {user.photos?.[0]?.url ? (
+                <AvatarImage src={user.photos[0].url} />
+              ) : (
+                <AvatarFallback>{user.fullName?.charAt(0) || user.email.charAt(0)}</AvatarFallback>
+              )}
             </Avatar>
             <div className="flex-1">
               <DialogTitle className="text-2xl">{user.fullName || "Unnamed User"}</DialogTitle>

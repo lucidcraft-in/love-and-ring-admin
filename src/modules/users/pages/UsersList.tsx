@@ -457,8 +457,15 @@ const Users = () => {
                             <TableCell>
                               <div className="flex items-center gap-3">
                                 <Avatar className="w-9 h-9">
-                                  <AvatarImage src={`https://ui-avatars.com/api/?name=${user.fullName || user.email}&size=64`} />
-                                  <AvatarFallback>{user.fullName?.charAt(0) || user.email.charAt(0)}</AvatarFallback>
+                                  {user.photos && user.photos.length > 0 ? (
+                                    <AvatarImage
+                                      src={user.photos.find((p: any) => p.isPrimary)?.url || user.photos[0].url}
+                                      className="object-cover"
+                                    />
+                                  ) : (
+                                    <AvatarImage src={`https://ui-avatars.com/api/?name=${user.fullName || user.email}&size=64`} />
+                                  )}
+                                  <AvatarFallback>{(user.fullName?.charAt(0) || user.email.charAt(0)).toUpperCase()}</AvatarFallback>
                                 </Avatar>
                                 <span className="font-medium">{user.fullName || "Unnamed"}</span>
                               </div>

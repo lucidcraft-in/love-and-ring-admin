@@ -102,7 +102,9 @@ export const updateAdminAsync = createAsyncThunk<
   async ({ id, payload }, { rejectWithValue }) => {
     try {
       const response = await adminService.updateAdmin(id, payload);
-      return response;
+      // Fetch the full admin object to get the populated role
+      const fullAdmin = await adminService.getAdminById(response._id);
+      return fullAdmin;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to update admin.';
       return rejectWithValue(message);

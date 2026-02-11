@@ -17,10 +17,12 @@ import { fetchStaffListAsync, setCurrentStaff } from "@/store/slices/staffSlice"
 import { fetchBranchesAsync } from "@/store/slices/branchSlice";
 import { Staff } from "@/services/staffService";
 import { Skeleton } from "@/components/ui/skeleton";
+import { fetchRolesAsync } from "@/store/slices/roleSlice";
 
 export default function StaffList() {
   const dispatch = useAppDispatch();
   const { staffList, total, listLoading } = useAppSelector((state) => state.staff);
+  const { roles } = useAppSelector((state) => state.role);
   console.log(staffList, "data in the staff list");
   console.log(total, "data in the total");
   console.log(listLoading, "data in the list loading");
@@ -43,6 +45,10 @@ export default function StaffList() {
   //   dispatch(fetchStaffListAsync({ take: 100 }));
   //   dispatch(fetchBranchesAsync({ take: 100 }));
   // }, [dispatch]);
+
+  useEffect(() =>{
+    dispatch(fetchRolesAsync())
+  },[])
 
   // Refetch when filters change
   useEffect(() => {
@@ -132,17 +138,17 @@ export default function StaffList() {
             </div>
           </CardContent>
         </Card>
-        <Card className="stat-card-shadow border-0">
+        {/* <Card className="stat-card-shadow border-0">
           <CardContent className="p-4 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-chart-orange/10 flex items-center justify-center">
               <Users className="w-5 h-5 text-chart-orange" />
             </div>
-            {/* <div>
+            <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Branches</p>
               <p className="text-xl font-semibold text-foreground">{branches.length}</p>
-            </div> */}
+            </div>
           </CardContent>
-        </Card>
+        </Card> */}
         <Card className="stat-card-shadow border-0">
           <CardContent className="p-4 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-info/10 flex items-center justify-center">
@@ -176,24 +182,26 @@ export default function StaffList() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all-role">All Roles</SelectItem>
-                  <SelectItem value="Branch Admin">Branch Admin</SelectItem>
-                  <SelectItem value="Matchmaker">Matchmaker</SelectItem>
-                  <SelectItem value="Support Staff">Support Staff</SelectItem>
+                  {roles.map((role) => (
+                    <SelectItem key={role._id} value={role._id}>
+                      {role.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
-              <Select value={branchFilter} onValueChange={setBranchFilter}>
+              {/* <Select value={branchFilter} onValueChange={setBranchFilter}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Branch" />
                 </SelectTrigger>
-                {/* <SelectContent>
+                <SelectContent>
                   <SelectItem value="all-branch">All Branches</SelectItem>
                   {branches.map((branch) => (
                     <SelectItem key={branch._id} value={branch._id}>
                       {branch.name}
                     </SelectItem>
                   ))}
-                </SelectContent> */}
-              </Select>
+                </SelectContent>
+              </Select> */}
               <Select value={statusFilter} onValueChange={setStatusFilter}>
                 <SelectTrigger className="w-32">
                   <SelectValue placeholder="Status" />
@@ -204,9 +212,9 @@ export default function StaffList() {
                   <SelectItem value="Inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
-              <Button variant="outline" size="icon">
+              {/* <Button variant="outline" size="icon">
                 <Filter className="w-4 h-4" />
-              </Button>
+              </Button> */}
             </div>
           </div>
         </CardContent>

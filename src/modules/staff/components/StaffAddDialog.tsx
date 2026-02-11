@@ -125,7 +125,7 @@ export function StaffAddDialog({ open, onOpenChange }: StaffAddDialogProps) {
             <Label htmlFor="phone">Phone</Label>
             <Input
               id="phone"
-              type="tel"
+              type="number"
               value={formData.phone}
               onChange={(e) => handleChange("phone", e.target.value)}
               placeholder="+91 98765 43210"

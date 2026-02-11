@@ -144,7 +144,7 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
             <Label htmlFor="edit-phone">Phone</Label>
             <Input
               id="edit-phone"
-              type="tel"
+              type="number"
               value={formData.phone}
               onChange={(e) => handleChange("phone", e.target.value)}
               placeholder="+91 98765 43210"

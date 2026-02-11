@@ -6,6 +6,7 @@ import {
   UpdateAdminPayload,
   GetAdminsParams,
   GetAdminsResponse,
+  StatsCount,
 } from '@/services/adminService';
 
 // ============================================================================
@@ -18,6 +19,9 @@ interface AdminState {
   skip: number;
   take: number;
   currentAdmin: Admin | null;
+
+  // Stats
+  stats: StatsCount | null;
 
   // Loading States
   listLoading: boolean;
@@ -35,6 +39,8 @@ const initialState: AdminState = {
   skip: 0,
   take: 10,
   currentAdmin: null,
+
+  stats: null,
 
   listLoading: false,
   createLoading: false,
@@ -132,6 +138,26 @@ export const deleteAdminAsync = createAsyncThunk<
   }
 );
 
+/**
+ * Get stats count
+ */
+export const getStatsCountAsync = createAsyncThunk<
+  StatsCount,
+  void,
+  { rejectValue: string }
+>(
+  'admin/getStatsCount',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await adminService.getStatsCount();
+      return response;
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to get stats count.';
+      return rejectWithValue(message);
+    }
+  }
+);
+
 // ============================================================================
 // Slice
 // ============================================================================
@@ -221,6 +247,11 @@ const adminSlice = createSlice({
       .addCase(deleteAdminAsync.rejected, (state, action) => {
         state.deleteLoading = false;
         state.error = action.payload || 'Failed to delete admin';
+      })
+
+      // Get Stats Count
+      .addCase(getStatsCountAsync.fulfilled, (state, action: PayloadAction<StatsCount>) => {
+        state.stats = action.payload;
       });
   },
 });

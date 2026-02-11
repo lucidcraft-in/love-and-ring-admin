@@ -45,6 +45,13 @@ export interface GetAdminsResponse {
   data: Admin[];
 }
 
+export interface StatsCount {
+  totalAdmins: number;
+  activeAdmins: number;
+  inactiveAdmins: number;
+  totalRoles: number;
+}
+
 // ============================================================================
 // Admin Service
 // ============================================================================
@@ -93,6 +100,14 @@ export const adminService = {
    */
   deleteAdmin: async (id: string): Promise<{ message: string }> => {
     const response = await Axios.delete<{ message: string }>(`/api/admin/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Get stats count
+   */
+  getStatsCount: async (): Promise<StatsCount> => {
+    const response = await Axios.get<StatsCount>('/api/admin/stats');
     return response.data;
   },
 };

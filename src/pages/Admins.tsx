@@ -21,6 +21,7 @@ import { AdminAddDialog } from "@/components/admins/AdminAddDialog";
 import { AdminEditDialog } from "@/components/admins/AdminEditDialog";
 import { AdminDeleteDialog } from "@/components/admins/AdminDeleteDialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import { getStatsCountAsync } from "@/store/slices/adminSlice";
 
 
 
@@ -40,7 +41,12 @@ const permissionLabels: Record<string, string> = {
 const Admins = () => {
   const dispatch = useAppDispatch();
   const { roles, listLoading: rolesLoading } = useAppSelector((state) => state.role);
-  const { admins, total: totalAdmins, listLoading: adminsLoading, currentAdmin } = useAppSelector((state) => state.admin);
+  const { admins, listLoading: adminsLoading, currentAdmin, stats } = useAppSelector((state) => state.admin);
+
+  const totalAdmins = stats?.totalAdmins || 0;
+  const activeAdmins = stats?.activeAdmins || 0;
+  const inactiveAdmins = stats?.inactiveAdmins || 0;
+  const totalRoles = stats?.totalRoles || 0;
 
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [addRoleOpen, setAddRoleOpen] = useState(false);
@@ -74,6 +80,10 @@ const Admins = () => {
       if (roles.length === 0) dispatch(fetchRolesAsync());
     }
   }, [activeTab, dispatch, adminPage, adminPageSize, adminRoleFilter, roles.length]);
+
+  useEffect(() => {
+    dispatch(getStatsCountAsync());
+  }, [dispatch]);
 
   const handleEditAdmin = (admin: Admin) => {
     dispatch(setCurrentAdmin(admin));
@@ -114,8 +124,8 @@ const Admins = () => {
               <Shield className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Super Admins</p>
-              <p className="text-xl font-semibold text-foreground">1</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Admins</p>
+              <p className="text-xl font-semibold text-foreground">{totalAdmins}</p>
             </div>
           </CardContent>
         </Card>
@@ -125,8 +135,8 @@ const Admins = () => {
               <ShieldCheck className="w-5 h-5 text-chart-orange" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Admins</p>
-              <p className="text-xl font-semibold text-foreground">3</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Active Admins</p>
+              <p className="text-xl font-semibold text-foreground">{activeAdmins}</p>
             </div>
           </CardContent>
         </Card>
@@ -136,8 +146,8 @@ const Admins = () => {
               <UserCog className="w-5 h-5 text-chart-green" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Branch Admins</p>
-              <p className="text-xl font-semibold text-foreground">12</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Inactive Admins</p>
+              <p className="text-xl font-semibold text-foreground">{inactiveAdmins}</p>
             </div>
           </CardContent>
         </Card>
@@ -148,7 +158,7 @@ const Admins = () => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Roles Defined</p>
-              <p className="text-xl font-semibold text-foreground">{totalAdmins}</p>
+              <p className="text-xl font-semibold text-foreground">{totalRoles}</p>
             </div>
           </CardContent>
         </Card>

@@ -36,6 +36,7 @@ export interface GetAdminsParams {
   skip?: number;
   take?: number;
   role?: string;
+  status?: string;
 }
 
 export interface GetAdminsResponse {
@@ -66,6 +67,7 @@ export const adminService = {
         skip: params?.skip || 0,
         take: params?.take || 10,
         role: params?.role,
+        status: params?.status,
       },
     });
     return response.data;

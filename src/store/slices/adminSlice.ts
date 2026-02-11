@@ -83,11 +83,15 @@ export const createAdminAsync = createAsyncThunk<
   { rejectValue: string }
 >(
   'admin/createAdmin',
-  async (payload, { rejectWithValue }) => {
+  async (payload, { rejectWithValue, dispatch }) => {
     try {
       const response = await adminService.createAdmin(payload);
       // Fetch the full admin object to get the populated role
       const fullAdmin = await adminService.getAdminById(response._id);
+
+      // Refresh stats
+      dispatch(getStatsCountAsync());
+
       return fullAdmin;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to create admin.';
@@ -105,11 +109,15 @@ export const updateAdminAsync = createAsyncThunk<
   { rejectValue: string }
 >(
   'admin/updateAdmin',
-  async ({ id, payload }, { rejectWithValue }) => {
+  async ({ id, payload }, { rejectWithValue, dispatch }) => {
     try {
       const response = await adminService.updateAdmin(id, payload);
       // Fetch the full admin object to get the populated role
       const fullAdmin = await adminService.getAdminById(response._id);
+
+      // Refresh stats
+      dispatch(getStatsCountAsync());
+
       return fullAdmin;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to update admin.';
@@ -127,9 +135,13 @@ export const deleteAdminAsync = createAsyncThunk<
   { rejectValue: string }
 >(
   'admin/deleteAdmin',
-  async (id, { rejectWithValue }) => {
+  async (id, { rejectWithValue, dispatch }) => {
     try {
       await adminService.deleteAdmin(id);
+
+      // Refresh stats
+      dispatch(getStatsCountAsync());
+
       return id;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to delete admin.';

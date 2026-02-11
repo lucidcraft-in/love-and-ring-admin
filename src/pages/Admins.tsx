@@ -64,6 +64,7 @@ const Admins = () => {
   const [adminPageSize, setAdminPageSize] = useState(10);
   const [adminRoleFilter, setAdminRoleFilter] = useState("all-role");
   const [adminSearch, setAdminSearch] = useState("");
+  const [adminStatusFilter, setAdminStatusFilter] = useState("all");
 
   // Fetch roles when component mounts or when switching to roles tab
   useEffect(() => {
@@ -75,11 +76,12 @@ const Admins = () => {
         skip,
         take: adminPageSize,
         role: adminRoleFilter === "all-role" ? undefined : adminRoleFilter,
+        status: adminStatusFilter === "all" ? undefined : adminStatusFilter,
       }));
       // We also need roles to filter and display in add/edit dialogs
       if (roles.length === 0) dispatch(fetchRolesAsync());
     }
-  }, [activeTab, dispatch, adminPage, adminPageSize, adminRoleFilter, roles.length]);
+  }, [activeTab, dispatch, adminPage, adminPageSize, adminRoleFilter, adminStatusFilter, roles.length]);
 
   useEffect(() => {
     dispatch(getStatsCountAsync());
@@ -213,9 +215,22 @@ const Admins = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                  <Button variant="outline" size="icon">
+                  <Select value={adminStatusFilter} onValueChange={(value) => {
+                    setAdminStatusFilter(value);
+                    setAdminPage(1);
+                  }}>
+                    <SelectTrigger className="w-36">
+                      <SelectValue placeholder="Status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All</SelectItem>
+                      <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="Inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  {/* <Button variant="outline" size="icon">
                     <Filter className="w-4 h-4" />
-                  </Button>
+                  </Button> */}
                 </div>
               </div>
             </CardContent>

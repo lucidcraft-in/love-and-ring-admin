@@ -67,15 +67,6 @@ interface EditUserDialogProps {
 export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: EditUserDialogProps) => {
   const { toast } = useToast();
   const dispatch = useAppDispatch();
-  // We need to fetch specific data lists for dropdowns. 
-  // Since Generic Slice focuses on ONE active type list, we might need a way to fetch simpler lists for dropdowns OR
-  // relying on the service directly for dropdowns (as done in MasterData.tsx for religion dropdown) to avoid polluting the main generic state.
-  // However, EditUserDialog expects all these lists.
-  // OPTION: We can add 'dropdown' specific state or just fetch them locally.
-  // Given the previous code used Redux, let's switch to local state for these dropdowns to not break the generic slice pattern
-  // which is designed for the CRUD page mainly.
-  // OR we can add a 'fetchDropdowns' thunk if this is common.
-  // For now, to check scope, I will fetch them locally using the service to restore functionality quickly.
 
   // const { religions, castes, locations, languages, educations, occupations } = useAppSelector((state) => state.masterData); // This selector likely doesn't exist anymore for all at once.
 
@@ -282,10 +273,24 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
 
     try {
       setUploading(true);
+
+      // If there are existing photos, delete them first to ensure only one photo exists
+      if (photos.length > 0) {
+        for (const photo of photos) {
+          try {
+            await userService.deleteUserPhoto(user._id, photo.url);
+          } catch (err) {
+            console.error("Failed to delete existing photo", err);
+            // Continue with upload even if delete fails, though ideally clean up
+          }
+        }
+      }
+
       const formData = new FormData();
-      Array.from(e.target.files).forEach((file) => {
-        formData.append("photos", file);
-      });
+      // Only append the first file since we restrict to single photo
+      if (e.target.files.length > 0) {
+        formData.append("photos", e.target.files[0]);
+      }
 
       const newPhotos = await userService.uploadUserPhotos(user._id, formData);
 
@@ -297,7 +302,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
 
       toast({
         title: "Success",
-        description: "Photos uploaded successfully",
+        description: "Photo updated successfully",
       });
 
       onUserUpdated?.();
@@ -602,34 +607,47 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
 
             <div className="space-y-2">
               <Label>User Photos</Label>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                {photos.map((photo, index) => (
-                  <div key={index} className="relative group aspect-square rounded-lg overflow-hidden border bg-muted">
-                    <img
-                      src={photo.url}
-                      alt={`User photo ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                    <div
-                      className="absolute top-1 right-1 bg-destructive/80 hover:bg-destructive text-destructive-foreground rounded-full p-1 cursor-pointer opacity-0 group-hover:opacity-100 transition-opacity z-10"
+              {photos.length > 0 ? (
+                <div className="relative group aspect-square rounded-lg overflow-hidden border bg-muted w-full max-w-xs mx-auto">
+                  <img
+                    src={photos[0].url}
+                    alt="User photo"
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center flex-col gap-2">
+                    <Button
+                      variant="destructive"
+                      size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDeletePhoto(photo.url);
+                        handleDeletePhoto(photos[0].url);
                       }}
                     >
-                      <X className="w-3 h-3" />
+                      <Trash2 className="w-4 h-4 mr-2" /> Remove
+                    </Button>
+                    <div className="relative">
+                      <Button variant="secondary" size="sm" className="pointer-events-none">
+                        Change Photo
+                      </Button>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="absolute inset-0 opacity-0 cursor-pointer"
+                        onChange={handlePhotoUpload}
+                        disabled={uploading}
+                      />
                     </div>
-                    {photo.isPrimary && (
-                      <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                        <Star className="w-3 h-3 fill-current" /> Primary
-                      </div>
-                    )}
                   </div>
-                ))}
-                <div className="col-span-1 md:col-span-1 aspect-square rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors relative">
+                  {photos[0].isPrimary && (
+                    <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
+                      <Star className="w-3 h-3 fill-current" /> Primary
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="aspect-square rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors relative w-full max-w-xs mx-auto">
                   <input
                     type="file"
-                    multiple
                     accept="image/*"
                     className="absolute inset-0 opacity-0 cursor-pointer z-10"
                     onChange={handlePhotoUpload}
@@ -637,10 +655,10 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
                   />
                   <Upload className="w-8 h-8 text-muted-foreground mb-2" />
                   <span className="text-xs font-medium text-center px-2">
-                    {uploading ? "Uploading..." : "Click to upload"}
+                    {uploading ? "Uploading..." : "Click to upload primary photo"}
                   </span>
                 </div>
-              </div>
+              )}
             </div>
 
             <div className="space-y-2">

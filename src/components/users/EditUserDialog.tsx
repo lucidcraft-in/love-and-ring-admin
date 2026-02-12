@@ -121,6 +121,13 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
     referredBy: "",
   });
 
+  const filteredCastes = formData.religion
+    ? castes.filter((caste) => {
+      const casteReligionId = typeof caste.religion === "object" ? caste.religion?._id : caste.religion;
+      return casteReligionId === formData.religion;
+    })
+    : castes;
+
   const [photos, setPhotos] = useState<any[]>([]);
 
   // Fetch master data when dialog opens
@@ -723,8 +730,8 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
                     <SelectValue placeholder="Select caste" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Array.isArray(castes) &&
-                      castes.map((caste) => (
+                    {Array.isArray(filteredCastes) &&
+                      filteredCastes.map((caste) => (
                         <SelectItem key={caste._id} value={caste._id}>
                           {caste.name}
                         </SelectItem>

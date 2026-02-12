@@ -6,14 +6,14 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Download, UserPlus, MoreHorizontal, Eye, Edit, Ban, CheckCircle, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import { Search, Filter, Download, UserPlus, MoreHorizontal, Eye, Edit, Ban, CheckCircle, Trash2, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AddUserDialog } from "@/components/users/AddUserDialog";
 import { EditUserDialog } from "@/components/users/EditUserDialog";
 import { ViewUserDialog } from "@/components/users/ViewUserDialog";
 import { UserFilterDialog, type UserFilters } from "@/components/users/UserFilterDialog";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
-import { fetchUsersAsync } from "@/store/slices/usersSlice";
+import { fetchUsersAsync, deleteUserAsync } from "@/store/slices/usersSlice";
 
 const Users = () => {
   const dispatch = useAppDispatch();
@@ -145,6 +145,10 @@ const Users = () => {
 
   const handleUserUpdated = () => {
     dispatch(fetchUsersAsync({ take: 1000 }));
+  };
+
+  const handleDeleteUser = (userId: string) => {
+    dispatch(deleteUserAsync(userId));
   };
 
   const handleApplyFilters = (filters: UserFilters) => {
@@ -518,8 +522,10 @@ const Users = () => {
                                   {/* <DropdownMenuItem>
                                   <CheckCircle className="w-4 h-4 mr-2" /> Approve
                                 </DropdownMenuItem> */}
-                                  <DropdownMenuItem className="text-destructive">
-                                    <Ban className="w-4 h-4 mr-2" /> Block
+                                  <DropdownMenuItem className="text-destructive"
+                                  onClick={() => handleDeleteUser(user._id)}
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" /> Delete
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>

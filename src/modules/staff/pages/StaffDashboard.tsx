@@ -34,6 +34,7 @@ export default function StaffDashboard() {
 
   // Redux state
   const { currentStaffUser, isAuthenticated } = useAppSelector((state) => state.staff);
+  console.log(currentStaffUser,"current user data in the staff")
   const { users, isLoading: usersLoading, deleteLoading } = useAppSelector((state) => state.users);
 
   // Dialog state
@@ -366,6 +367,29 @@ export default function StaffDashboard() {
             </CardContent>
           </Card>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Your Permissions</CardTitle>
+            <CardDescription>Access levels assigned by admin</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              <Badge variant={currentStaffUser.permissions.viewProfile ? "default" : "secondary"}>
+                {currentStaffUser.permissions.viewProfile ? "✓" : "✗"} View Profiles
+              </Badge>
+              <Badge variant={currentStaffUser.permissions.createProfile ? "default" : "secondary"}>
+                {currentStaffUser.permissions.createProfile ? "✓" : "✗"} Create Profiles
+              </Badge>
+              <Badge variant={currentStaffUser.permissions.editProfile ? "default" : "secondary"}>
+                {currentStaffUser.permissions.editProfile ? "✓" : "✗"} Edit Profiles
+              </Badge>
+              <Badge variant={currentStaffUser.permissions.deleteProfile ? "default" : "secondary"}>
+                {currentStaffUser.permissions.deleteProfile ? "✓" : "✗"} Delete Profiles
+              </Badge>
+            </div>
+          </CardContent>
+        </Card>
 
       </main>
 

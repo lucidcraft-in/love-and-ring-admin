@@ -34,7 +34,7 @@ export default function StaffDashboard() {
 
   // Redux state
   const { currentStaffUser, isAuthenticated } = useAppSelector((state) => state.staff);
-  console.log(currentStaffUser,"current user data in the staff")
+  console.log(currentStaffUser, "current user data in the staff")
   const { users, isLoading: usersLoading, deleteLoading } = useAppSelector((state) => state.users);
 
   // Dialog state
@@ -232,10 +232,13 @@ export default function StaffDashboard() {
             <p className="text-muted-foreground">Manage your assigned tasks and profiles</p>
           </div>
           {/* Check permissions if available in currentStaffUser, otherwise default to show */}
-          <Button onClick={() => setAddDialogOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" />
-            Create Profile
-          </Button>
+          {currentStaffUser.permissions.createProfile &&
+            <Button onClick={() => setAddDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Profile
+            </Button>
+          }
+
         </div>
 
         {/* Stats Cards */}
@@ -316,30 +319,37 @@ export default function StaffDashboard() {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => handleViewUser(user)}
-                              >
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8"
-                                onClick={() => handleEditUser(user)}
-                              >
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-8 w-8 text-destructive"
-                                onClick={() => handleDeleteUser(user)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
+                              {currentStaffUser.permissions.viewProfile &&
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => handleViewUser(user)}
+                                >
+                                  <Eye className="h-4 w-4" />
+                                </Button>
+                              }
+                              {currentStaffUser.permissions.editProfile &&
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8"
+                                  onClick={() => handleEditUser(user)}
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                              }
+                              {currentStaffUser.permissions.deleteProfile &&
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-8 w-8 text-destructive"
+                                  onClick={() => handleDeleteUser(user)}
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              }
+
                             </div>
                           </TableCell>
                         </TableRow>

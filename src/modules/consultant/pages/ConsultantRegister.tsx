@@ -62,7 +62,7 @@ export default function ConsultantRegister() {
         email: formData.email,
         fullName: formData.fullName,
         phone: formData.phone,
-        branch: formData.branch,
+        // branch: formData.branch,
         licenseNumber: formData.licenseNumber,
         regions: formData.regions,
         password: formData.password,

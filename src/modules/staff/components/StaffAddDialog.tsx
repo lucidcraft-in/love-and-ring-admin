@@ -25,9 +25,10 @@ export function StaffAddDialog({ open, onOpenChange }: StaffAddDialogProps) {
     fullName: "",
     email: "",
     phone: "",
-    role: "",
+    // role: "",
     // branch: "",
     password: "",
+    confirmPassword:""
   });
 
   // Fetch branches when dialog opens
@@ -51,9 +52,9 @@ export function StaffAddDialog({ open, onOpenChange }: StaffAddDialogProps) {
         fullName: "",
         email: "",
         phone: "",
-        role: "",
         // branch: "",
         password: "",
+        confirmPassword:"",
       });
     }
   }, [open, dispatch]);
@@ -70,9 +71,9 @@ export function StaffAddDialog({ open, onOpenChange }: StaffAddDialogProps) {
         fullName: "",
         email: "",
         phone: "",
-        role: "",
         // branch: "",
         password: "",
+        confirmPassword:"",
       });
     }
   };
@@ -143,22 +144,18 @@ export function StaffAddDialog({ open, onOpenChange }: StaffAddDialogProps) {
               required
             />
           </div>
-
           <div className="space-y-2">
-            <Label htmlFor="role">Role *</Label>
-            <Select value={formData.role} onValueChange={(value) => handleChange("role", value)} required>
-              <SelectTrigger id="role">
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-              <SelectContent>
-                {roles.map((role) => (
-                  <SelectItem key={role._id} value={role._id}>
-                    {role.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label htmlFor="password">Confirm Password *</Label>
+            <Input
+              id="confirmPassword"
+              type="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={(e) => handleChange("confirmPassword", e.target.value)}
+              placeholder="Enter above password"
+              required
+            />
           </div>
+
 
           {/* <div className="space-y-2">
             <Label htmlFor="branch">Branch *</Label>

@@ -8,6 +8,7 @@ import {
   GetStaffResponse,
   ConsultantLoginCredentials,
   ConsultantLoginResponse,
+  StaffPermissions,
 } from '@/services/staffService';
 
 
@@ -30,6 +31,7 @@ interface StaffState {
   createLoading: boolean;
   updateLoading: boolean;
   deleteLoading: boolean;
+  permissionsLoading: boolean;
   detailLoading: boolean;
 
   // Auth State
@@ -57,6 +59,7 @@ const initialState: StaffState = {
   createLoading: false,
   updateLoading: false,
   deleteLoading: false,
+  permissionsLoading: false,
   detailLoading: false,
 
   // Auth State
@@ -194,6 +197,26 @@ export const updateStaffStatusAsync = createAsyncThunk<
       return { id, status };
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to update staff status.';
+      return rejectWithValue(message);
+    }
+  }
+);
+
+/**
+ * Update staff permissions
+ */
+export const updatePermissionsAsync = createAsyncThunk<
+  { id: string; permissions: StaffPermissions },
+  { id: string; permissions: Partial<StaffPermissions> },
+  { rejectValue: string }
+>(
+  'staff/updatePermissions',
+  async ({ id, permissions }, { rejectWithValue }) => {
+    try {
+      const response = await staffService.updatePermissions(id, permissions);
+      return { id, permissions: response.permissions };
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to update permissions.';
       return rejectWithValue(message);
     }
   }
@@ -404,6 +427,31 @@ const staffSlice = createSlice({
       .addCase(updateStaffStatusAsync.rejected, (state, action) => {
         state.updateLoading = false;
         state.error = action.payload || 'Failed to update staff status';
+      })
+
+      // ========================================================================
+      // Update Permissions
+      // ========================================================================
+      .addCase(updatePermissionsAsync.pending, (state) => {
+        state.permissionsLoading = true;
+        state.error = null;
+      })
+      .addCase(updatePermissionsAsync.fulfilled, (state, action: PayloadAction<{ id: string; permissions: StaffPermissions }>) => {
+        state.permissionsLoading = false;
+        // Update permissions in staff list
+        const index = state.staffList.findIndex(s => s._id === action.payload.id);
+        if (index !== -1) {
+          state.staffList[index].permissions = action.payload.permissions;
+        }
+        // Update current staff if it's the same one
+        if (state.currentStaff?._id === action.payload.id) {
+          state.currentStaff.permissions = action.payload.permissions;
+        }
+        state.error = null;
+      })
+      .addCase(updatePermissionsAsync.rejected, (state, action) => {
+        state.permissionsLoading = false;
+        state.error = action.payload || 'Failed to update permissions';
       })
 
       // ========================================================================

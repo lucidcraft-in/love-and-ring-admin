@@ -29,8 +29,6 @@ export default function StaffRegister() {
     email: "",
     fullName: "",
     phone: "",
-    branch: "",
-    role: "",
     password: "",
     confirmPassword: "",
   });
@@ -61,9 +59,8 @@ export default function StaffRegister() {
         email: formData.email,
         fullName: formData.fullName,
         phone: formData.phone,
-        // branch: formData.branch,
-        role: formData.role,
         password: formData.password,
+        confirmPassword: formData.confirmPassword
       })).unwrap();
 
       setIsSuccess(true);
@@ -160,50 +157,6 @@ export default function StaffRegister() {
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   disabled={createLoading}
                 />
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="branch">Branch *</Label>
-                <Select
-                  value={formData.branch}
-                  onValueChange={(value) => setFormData({ ...formData, branch: value })}
-                  disabled={createLoading || branchesLoading}
-                  required
-                >
-                  <SelectTrigger id="branch">
-                    <SelectValue placeholder={branchesLoading ? "Loading..." : "Select Branch"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {branches.map((branch) => (
-                      <SelectItem key={branch._id} value={branch._id}>
-                        {branch.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="role">Role *</Label>
-                <Select
-                  value={formData.role}
-                  onValueChange={(value) => setFormData({ ...formData, role: value })}
-                  disabled={createLoading || rolesLoading}
-                  required
-                >
-                  <SelectTrigger id="role">
-                    <SelectValue placeholder={rolesLoading ? "Loading..." : "Select Role"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {roles.map((role: any) => (
-                      <SelectItem key={role._id} value={role._id}>
-                        {role.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
             </div>
 

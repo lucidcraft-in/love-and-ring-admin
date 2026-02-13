@@ -18,11 +18,13 @@ import { fetchBranchesAsync } from "@/store/slices/branchSlice";
 import { Staff } from "@/services/staffService";
 import { Skeleton } from "@/components/ui/skeleton";
 import { fetchRolesAsync } from "@/store/slices/roleSlice";
+import { StaffPermissionsDialog } from "../components/StaffPermissionDialog";
+import { Shield } from "lucide-react";
 
 export default function StaffList() {
   const dispatch = useAppDispatch();
   const { staffList, total, listLoading } = useAppSelector((state) => state.staff);
-  const { roles } = useAppSelector((state) => state.role);
+  // const { roles } = useAppSelector((state) => state.role);
   console.log(staffList, "data in the staff list");
   console.log(total, "data in the total");
   console.log(listLoading, "data in the list loading");
@@ -33,6 +35,7 @@ export default function StaffList() {
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [permissionOpen, setPermissionOpen] = useState(false)
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -46,9 +49,9 @@ export default function StaffList() {
   //   dispatch(fetchBranchesAsync({ take: 100 }));
   // }, [dispatch]);
 
-  useEffect(() =>{
+  useEffect(() => {
     dispatch(fetchRolesAsync())
-  },[])
+  }, [])
 
   // Refetch when filters change
   useEffect(() => {
@@ -187,7 +190,7 @@ export default function StaffList() {
               />
             </div>
             <div className="flex flex-wrap gap-2">
-              <Select value={roleFilter} onValueChange={setRoleFilter}>
+              {/* <Select value={roleFilter} onValueChange={setRoleFilter}>
                 <SelectTrigger className="w-36">
                   <SelectValue placeholder="Role" />
                 </SelectTrigger>
@@ -199,7 +202,7 @@ export default function StaffList() {
                     </SelectItem>
                   ))}
                 </SelectContent>
-              </Select>
+              </Select> */}
               {/* <Select value={branchFilter} onValueChange={setBranchFilter}>
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Branch" />
@@ -239,7 +242,7 @@ export default function StaffList() {
               <TableRow className="border-border/50">
                 <TableHead>Staff Member</TableHead>
                 <TableHead>Contact</TableHead>
-                <TableHead>Role</TableHead>
+                {/* <TableHead>Role</TableHead> */}
                 {/* <TableHead>Branch</TableHead> */}
                 <TableHead>Status</TableHead>
                 <TableHead>Created</TableHead>
@@ -260,9 +263,9 @@ export default function StaffList() {
                     <TableCell>
                       <Skeleton className="h-4 w-40" />
                     </TableCell>
-                    <TableCell>
+                    {/* <TableCell>
                       <Skeleton className="h-6 w-24" />
-                    </TableCell>
+                    </TableCell> */}
                     {/* <TableCell>
                       <Skeleton className="h-4 w-28" />
                     </TableCell> */}
@@ -303,9 +306,9 @@ export default function StaffList() {
                         {member.phone && <p className="text-muted-foreground">{member.phone}</p>}
                       </div>
                     </TableCell>
-                    <TableCell>
+                    {/* <TableCell>
                       <Badge variant="outline">{member?.role?.name}</Badge>
-                    </TableCell>
+                    </TableCell> */}
                     {/* <TableCell className="text-sm">{getBranchName(member.branch)}</TableCell> */}
                     <TableCell>
                       <Badge
@@ -340,6 +343,11 @@ export default function StaffList() {
                           <DropdownMenuItem onClick={() => handleEdit(member)}>
                             <Edit className="w-4 h-4 mr-2" /> Edit
                           </DropdownMenuItem>
+                          {member.status === "Active" && (
+                            <DropdownMenuItem onClick={() => { setSelectedStaff(member); setPermissionOpen(true); }}>
+                              <Shield className="w-4 h-4 mr-2" />Edit Permissions
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem className="text-destructive" onClick={() => handleDelete(member)}>
                             <Trash2 className="w-4 h-4 mr-2" /> Remove
                           </DropdownMenuItem>
@@ -358,7 +366,9 @@ export default function StaffList() {
       <StaffAddDialog open={addOpen} onOpenChange={setAddOpen} />
       <StaffViewDialog open={viewOpen} onOpenChange={setViewOpen} staff={selectedStaff} />
       <StaffEditDialog open={editOpen} onOpenChange={setEditOpen} staff={selectedStaff} />
+      <StaffPermissionsDialog open={permissionOpen} onOpenChange={setPermissionOpen} staff={selectedStaff} />
       <StaffDeleteDialog open={deleteOpen} onOpenChange={setDeleteOpen} staff={selectedStaff} />
+
     </div>
   );
 }

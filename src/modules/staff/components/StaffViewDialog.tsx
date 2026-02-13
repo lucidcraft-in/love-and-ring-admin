@@ -39,7 +39,7 @@ export function StaffViewDialog({ open, onOpenChange, staff }: StaffViewDialogPr
             </Avatar>
             <div className="flex-1">
               <h3 className="font-semibold text-lg">{staff.fullName}</h3>
-              <Badge variant="outline" className="mt-1">{staff.role.name}</Badge>
+              {/* <Badge variant="outline" className="mt-1">{staff.role.name}</Badge> */}
               <Badge
                 variant="outline"
                 className={`ml-2 ${staff.status === "Active"
@@ -86,7 +86,7 @@ export function StaffViewDialog({ open, onOpenChange, staff }: StaffViewDialogPr
               </div>
             </div> */}
 
-            <div className="flex items-center gap-3">
+            {/* <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
                 <Shield className="w-4 h-4 text-primary" />
               </div>
@@ -94,7 +94,7 @@ export function StaffViewDialog({ open, onOpenChange, staff }: StaffViewDialogPr
                 <p className="text-sm text-muted-foreground">Role</p>
                 <p className="font-medium">{staff.role.name}</p>
               </div>
-            </div>
+            </div> */}
           </div>
 
           <Separator />

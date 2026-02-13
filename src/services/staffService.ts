@@ -23,20 +23,29 @@ export interface Staff {
   fullName: string;
   email: string;
   phone?: string;
-  role: Role;
+  // role: Role;
   // branch?: Branch;
   status: 'Active' | 'Inactive';
   createdAt: string;
   updatedAt?: string;
+  permissions: StaffPermissions;
+}
+
+export interface StaffPermissions {
+  createProfile: boolean;
+  editProfile: boolean;
+  viewProfile: boolean;
+  deleteProfile: boolean;
 }
 
 export interface CreateStaffPayload {
   fullName: string;
   email: string;
   phone?: string;
-  role: string; // ID
+  // role: string; // ID
   // branch?: string; // ID
   password: string;
+  confirmPassword: string
 }
 
 export interface Role {
@@ -162,4 +171,19 @@ export const staffService = {
     const response = await Axios.delete<{ message: string }>(`/api/staff/${id}`);
     return response.data;
   },
+
+  /**
+   * Update staff permissions
+   */
+  updatePermissions: async (
+    id: string,
+    permissions: Partial<StaffPermissions>
+  ): Promise<{ message: string; permissions: StaffPermissions }> => {
+    const response = await Axios.put<{ message: string; permissions: StaffPermissions }>(
+      `/api/staff/${id}/permissions`,
+      { permissions }
+    );
+    return response.data;
+  },
+
 };

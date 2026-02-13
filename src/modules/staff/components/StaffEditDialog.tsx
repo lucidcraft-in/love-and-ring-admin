@@ -27,7 +27,7 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
     fullName: "",
     email: "",
     phone: "",
-    role: "",
+    // role: "",
     // branch: "",
     password: "",
     status: "",
@@ -52,8 +52,6 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
         fullName: staff.fullName,
         email: staff.email,
         phone: staff.phone || "",
-        role: typeof staff.role === 'object' ? staff.role._id : staff.role as string,
-        // branch: staff.branch,
         password: "",
         status: staff.status,
       });
@@ -77,7 +75,7 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
       fullName: formData.fullName,
       email: formData.email,
       phone: formData.phone,
-      role: formData.role,
+      // role: formData.role,
       // branch: formData.branch,
       status: formData.status,
     };
@@ -162,7 +160,7 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
             />
           </div>
 
-          <div className="space-y-2">
+          {/* <div className="space-y-2">
             <Label htmlFor="edit-role">Role *</Label>
             <Select value={formData.role} onValueChange={(value) => handleChange("role", value)} required>
               <SelectTrigger id="edit-role">
@@ -176,7 +174,7 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </div> */}
 
           <div className="space-y-2">
             <Label htmlFor="edit-status">Status *</Label>

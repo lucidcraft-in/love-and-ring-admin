@@ -279,7 +279,7 @@ const Admins = () => {
                             variant="outline"
                             className="border-primary text-primary"
                           >
-                            {admin.role.name}
+                            {admin?.role?.name || "N/A"}
                           </Badge>
                         </TableCell>
                         <TableCell>

@@ -273,7 +273,7 @@ export const ViewUserDialog = ({ open, onOpenChange, user, onEdit }: ViewUserDia
                 <InfoRow label="Caste" value={extractName(user.caste)} />
                 <InfoRow label="Mother Tongue" value={extractName(user.motherTongue)} />
                 {/* <InfoRow label="Branch" value={user.branch} /> */}
-                <InfoRow label="Referred By" value={user.referredBy} />
+                {/* <InfoRow label="Referred By" value={user.referredBy} /> */}
               </div>
             </div>
           </TabsContent>

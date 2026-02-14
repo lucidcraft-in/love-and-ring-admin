@@ -121,20 +121,20 @@ export const fetchMembershipDistributionAsync = createAsyncThunk<
   }
 );
 
-export const fetchTopBranchesAsync = createAsyncThunk<
-  TopBranch[],
-  void,
-  { rejectValue: string }
->(
-  'reports/fetchTopBranches',
-  async (_, { rejectWithValue }) => {
-    try {
-      return await reportService.getTopBranches();
-    } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch top branches');
-    }
-  }
-);
+// export const fetchTopBranchesAsync = createAsyncThunk<
+//   TopBranch[],
+//   void,
+//   { rejectValue: string }
+// >(
+//   'reports/fetchTopBranches',
+//   async (_, { rejectWithValue }) => {
+//     try {
+//       return await reportService.getTopBranches();
+//     } catch (error: any) {
+//       return rejectWithValue(error.response?.data?.message || 'Failed to fetch top branches');
+//     }
+//   }
+// );
 
 export const fetchBranchPerformanceAsync = createAsyncThunk<
   BranchPerformance[],
@@ -237,18 +237,18 @@ const reportSlice = createSlice({
       })
 
       // Top Branches
-      .addCase(fetchTopBranchesAsync.pending, (state) => {
-        state.topBranchesLoading = true;
-        state.error = null;
-      })
-      .addCase(fetchTopBranchesAsync.fulfilled, (state, action) => {
-        state.topBranchesLoading = false;
-        state.topBranches = action.payload;
-      })
-      .addCase(fetchTopBranchesAsync.rejected, (state, action) => {
-        state.topBranchesLoading = false;
-        state.error = action.payload as string;
-      })
+      // .addCase(fetchTopBranchesAsync.pending, (state) => {
+      //   state.topBranchesLoading = true;
+      //   state.error = null;
+      // })
+      // .addCase(fetchTopBranchesAsync.fulfilled, (state, action) => {
+      //   state.topBranchesLoading = false;
+      //   state.topBranches = action.payload;
+      // })
+      // .addCase(fetchTopBranchesAsync.rejected, (state, action) => {
+      //   state.topBranchesLoading = false;
+      //   state.error = action.payload as string;
+      // })
 
       // Branch Performance
       .addCase(fetchBranchPerformanceAsync.pending, (state) => {

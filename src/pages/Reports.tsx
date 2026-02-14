@@ -12,7 +12,7 @@ import {
   fetchUserTrendAsync,
   fetchRevenueVsTargetAsync,
   fetchMembershipDistributionAsync,
-  fetchTopBranchesAsync,
+  // fetchTopBranchesAsync,
   fetchBranchPerformanceAsync,
   fetchStaffActivityAsync,
 } from "@/store/slices/reportSlice";
@@ -35,7 +35,7 @@ const Reports = () => {
     dispatch(fetchUserTrendAsync());
     dispatch(fetchRevenueVsTargetAsync());
     dispatch(fetchMembershipDistributionAsync());
-    dispatch(fetchTopBranchesAsync());
+    // dispatch(fetchTopBranchesAsync());
     dispatch(fetchBranchPerformanceAsync());
     dispatch(fetchStaffActivityAsync());
   }, [dispatch]);
@@ -174,7 +174,7 @@ const Reports = () => {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="users">User Reports</TabsTrigger>
           <TabsTrigger value="revenue">Revenue Reports</TabsTrigger>
-          <TabsTrigger value="branches">Branch Performance</TabsTrigger>
+          {/* <TabsTrigger value="branches">Branch Performance</TabsTrigger> */}
           <TabsTrigger value="staff">Staff Activity</TabsTrigger>
         </TabsList>
 
@@ -281,7 +281,7 @@ const Reports = () => {
               </CardContent>
             </Card>
 
-            <Card className="stat-card-shadow border-0 lg:col-span-2">
+            {/* <Card className="stat-card-shadow border-0 lg:col-span-2">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base">Top Performing Branches</CardTitle>
               </CardHeader>
@@ -303,7 +303,7 @@ const Reports = () => {
                   </ResponsiveContainer>
                 </div>
               </CardContent>
-            </Card>
+            </Card> */}
           </div>
         </TabsContent>
 

@@ -166,7 +166,7 @@ const MasterData = () => {
             <p className="text-xl font-semibold">{counts?.occupations || 0}</p>
           </CardContent>
         </Card>
-        <Card className="stat-card-shadow border-0">
+        {/* <Card className="stat-card-shadow border-0">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
               <MapPin className="w-4 h-4 text-chart-purple" />
@@ -174,7 +174,7 @@ const MasterData = () => {
             </div>
             <p className="text-xl font-semibold">{counts?.locations || 0}</p>
           </CardContent>
-        </Card>
+        </Card> */}
         <Card className="stat-card-shadow border-0">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
@@ -196,7 +196,7 @@ const MasterData = () => {
           <TabsTrigger value="castes">Caste</TabsTrigger>
           <TabsTrigger value="educations">Education</TabsTrigger>
           <TabsTrigger value="occupations">Occupation</TabsTrigger>
-          <TabsTrigger value="locations">Location</TabsTrigger>
+          {/* <TabsTrigger value="locations">Location</TabsTrigger> */}
           <TabsTrigger value="languages">Language</TabsTrigger>
         </TabsList>
 

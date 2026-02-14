@@ -56,7 +56,8 @@ export interface User {
   updatedAt?: string;
   approvedAt?: string;
   approvedBy?: string;
-  createdBy?: string | { _id: string; fullName: string };
+  createdBy?: { _id: string; fullName: string, email:string };
+  createdByModel?:string
 }
 
 export interface SendEmailOtpPayload {

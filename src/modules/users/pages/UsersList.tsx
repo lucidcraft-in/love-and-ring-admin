@@ -18,6 +18,7 @@ import { fetchUsersAsync, deleteUserAsync } from "@/store/slices/usersSlice";
 const Users = () => {
   const dispatch = useAppDispatch();
   const { users, isLoading, error, total } = useAppSelector((state) => state.users);
+  console.log(users, "user data")
 
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -29,6 +30,7 @@ const Users = () => {
   const [membershipFilter, setMembershipFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [advancedFilters, setAdvancedFilters] = useState<UserFilters>({});
+  const [createdByFilter, setCreatedByFilter] = useState('all')
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -64,6 +66,10 @@ const Users = () => {
       // gender - use advanced filter if set, otherwise use main filter
       const effectiveGender = advancedFilters.gender || genderFilter;
       const matchesGender = effectiveGender === "all" || user.gender === effectiveGender;
+
+      // Creatd by
+      const created = advancedFilters.createdByModel || createdByFilter;
+      const matchCreated = created === "all" || user.createdByModel === created;
 
       // Membership - use advanced filter if set, otherwise use main filter
       const effectiveMembership = advancedFilters.membership || membershipFilter;
@@ -111,6 +117,7 @@ const Users = () => {
       return (
         matchesSearch &&
         matchesGender &&
+        matchCreated &&
         matchesMembership &&
         matchesStatus &&
         matchesCity &&
@@ -122,7 +129,7 @@ const Users = () => {
         matchesCreatedBefore
       );
     })
-  }, [users, searchTerm, genderFilter, membershipFilter, statusFilter, advancedFilters])
+  }, [users, searchTerm, genderFilter, membershipFilter, statusFilter, advancedFilters, createdByFilter])
 
   const handleViewUser = (user: any) => {
     setSelectedUser(user);
@@ -162,6 +169,7 @@ const Users = () => {
   const handleClearFilters = () => {
     setAdvancedFilters({});
     setGenderFilter("all");
+    setCreatedByFilter("all")
     setMembershipFilter("all");
     setStatusFilter("all");
     setSearchTerm("");
@@ -316,6 +324,18 @@ const Users = () => {
                       <SelectItem value="Female">Female</SelectItem>
                     </SelectContent>
                   </Select>
+                  <Select defaultValue={createdByFilter} onValueChange={setCreatedByFilter}>
+                    <SelectTrigger className="w-32">
+                      <SelectValue placeholder="Gender" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">All Users</SelectItem>
+                      <SelectItem value="Admin">Admin</SelectItem>
+                      <SelectItem value="User">User</SelectItem>
+                      <SelectItem value="Staff">Staff</SelectItem>
+                      <SelectItem value="Consultant">Consultant</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <Select defaultValue={membershipFilter} onValueChange={setMembershipFilter}>
                     <SelectTrigger className="w-36">
                       <SelectValue placeholder="Membership" />
@@ -419,9 +439,11 @@ const Users = () => {
                     <TableHead className="sticky top-0 bg-card z-10">Contact</TableHead>
                     <TableHead className="sticky top-0 bg-card z-10">Gender</TableHead>
                     <TableHead className="sticky top-0 bg-card z-10">Age</TableHead>
-                    <TableHead className="sticky top-0 bg-card z-10">Location</TableHead>
+                    {/* <TableHead className="sticky top-0 bg-card z-10">Location</TableHead> */}
                     <TableHead className="sticky top-0 bg-card z-10">Membership</TableHead>
                     <TableHead className="sticky top-0 bg-card z-10">Status</TableHead>
+                    <TableHead className="sticky top-0 bg-card z-10">Created</TableHead>
+                    <TableHead className="sticky top-0 bg-card z-10">Created By</TableHead>
                     <TableHead className="sticky top-0 bg-card z-10">Joined</TableHead>
                     <TableHead className="sticky top-0 bg-card z-10 text-right">Actions</TableHead>
                   </TableRow>
@@ -484,7 +506,7 @@ const Users = () => {
                             </TableCell>
                             <TableCell>{user.gender || "N/A"}</TableCell>
                             <TableCell>{calculateAge(user.dateOfBirth)}</TableCell>
-                            <TableCell>{user?.city?.city}</TableCell>
+                            {/* <TableCell>{user?.city?.city}</TableCell> */}
                             <TableCell>
                               <Badge variant={user.profileStatus === "COMPLETE" ? "default" : "secondary"}>
                                 {user.profileStatus || "Basic"}
@@ -504,6 +526,8 @@ const Users = () => {
                                 {status}
                               </Badge>
                             </TableCell>
+                            <TableCell>{user?.createdByModel || "User"}</TableCell>
+                            <TableCell>{user?.createdBy?.fullName || user?.fullName}</TableCell>
                             <TableCell>{formatDate(user.createdAt)}</TableCell>
                             <TableCell className="text-right">
                               <DropdownMenu>
@@ -523,7 +547,7 @@ const Users = () => {
                                   <CheckCircle className="w-4 h-4 mr-2" /> Approve
                                 </DropdownMenuItem> */}
                                   <DropdownMenuItem className="text-destructive"
-                                  onClick={() => handleDeleteUser(user._id)}
+                                    onClick={() => handleDeleteUser(user._id)}
                                   >
                                     <Trash2 className="w-4 h-4 mr-2" /> Delete
                                   </DropdownMenuItem>

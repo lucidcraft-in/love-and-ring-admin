@@ -18,6 +18,7 @@ export interface UserFilters {
   maritalStatus?: string;
   createdAfter?: string;
   createdBefore?: string;
+  createdByModel?:string;
 }
 
 interface UserFilterDialogProps {

@@ -147,7 +147,7 @@ export default function ForgotPassword() {
             <Heart className="w-6 h-6 text-primary-foreground" fill="currentColor" />
           </div>
           <span className="text-2xl font-semibold text-foreground tracking-wide">
-            MatchMate
+            Love & Ring
           </span>
         </div>
 
@@ -167,7 +167,7 @@ export default function ForgotPassword() {
                     <Input
                       id="email"
                       type="email"
-                      placeholder="admin@matchmate.com"
+                      placeholder="admin@loveandring.com"
                       className="pl-10"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -314,7 +314,7 @@ export default function ForgotPassword() {
         </Card>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          © 2024 MatchMate. All rights reserved.
+          © 2024 Love & Ring. All rights reserved.
         </p>
       </div>
     </div>

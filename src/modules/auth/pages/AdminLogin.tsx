@@ -48,7 +48,7 @@ export default function AdminLogin() {
     if (loginAsync.fulfilled.match(result)) {
       toast({
         title: "Login Successful",
-        description: "Welcome to MatchMate Admin Portal",
+        description: "Welcome to Love & Ring Admin Portal",
       });
       navigate(from, { replace: true });
     }
@@ -63,7 +63,7 @@ export default function AdminLogin() {
             <Heart className="w-6 h-6 text-primary-foreground" fill="currentColor" />
           </div>
           <span className="text-2xl font-semibold text-foreground tracking-wide">
-            MatchMate
+            Love & Ring
           </span>
         </div>
 
@@ -81,7 +81,7 @@ export default function AdminLogin() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="admin@matchmate.com"
+                    placeholder="admin@loveandring.com"
                     className="pl-10"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -145,7 +145,7 @@ export default function AdminLogin() {
         </Card>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          © 2024 MatchMate. All rights reserved.
+          © 2024 Love & Ring. All rights reserved.
         </p>
       </div>
     </div>

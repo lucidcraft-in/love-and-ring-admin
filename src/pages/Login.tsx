@@ -48,7 +48,7 @@ const Login = () => {
     if (loginAsync.fulfilled.match(result)) {
       toast({
         title: "Login Successful",
-        description: "Welcome to MatchMate Admin Portal",
+        description: "Welcome to Love & Ring Admin Portal",
       });
       navigate(from, { replace: true });
     }
@@ -63,7 +63,7 @@ const Login = () => {
             <Heart className="w-6 h-6 text-primary-foreground" fill="currentColor" />
           </div>
           <span className="text-2xl font-semibold text-foreground tracking-wide">
-            MatchMate
+            Love & Ring
           </span>
         </div>
 
@@ -81,7 +81,7 @@ const Login = () => {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="admin@matchmate.com"
+                    placeholder="admin@loveandring.com"
                     className="pl-10"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -144,7 +144,7 @@ const Login = () => {
         </Card>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
-          © 2024 MatchMate. All rights reserved.
+          © 2024 Love & Ring. All rights reserved.
         </p>
       </div>
     </div>

@@ -74,7 +74,7 @@ export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium leading-none">{user?.name || "Admin"}</p>
                 <p className="text-xs leading-none text-muted-foreground">
-                  {user?.email || "admin@matchmate.com"}
+                  {user?.email || "admin@loveandring.com"}
                 </p>
               </div>
             </DropdownMenuLabel>

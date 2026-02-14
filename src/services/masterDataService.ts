@@ -76,7 +76,7 @@ export const masterDataService = {
     const response = await Axios.get<MasterDataResponse>(endpoint, {
       params: {
         skip: params?.skip || 0,
-        take: params?.take || 10,
+        take: params?.take || 1000,
         search: params?.search,
       },
     });

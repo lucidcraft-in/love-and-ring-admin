@@ -36,6 +36,12 @@ const Users = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
+  // get loged user data
+  const authString = localStorage.getItem("auth");
+  const auth = authString ? JSON.parse(authString) : null;
+  console.log(auth, "user data login");
+
+
   useEffect(() => {
     // Fetch all users for client-side pagination
     dispatch(fetchUsersAsync({ take: 1000 }));
@@ -263,10 +269,13 @@ const Users = () => {
               <h1 className="text-2xl font-semibold text-foreground">User Management</h1>
               <p className="text-sm text-muted-foreground">Manage all registered users and profiles</p>
             </div>
-            <Button className="bg-primary hover:bg-primary/90" onClick={() => setAddDialogOpen(true)}>
-              <UserPlus className="w-4 h-4 mr-2" />
-              Add User
-            </Button>
+
+            {auth?.permission?.includes("createProfiles") &&
+              <Button className="bg-primary hover:bg-primary/90" onClick={() => setAddDialogOpen(true)}>
+                <UserPlus className="w-4 h-4 mr-2" />
+                Add User
+              </Button>
+            }
           </div>
 
           {/* Stats */}

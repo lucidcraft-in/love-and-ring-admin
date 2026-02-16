@@ -2,16 +2,11 @@ import { Heart, LayoutDashboard, Users, UserCog, X, Ticket, Globe, CheckCircle, 
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { permission } from "process";
 
 
-// get loged user data
-const authString = localStorage.getItem("auth");
-const auth = authString ? JSON.parse(authString) : null;
-console.log(auth, "user data login");
 
-const hasPermission = (key: string) => {
-  return Boolean(auth?.permissions?.[key]);
-};
 
 
 const menuItems = [
@@ -21,15 +16,15 @@ const menuItems = [
   { icon: Ticket, label: "SUPPORT TICKETS", path: "/support" },
   { icon: Globe, label: "DEMOGRAPHICS", path: "/demographics" },
   { icon: CheckCircle, label: "APPROVALS", path: "/approvals", permission: "approveProfiles" },
-  { icon: CreditCard, label: "PAYMENT", path: "/payment" },
+  { icon: CreditCard, label: "PAYMENT", path: "/payment" , permission:"managePayments"},
   // { icon: MessageSquare, label: "CONTACT", path: "/contact" },
   // { icon: Building2, label: "BRANCHES", path: "/branches" },
-  { icon: UserCog, label: "STAFF", path: "/admin/staff" },
-  { icon: Shield, label: "ADMINS & ROLES", path: "/admins" },
-  { icon: BarChart3, label: "REPORTS", path: "/reports" },
+  { icon: UserCog, label: "STAFF", path: "/admin/staff", permission:"manageStaff" },
+  { icon: Shield, label: "ADMINS & ROLES", path: "/admins", permission:"manageAdmins" },
+  { icon: BarChart3, label: "REPORTS", path: "/reports", permission:"viewReports" },
   { icon: FileText, label: "CMS", path: "/cms" },
   { icon: Database, label: "MASTER DATA", path: "/master-data" },
-  { icon: Settings, label: "SETTINGS", path: "/settings" },
+  { icon: Settings, label: "SETTINGS", path: "/settings", permission:"manageSettings" },
 ];
 
 interface AdminSidebarProps {
@@ -38,6 +33,18 @@ interface AdminSidebarProps {
 
 export function AdminSidebar({ onClose }: AdminSidebarProps) {
   const location = useLocation();
+
+  const [auth, setAuth] = useState<any>(null)
+
+  // get loged user data
+  useEffect(() => {
+    const authString = localStorage.getItem("auth");
+    setAuth(authString ? JSON.parse(authString) : null);
+  }, []);
+
+  const hasPermission = (key: string) => {
+    return Boolean(auth?.permissions?.[key]);
+  };
 
   return (
     <aside className="w-56 bg-sidebar h-screen sticky top-0 flex flex-col shrink-0">

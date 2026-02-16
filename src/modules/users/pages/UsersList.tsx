@@ -41,6 +41,12 @@ const Users = () => {
   const auth = authString ? JSON.parse(authString) : null;
   console.log(auth, "user data login");
 
+  const canShowActions =
+    auth?.permissions?.viewProfiles ||
+    auth?.permissions?.editProfiles ||
+    auth?.permissions?.deleteProfiles;
+
+
 
   useEffect(() => {
     // Fetch all users for client-side pagination
@@ -270,7 +276,7 @@ const Users = () => {
               <p className="text-sm text-muted-foreground">Manage all registered users and profiles</p>
             </div>
 
-            {auth?.permission?.includes("createProfiles") &&
+            {auth?.permissions?.createProfiles &&
               <Button className="bg-primary hover:bg-primary/90" onClick={() => setAddDialogOpen(true)}>
                 <UserPlus className="w-4 h-4 mr-2" />
                 Add User
@@ -454,7 +460,10 @@ const Users = () => {
                     <TableHead className="sticky top-0 bg-card z-10">Created</TableHead>
                     <TableHead className="sticky top-0 bg-card z-10">Created By</TableHead>
                     <TableHead className="sticky top-0 bg-card z-10">Joined</TableHead>
-                    <TableHead className="sticky top-0 bg-card z-10 text-right">Actions</TableHead>
+                    {canShowActions &&
+                      <TableHead className="sticky top-0 bg-card z-10 text-right">Actions</TableHead>
+
+                    }
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -538,31 +547,42 @@ const Users = () => {
                             <TableCell>{user?.createdByModel || "User"}</TableCell>
                             <TableCell>{user?.createdBy?.fullName || user?.fullName}</TableCell>
                             <TableCell>{formatDate(user.createdAt)}</TableCell>
-                            <TableCell className="text-right">
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="h-8 w-8">
-                                    <MoreHorizontal className="w-4 h-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => handleViewUser(user)}>
-                                    <Eye className="w-4 h-4 mr-2" /> View Profile
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleEditUser(user)}>
-                                    <Edit className="w-4 h-4 mr-2" /> Edit
-                                  </DropdownMenuItem>
-                                  {/* <DropdownMenuItem>
+                            {canShowActions &&
+                              <TableCell className="text-right">
+
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                      <MoreHorizontal className="w-4 h-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    {auth?.permissions?.viewProfiles &&
+                                      <DropdownMenuItem onClick={() => handleViewUser(user)}>
+                                        <Eye className="w-4 h-4 mr-2" /> View Profile
+                                      </DropdownMenuItem>
+                                    }
+
+                                    {auth?.permissions?.editProfiles &&
+                                      <DropdownMenuItem onClick={() => handleEditUser(user)}>
+                                        <Edit className="w-4 h-4 mr-2" /> Edit
+                                      </DropdownMenuItem>
+                                    }
+
+                                    {/* <DropdownMenuItem>
                                   <CheckCircle className="w-4 h-4 mr-2" /> Approve
                                 </DropdownMenuItem> */}
-                                  <DropdownMenuItem className="text-destructive"
-                                    onClick={() => handleDeleteUser(user._id)}
-                                  >
-                                    <Trash2 className="w-4 h-4 mr-2" /> Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </TableCell>
+                                    {auth?.permission?.deleteProfiles &&
+                                      <DropdownMenuItem className="text-destructive"
+                                        onClick={() => handleDeleteUser(user._id)}
+                                      >
+                                        <Trash2 className="w-4 h-4 mr-2" /> Delete
+                                      </DropdownMenuItem>
+                                    }
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              </TableCell>
+                            }
                           </TableRow>
                         );
                       })

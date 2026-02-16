@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { authService, LoginCredentials, LoginResponse } from '@/services/authService';
+import { json } from 'stream/consumers';
 
 interface User {
   id: string;
@@ -35,6 +36,7 @@ export const loginAsync = createAsyncThunk<
     try {
       const response = await authService.login(credentials);
       // Store token in localStorage
+      localStorage.setItem('auth', JSON.stringify(response))
       localStorage.setItem('token', response.token);
       return response;
     } catch (error: any) {

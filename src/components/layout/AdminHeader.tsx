@@ -25,6 +25,7 @@ export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
 
   const handleLogout = () => {
     dispatch(logoutAction());
+    localStorage.clear()
     navigate("/login");
   };
 

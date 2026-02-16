@@ -16,7 +16,7 @@ interface AdminEditDialogProps {
   admin: Admin | null;
 }
 
-export function AdminEditDialog({ open, onOpenChange, admin }: AdminEditDialogProps) {
+function AdminEditDialog({ open, onOpenChange, admin }: AdminEditDialogProps) {
   const dispatch = useAppDispatch();
   const { updateLoading, error } = useAppSelector((state) => state.admin);
   const { roles } = useAppSelector((state) => state.role);
@@ -44,7 +44,7 @@ export function AdminEditDialog({ open, onOpenChange, admin }: AdminEditDialogPr
         fullName: admin.fullName,
         email: admin.email,
         password: "", // Don't pre-fill password
-        role: typeof admin.role === 'object' ? admin.role._id : admin.role as string,
+        role: typeof admin?.role === 'object' ? admin?.role?._id : admin?.role as string,
         status: admin.status,
       });
       setShowPassword(false);
@@ -194,3 +194,5 @@ export function AdminEditDialog({ open, onOpenChange, admin }: AdminEditDialogPr
     </Dialog>
   );
 }
+
+export default AdminEditDialog

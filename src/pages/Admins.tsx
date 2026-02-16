@@ -18,7 +18,7 @@ import { RoleAddDialog } from "@/components/roles/RoleAddDialog";
 import { RoleEditDialog } from "@/components/roles/RoleEditDialog";
 import { RoleDeleteDialog } from "@/components/roles/RoleDeleteDialog";
 import { AdminAddDialog } from "@/components/admins/AdminAddDialog";
-import { AdminEditDialog } from "@/components/admins/AdminEditDialog";
+import  AdminEditDialog  from "@/components/admins/AdminEditDialog";
 import { AdminDeleteDialog } from "@/components/admins/AdminDeleteDialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getStatsCountAsync } from "@/store/slices/adminSlice";

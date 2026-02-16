@@ -22,7 +22,7 @@ const permissionLabels: Record<string, string> = {
   deleteProfiles: "Delete Profiles",
   approveProfiles: "Approve Profiles",
   managePayments: "Manage Payments",
-  manageBranches: "Manage Branches",
+  // manageBranches: "Manage Branches",
   viewReports: "View Reports",
   manageStaff: "Manage Staff",
   manageAdmins: "Manage Admins",

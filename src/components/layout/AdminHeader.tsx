@@ -19,7 +19,12 @@ interface AdminHeaderProps {
 }
 
 export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
-  const { user } = useAppSelector((state) => state.auth);
+  // const { user } = useAppSelector((state) => state.auth);
+
+  const userString = localStorage.getItem("auth")
+  const user = userString ? JSON.parse(userString): null;
+
+
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
@@ -73,7 +78,7 @@ export function AdminHeader({ onMenuClick }: AdminHeaderProps) {
           <DropdownMenuContent className="w-56" align="end" forceMount>
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium leading-none">{user?.name || "Admin"}</p>
+                <p className="text-sm font-medium leading-none">{user?.fullName || "Admin"}</p>
                 <p className="text-xs leading-none text-muted-foreground">
                   {user?.email || "admin@loveandring.com"}
                 </p>

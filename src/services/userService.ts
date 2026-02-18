@@ -21,6 +21,7 @@ export interface User {
   physicallyChallenged?: boolean;
   livingWithFamily?: boolean;
   // course?: string;
+  primaryEducation?: string;
   highestEducation?: string;
   profession?: string;
   income?: {
@@ -56,8 +57,8 @@ export interface User {
   updatedAt?: string;
   approvedAt?: string;
   approvedBy?: string;
-  createdBy?: { _id: string; fullName: string, email:string };
-  createdByModel?:string
+  createdBy?: { _id: string; fullName: string, email: string };
+  createdByModel?: string
 }
 
 export interface SendEmailOtpPayload {

@@ -39,6 +39,7 @@ interface User {
   physicallyChallenged?: boolean;
   livingWithFamily?: boolean;
   // course?: string;
+  primaryEducation?: any,
   highestEducation?: any;
   profession?: any;
   income?: {
@@ -74,11 +75,12 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
   const [castes, setCastes] = useState<any[]>([]);
   const [locations, setLocations] = useState<any[]>([]);
   const [languages, setLanguages] = useState<any[]>([]);
-  const [educations, setEducations] = useState<any[]>([]);
+  const [primaryEducations, setPrimaryEducations] = useState<any[]>([]);
+  const [higherEducations, setHigherEducations] = useState<any[]>([]);
   const [occupations, setOccupations] = useState<any[]>([]);
 
   // We can import masterDataService
-  console.log("educations", educations);
+  // console.log("educations", educations);
   console.log("occupations", occupations);
   console.log("locations", locations);
   console.log("languages", languages);
@@ -105,6 +107,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
     physicallyChallenged: false,
     livingWithFamily: false,
     // course: "",
+    primaryEducation: "",
     highestEducation: "",
     profession: "",
     incomeAmount: "",
@@ -137,12 +140,13 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
       // Fetch all needed dropdown data
       const fetchData = async () => {
         try {
-          const [r, c, l, lang, e, o] = await Promise.all([
+          const [r, c, l, lang, pe, he, o] = await Promise.all([
             masterDataService.getSimpleList('religions'),
             masterDataService.getSimpleList('castes'),
             masterDataService.getSimpleList('locations'),
             masterDataService.getSimpleList('languages'),
-            masterDataService.getSimpleList('educations'),
+            masterDataService.getSimpleList('primaryEducations'),
+            masterDataService.getSimpleList('higherEducations'),
             masterDataService.getSimpleList('occupations'),
           ]);
 
@@ -150,8 +154,25 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
           setCastes(c.data);
           setLocations(l.data);
           setLanguages(lang.data);
-          setEducations(e.data);
+          setPrimaryEducations(pe.data);
+          setHigherEducations(he.data);
           setOccupations(o.data);
+          // [r, c, l, lang, e, he, o]
+          // The previous code had: [r, c, l, lang, e, o] = await Promise.all([
+          //   masterDataService.getSimpleList('religions'),
+          //   masterDataService.getSimpleList('castes'),
+          //   masterDataService.getSimpleList('locations'),
+          //   masterDataService.getSimpleList('languages'),
+          //   masterDataService.getSimpleList('primaryEducations'),
+          //   masterDataService.getSimpleList('higherEducations'),
+          //   masterDataService.getSimpleList('occupations'),
+          // ]);
+          // So 'e' is primaryEducations, 'o' is higherEducations. Wait, the array destructuring was wrong in original code or I misread.
+          // Original: [r, c, l, lang, e, o]
+          // API calls: religions, castes, locations, languages, primaryEducations, higherEducations, occupations.
+          // So 'e' was assigned primaryEducations, and 'o' was assigned higherEducations. Occupations was ignored?
+          // Let's fix this properly.
+
         } catch (err) {
           console.error("Failed to fetch dropdown data", err);
         }
@@ -185,7 +206,8 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
         bodyType: user.bodyType || "",
         physicallyChallenged: user.physicallyChallenged || false,
         livingWithFamily: user.livingWithFamily || false,
-        // course: user.course || "",
+        // course: user.course || ""
+        primaryEducation: extractId(user.primaryEducation),
         highestEducation: extractId(user.highestEducation),
         profession: extractId(user.profession),
         incomeAmount: user.income?.amount?.toString() || "",
@@ -231,6 +253,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
         physicallyChallenged: formData.physicallyChallenged,
         livingWithFamily: formData.livingWithFamily,
         // course: formData.course,
+        primaryEducation: formData.primaryEducation || undefined,
         highestEducation: formData.highestEducation || undefined,
         profession: formData.profession || undefined,
         income: formData.incomeAmount
@@ -531,21 +554,53 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
               </div> */}
 
               <div className="space-y-2">
-                <Label htmlFor="highestEducation">Highest Education</Label>
+                <Label htmlFor="primaryEducation">Primary Education</Label>
                 <Select
-                  value={formData.highestEducation}
-                  onValueChange={(val) => handleInputChange("highestEducation", val)}
+                  value={formData.primaryEducation}
+                  onValueChange={(val) => {
+                    handleInputChange("primaryEducation", val);
+                    handleInputChange("highestEducation", ""); // Reset highest education when primary changes
+                  }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select education" />
+                    <SelectValue placeholder="Select primary education" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Array.isArray(educations) &&
-                      educations.map((education) => (
+                    {Array.isArray(primaryEducations) &&
+                      primaryEducations.map((education) => (
                         <SelectItem key={education._id} value={education._id}>
                           {education.name}
                         </SelectItem>
                       ))
+                    }
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="highestEducation">Highest Education</Label>
+                <Select
+                  value={formData.highestEducation}
+                  onValueChange={(val) => handleInputChange("highestEducation", val)}
+                  disabled={!formData.primaryEducation}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select highest education" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Array.isArray(higherEducations) &&
+                      higherEducations
+                        .filter(edu => {
+                          if (!formData.primaryEducation) return true;
+                          // Check if primaryEducation field exists and matches
+                          const pId = typeof edu.primaryEducation === 'object' ? edu.primaryEducation?._id : edu.primaryEducation;
+                          return pId === formData.primaryEducation;
+                        })
+                        .map((education) => (
+                          <SelectItem key={education._id} value={education._id}>
+                            {education.name}
+                          </SelectItem>
+                        ))
                     }
 
                   </SelectContent>

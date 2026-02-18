@@ -21,8 +21,8 @@ export interface MasterItem {
 export interface MasterDataCountResponse {
   religions: number;
   castes: number;
-  primaryEducations: number;
-  higherEducations:number;
+  primaryEducation: number;
+  higherEducation:number;
   occupations: number;
   languages: number;
   locations: number;

@@ -141,8 +141,72 @@ const MasterData = () => {
       </div>
 
       {/* Stats Section unchanged */}
-      {/* ------------------------------------------------ */}
-
+      {/* Stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+        <Card className="stat-card-shadow border-0">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Heart className="w-4 h-4 text-primary" />
+              <span className="text-xs text-muted-foreground uppercase">Religions</span>
+            </div>
+            <p className="text-xl font-semibold">{counts?.religions || 0}</p>
+          </CardContent>
+        </Card>
+        <Card className="stat-card-shadow border-0">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Database className="w-4 h-4 text-chart-orange" />
+              <span className="text-xs text-muted-foreground uppercase">Castes</span>
+            </div>
+            <p className="text-xl font-semibold">{counts?.castes || 0}</p>
+          </CardContent>
+        </Card>
+        <Card className="stat-card-shadow border-0">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Book className="w-4 h-4 text-chart-green" />
+              <span className="text-xs text-muted-foreground uppercase">Primary Education</span>
+            </div>
+            <p className="text-xl font-semibold">{counts?.primaryEducation || 0}</p>
+          </CardContent>
+        </Card>
+                <Card className="stat-card-shadow border-0">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Book className="w-4 h-4 text-chart-green" />
+              <span className="text-xs text-muted-foreground uppercase">Higher Education</span>
+            </div>
+            <p className="text-xl font-semibold">{counts?.higherEducation || 0}</p>
+          </CardContent>
+        </Card>
+        <Card className="stat-card-shadow border-0">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Briefcase className="w-4 h-4 text-info" />
+              <span className="text-xs text-muted-foreground uppercase">Occupations</span>
+            </div>
+            <p className="text-xl font-semibold">{counts?.occupations || 0}</p>
+          </CardContent>
+        </Card>
+        {/* <Card className="stat-card-shadow border-0">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <MapPin className="w-4 h-4 text-chart-purple" />
+              <span className="text-xs text-muted-foreground uppercase">Locations</span>
+            </div>
+            <p className="text-xl font-semibold">{counts?.locations || 0}</p>
+          </CardContent>
+        </Card> */}
+        <Card className="stat-card-shadow border-0">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Languages className="w-4 h-4 text-chart-rose" />
+              <span className="text-xs text-muted-foreground uppercase">Languages</span>
+            </div>
+            <p className="text-xl font-semibold">{counts?.languages || 0}</p>
+          </CardContent>
+        </Card>
+      </div>
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => {
         setActiveTab(v as any);

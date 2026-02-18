@@ -13,38 +13,39 @@ interface MasterDataDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   type: MasterDataType | null;
-  item: MasterItem | null; // If null, mode is 'create', else 'edit'
+  item: MasterItem | null;
   title: string;
-  // For selecting parent religion when adding/editing generic items like Caste
   religions?: MasterItem[];
+  primaryEducations?: MasterItem[]; // ✅ NEW
 }
 
-export function MasterDataDialog({ open, onOpenChange, type, item, title, religions = [] }: MasterDataDialogProps) {
+export function MasterDataDialog({ open, onOpenChange, type, item, title, religions = [], primaryEducations = [] }: MasterDataDialogProps) {
   const dispatch = useAppDispatch();
   const { createLoading, updateLoading, error } = useAppSelector((state) => state.masterData);
 
   const [formData, setFormData] = useState({
     name: "",
     value: "",
-    religion: "", // Only for caste
+    religion: "",
+    primaryEducation: "", // ✅ NEW
   });
 
   useEffect(() => {
     if (open) {
       dispatch(clearMasterDataError());
       if (item) {
-        // Edit mode
         setFormData({
           name: item.name,
           value: item.value || "",
           religion: typeof item.religion === 'object' ? item.religion?._id : item.religion || "",
+          primaryEducation: typeof item.primaryEducation === 'object' ? item.primaryEducation?._id : item.primaryEducation || "",
         });
       } else {
-        // Create mode
         setFormData({
           name: "",
           value: "",
           religion: "",
+          primaryEducation: "",
         });
       }
     }
@@ -54,23 +55,17 @@ export function MasterDataDialog({ open, onOpenChange, type, item, title, religi
     e.preventDefault();
     if (!type) return;
 
-    if (item) {
-      // Update
-      const payload: any = { name: formData.name };
-      // Some simple logic to include value if needed, for simplicity we send what we have if not empty
-      if (formData.value) payload.value = formData.value;
-      if (type === 'castes' && formData.religion) payload.religion = formData.religion;
+    const payload: any = { name: formData.name };
+    if (formData.value) payload.value = formData.value;
+    if (type === 'castes' && formData.religion) payload.religion = formData.religion;
+    if (type === 'higherEducations' && formData.primaryEducation) payload.primaryEducation = formData.primaryEducation;
 
+    if (item) {
       const result = await dispatch(updateMasterDataAsync({ type, id: item._id, payload }));
       if (updateMasterDataAsync.fulfilled.match(result)) {
         onOpenChange(false);
       }
     } else {
-      // Create
-      const payload: any = { name: formData.name };
-      if (formData.value) payload.value = formData.value;
-      if (type === 'castes' && formData.religion) payload.religion = formData.religion;
-
       const result = await dispatch(createMasterDataAsync({ type, payload }));
       if (createMasterDataAsync.fulfilled.match(result)) {
         onOpenChange(false);
@@ -108,7 +103,6 @@ export function MasterDataDialog({ open, onOpenChange, type, item, title, religi
             />
           </div>
 
-          {/* Special case for Caste: Needs Religion Selection */}
           {type === 'castes' && (
             <div className="space-y-2">
               <Label htmlFor="religion">Religion</Label>
@@ -122,6 +116,26 @@ export function MasterDataDialog({ open, onOpenChange, type, item, title, religi
                 <SelectContent>
                   {religions.map(r => (
                     <SelectItem key={r._id} value={r._id}>{r.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {/* ✅ NEW: Higher Education → Primary Education Select */}
+          {type === 'higherEducations' && (
+            <div className="space-y-2">
+              <Label htmlFor="primaryEducation">Primary Education</Label>
+              <Select
+                value={formData.primaryEducation}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, primaryEducation: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select Primary Education" />
+                </SelectTrigger>
+                <SelectContent>
+                  {primaryEducations.map(p => (
+                    <SelectItem key={p._id} value={p._id}>{p.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

@@ -4,7 +4,7 @@ import Axios from '@/axios/axios';
 // Type Definitions
 // ============================================================================
 
-export type MasterDataType = 'religions' | 'castes' | 'educations' | 'occupations' | 'languages' | 'locations';
+export type MasterDataType = 'religions' | 'castes' | 'primaryEducations' | 'higherEducations' | 'occupations' | 'languages' | 'locations';
 
 export interface MasterItem {
   _id: string;
@@ -12,6 +12,7 @@ export interface MasterItem {
   value: string;
   usersCount?: number;
   // For Caste which has relation to Religion
+  primaryEducation?:string | {_id: string; name: string}
   religion?: string | { _id: string; name: string };
   createdAt?: string;
   updatedAt?: string;
@@ -20,7 +21,8 @@ export interface MasterItem {
 export interface MasterDataCountResponse {
   religions: number;
   castes: number;
-  educations: number;
+  primaryEducations: number;
+  higherEducations:number;
   occupations: number;
   languages: number;
   locations: number;

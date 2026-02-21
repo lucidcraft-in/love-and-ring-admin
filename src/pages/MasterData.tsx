@@ -30,6 +30,17 @@ const MasterData = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [primaryEducationsList, setPrimaryEducationsList] = useState<MasterItem[]>([]);
 
+
+  const masterDataLabels: Record<MasterDataType, string> = {
+    religions: "Religion",
+    castes: "Caste",
+    primaryEducations: "Qualification Level",
+    higherEducations: "Higher Education",
+    occupations: "Occupation",
+    languages: "Language",
+    locations: "Location",
+  };
+
   useEffect(() => {
     dispatch(setMasterDataType(activeTab));
     dispatch(fetchMasterDataAsync({ type: activeTab, params: { search: searchQuery } }));
@@ -170,7 +181,7 @@ const MasterData = () => {
             <p className="text-xl font-semibold">{counts?.primaryEducation || 0}</p>
           </CardContent>
         </Card>
-                <Card className="stat-card-shadow border-0">
+        <Card className="stat-card-shadow border-0">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
               <Book className="w-4 h-4 text-chart-green" />
@@ -228,7 +239,7 @@ const MasterData = () => {
             <div className="relative w-full sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
-                placeholder={`Search ${activeTab}...`}
+                placeholder={`Search ${masterDataLabels[activeTab]}...`}
                 className="pl-10"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}

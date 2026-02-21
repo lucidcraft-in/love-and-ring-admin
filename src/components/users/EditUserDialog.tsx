@@ -554,7 +554,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
               </div> */}
 
               <div className="space-y-2">
-                <Label htmlFor="primaryEducation">Primary Education</Label>
+                <Label htmlFor="primaryEducation">Qualification Level</Label>
                 <Select
                   value={formData.primaryEducation}
                   onValueChange={(val) => {

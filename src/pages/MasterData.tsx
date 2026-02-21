@@ -165,7 +165,7 @@ const MasterData = () => {
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
               <Book className="w-4 h-4 text-chart-green" />
-              <span className="text-xs text-muted-foreground uppercase">Primary Education</span>
+              <span className="text-xs text-muted-foreground uppercase">Qualification Level</span>
             </div>
             <p className="text-xl font-semibold">{counts?.primaryEducation || 0}</p>
           </CardContent>
@@ -216,7 +216,7 @@ const MasterData = () => {
         <TabsList className="bg-muted/50 flex-wrap h-auto">
           <TabsTrigger value="religions">Religion</TabsTrigger>
           <TabsTrigger value="castes">Caste</TabsTrigger>
-          <TabsTrigger value="primaryEducations">Primary Education</TabsTrigger>
+          <TabsTrigger value="primaryEducations">Qualification Level</TabsTrigger>
           <TabsTrigger value="higherEducations">Higher Education</TabsTrigger>
           <TabsTrigger value="occupations">Occupation</TabsTrigger>
           <TabsTrigger value="languages">Language</TabsTrigger>

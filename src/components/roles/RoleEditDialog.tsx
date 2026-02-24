@@ -17,6 +17,7 @@ interface RoleEditDialogProps {
 }
 
 const permissionLabels: Record<string, string> = {
+  createProfiles: "Create Profiles",
   viewProfiles: "View Profiles",
   editProfiles: "Edit Profiles",
   deleteProfiles: "Delete Profiles",

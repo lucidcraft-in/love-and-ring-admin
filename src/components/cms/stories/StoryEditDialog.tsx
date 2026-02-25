@@ -28,6 +28,11 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
     image: null as File | null,
     isPrimary:false
   });
+  console.log("date in the edit:",formData.date)
+
+  const formDataForInput = (isoDate:string) =>{
+    return new Date(isoDate).toISOString().split("T")[0];
+  }
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
@@ -37,7 +42,7 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
       setFormData({
         coupleName: story.coupleName,
         story: story.story,
-        date: story.date,
+        date: formDataForInput(story.date),
         status: story.status,
         image: null,
         isPrimary:story.isPrimary

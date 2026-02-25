@@ -26,6 +26,7 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
     date: "",
     status: "Published" as "Published" | "Pending",
     image: null as File | null,
+    isPrimary:false
   });
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -39,6 +40,7 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
         date: story.date,
         status: story.status,
         image: null,
+        isPrimary:story.isPrimary
       });
       setImagePreview(story.imageUrl);
     }
@@ -65,6 +67,7 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
       story: formData.story,
       date: formData.date,
       status: formData.status,
+      isPrimary:formData.isPrimary,
     };
 
     if (formData.image) {
@@ -146,6 +149,24 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="isPrimary">Is Primary</Label>
+            <Select
+              value={formData.isPrimary ? "true" : "false"}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, isPrimary: value === "true" }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select option" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="false">No</SelectItem>
+                <SelectItem value="true">Yes</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

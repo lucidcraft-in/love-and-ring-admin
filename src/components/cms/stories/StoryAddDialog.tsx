@@ -24,6 +24,7 @@ export function StoryAddDialog({ open, onOpenChange }: StoryAddDialogProps) {
     date: "",
     status: "Published" as "Published" | "Pending",
     image: null as File | null,
+    isPrimary: false, // ✅ ADDED
   });
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -37,6 +38,7 @@ export function StoryAddDialog({ open, onOpenChange }: StoryAddDialogProps) {
         date: "",
         status: "Published",
         image: null,
+        isPrimary: false, // ✅ ADDED
       });
       setImagePreview(null);
     }
@@ -69,6 +71,7 @@ export function StoryAddDialog({ open, onOpenChange }: StoryAddDialogProps) {
       date: formData.date,
       status: formData.status,
       image: formData.image,
+      isPrimary: formData.isPrimary, // ✅ ADDED
     }));
 
     if (createStoryAsync.fulfilled.match(result)) {
@@ -142,6 +145,25 @@ export function StoryAddDialog({ open, onOpenChange }: StoryAddDialogProps) {
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          {/* ✅ ADDED: Is Primary Select */}
+          <div className="space-y-2">
+            <Label htmlFor="isPrimary">Is Primary</Label>
+            <Select
+              value={formData.isPrimary ? "true" : "false"}
+              onValueChange={(value) =>
+                setFormData((prev) => ({ ...prev, isPrimary: value === "true" }))
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select option" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="false">No</SelectItem>
+                <SelectItem value="true">Yes</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

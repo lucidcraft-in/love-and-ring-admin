@@ -13,6 +13,7 @@ export interface SuccessStory {
   date: string;
   createdAt?: string;
   updatedAt?: string;
+  isPrimary?:boolean;
 }
 
 export interface CreateStoryPayload {
@@ -21,6 +22,8 @@ export interface CreateStoryPayload {
   status: 'Published' | 'Pending';
   date: string;
   image: File;
+  isPrimary:boolean;
+
 }
 
 export interface UpdateStoryPayload {
@@ -29,6 +32,7 @@ export interface UpdateStoryPayload {
   status?: 'Published' | 'Pending';
   date?: string;
   image?: File;
+  isPrimary?:boolean;
 }
 
 export interface GetStoriesParams {
@@ -85,6 +89,7 @@ export const successStoryService = {
     if (payload.status) formData.append('status', payload.status);
     if (payload.date) formData.append('date', payload.date);
     if (payload.image) formData.append('image', payload.image);
+    if (payload.isPrimary) formData.append('isPrimary', String(payload.isPrimary));
 
     const response = await Axios.put<SuccessStory>(`/api/cms/success-stories/${id}`, formData, {
       headers: {

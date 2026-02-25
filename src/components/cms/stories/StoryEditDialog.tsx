@@ -28,7 +28,6 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
     image: null as File | null,
     isPrimary:false
   });
-  console.log("date in the edit:",formData.date)
 
   const formDataForInput = (isoDate:string) =>{
     return new Date(isoDate).toISOString().split("T")[0];

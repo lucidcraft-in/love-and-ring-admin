@@ -70,6 +70,7 @@ export const successStoryService = {
     formData.append('status', payload.status);
     formData.append('date', payload.date);
     formData.append('image', payload.image);
+    formData.append('isPrimary', String(payload.isPrimary));
 
     const response = await Axios.post<SuccessStory>('/api/cms/success-stories', formData, {
       headers: {
@@ -89,7 +90,7 @@ export const successStoryService = {
     if (payload.status) formData.append('status', payload.status);
     if (payload.date) formData.append('date', payload.date);
     if (payload.image) formData.append('image', payload.image);
-    if (payload.isPrimary) formData.append('isPrimary', String(payload.isPrimary));
+    if (payload.isPrimary !== undefined) formData.append('isPrimary', String(payload.isPrimary));
 
     const response = await Axios.put<SuccessStory>(`/api/cms/success-stories/${id}`, formData, {
       headers: {

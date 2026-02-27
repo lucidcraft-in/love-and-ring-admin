@@ -24,7 +24,7 @@ export function StoryAddDialog({ open, onOpenChange }: StoryAddDialogProps) {
     date: "",
     status: "Published" as "Published" | "Pending",
     image: null as File | null,
-    isPrimary: false, // ✅ ADDED
+    isPrimary: false,
   });
 
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -38,7 +38,7 @@ export function StoryAddDialog({ open, onOpenChange }: StoryAddDialogProps) {
         date: "",
         status: "Published",
         image: null,
-        isPrimary: false, // ✅ ADDED
+        isPrimary: false,
       });
       setImagePreview(null);
     }

@@ -572,7 +572,7 @@ const Users = () => {
                                     {/* <DropdownMenuItem>
                                   <CheckCircle className="w-4 h-4 mr-2" /> Approve
                                 </DropdownMenuItem> */}
-                                    {auth?.permission?.deleteProfiles &&
+                                    {auth?.permissions?.deleteProfiles &&
                                       <DropdownMenuItem className="text-destructive"
                                         onClick={() => handleDeleteUser(user._id)}
                                       >

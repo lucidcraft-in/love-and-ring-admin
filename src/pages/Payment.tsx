@@ -81,7 +81,7 @@ const Payment = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <Card className="stat-card-shadow border-0">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-chart-green/10 flex items-center justify-center">
@@ -129,7 +129,7 @@ const Payment = () => {
               </div>
             </CardContent>
           </Card>
-        </div>
+        </div> */}
 
         {/* Tabs */}
         <Tabs defaultValue="transactions" className="space-y-4">

@@ -27,7 +27,6 @@ const Payment = () => {
   const [viewTransactionOpen, setViewTransactionOpen] = useState(false);
   const [addPaymentOpen, setAddPaymentOpen] = useState(false);
 
-  // Plan State
   const [planDialogOpen, setPlanDialogOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState<MembershipPlan | null>(null);
   const [deletePlanId, setDeletePlanId] = useState<string | null>(null);
@@ -94,6 +93,7 @@ const Payment = () => {
               </div>
             </CardContent>
           </Card>
+
           <Card className="stat-card-shadow border-0">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -105,6 +105,7 @@ const Payment = () => {
               </div>
             </CardContent>
           </Card>
+
           <Card className="stat-card-shadow border-0">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-chart-orange/10 flex items-center justify-center">
@@ -116,6 +117,7 @@ const Payment = () => {
               </div>
             </CardContent>
           </Card>
+
           <Card className="stat-card-shadow border-0">
             <CardContent className="p-4 flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-info/10 flex items-center justify-center">
@@ -136,113 +138,7 @@ const Payment = () => {
             <TabsTrigger value="plans">Membership Plans</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="transactions" className="space-y-4">
-            {/* Filters */}
-            <Card className="stat-card-shadow border-0">
-              <CardContent className="p-4">
-                <div className="flex flex-col lg:flex-row gap-4">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                    <Input placeholder="Search transactions..." className="pl-10" />
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Select defaultValue="all-status">
-                      <SelectTrigger className="w-32">
-                        <SelectValue placeholder="Status" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all-status">All Status</SelectItem>
-                        <SelectItem value="Success">Success</SelectItem>
-                        <SelectItem value="Pending">Pending</SelectItem>
-                        <SelectItem value="Failed">Failed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Select defaultValue="all-method">
-                      <SelectTrigger className="w-36">
-                        <SelectValue placeholder="Method" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all-method">All Methods</SelectItem>
-                        <SelectItem value="Card">Card</SelectItem>
-                        <SelectItem value="UPI">UPI</SelectItem>
-                        <SelectItem value="NetBanking">Net Banking</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button variant="outline" size="icon">
-                      <Filter className="w-4 h-4" />
-                    </Button>
-                    <Button variant="outline" size="icon">
-                      <Download className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Transactions Table */}
-            <Card className="stat-card-shadow border-0">
-              <CardContent className="p-0">
-                <Table>
-                  <TableHeader>
-                    <TableRow className="border-border/50">
-                      <TableHead>Transaction ID</TableHead>
-                      <TableHead>User</TableHead>
-                      <TableHead>Plan</TableHead>
-                      <TableHead>Amount</TableHead>
-                      <TableHead>Method</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {transactions.map((txn) => (
-                      <TableRow key={txn._id} className="border-border/50">
-                        <TableCell className="font-medium text-primary">{txn.transactionId}</TableCell>
-                        <TableCell>{txn.user?.fullName || "Unknown"}</TableCell>
-                        <TableCell>{txn.planName}</TableCell>
-                        <TableCell className="font-medium">₹{txn.amount.toLocaleString()}</TableCell>
-                        <TableCell>{txn.paymentMethod}</TableCell>
-                        <TableCell>{new Date(txn.createdAt).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <Badge
-                            variant="secondary"
-                            className={
-                              txn.status === "Success"
-                                ? "bg-chart-green/10 text-chart-green"
-                                : txn.status === "Pending"
-                                  ? "bg-chart-orange/10 text-chart-orange"
-                                  : "bg-destructive/10 text-destructive"
-                            }
-                          >
-                            {txn.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => handleViewTransaction(txn)}
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                    {transactions.length === 0 && !loading && (
-                      <TableRow>
-                        <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
-                          No transactions found
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
+          {/* Plans Section */}
           <TabsContent value="plans" className="space-y-4">
             <div className="flex justify-end">
               <Button className="bg-primary hover:bg-primary/90" onClick={handleCreatePlan}>
@@ -250,18 +146,26 @@ const Payment = () => {
                 Add Plan
               </Button>
             </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               {plans.map((plan) => (
                 <Card key={plan._id} className="stat-card-shadow border-0">
+
                   <CardHeader className="pb-2">
                     <div className="flex items-center justify-between">
-                      <CardTitle className="text-base">{plan.name}</CardTitle>
+                      <CardTitle className="text-base">{plan.title}</CardTitle>
+
+                      {plan.isPopular && (
+                        <Badge className="bg-primary/10 text-primary">Popular</Badge>
+                      )}
+
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button variant="ghost" size="icon" className="h-8 w-8">
                             <MoreHorizontal className="w-4 h-4" />
                           </Button>
                         </DropdownMenuTrigger>
+
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleEditPlan(plan)}>
                             <Edit className="w-4 h-4 mr-2" /> Edit
@@ -272,12 +176,24 @@ const Payment = () => {
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
+
+                    {plan.heading && (
+                      <p className="text-xs text-muted-foreground">{plan.heading}</p>
+                    )}
+
                     <div className="flex items-baseline gap-1">
                       <span className="text-3xl font-bold text-primary">₹{plan.price.toLocaleString()}</span>
-                      <span className="text-sm text-muted-foreground">/ {typeof plan.duration === 'object' ? `${plan.duration.value} ${plan.duration.unit}` : plan.duration}</span>
+                      <span className="text-sm text-muted-foreground">
+                        / {typeof plan.duration === 'object'
+                          ? `${plan.duration.value} ${plan.duration.unit}`
+                          : plan.duration}
+                      </span>
                     </div>
                   </CardHeader>
+
                   <CardContent>
+
+                    {/* FEATURES */}
                     <ul className="space-y-2 text-sm text-muted-foreground mb-4">
                       {plan.features.slice(0, 5).map((feature, index) => (
                         <li key={index} className="flex items-center gap-2">
@@ -286,20 +202,51 @@ const Payment = () => {
                         </li>
                       ))}
                     </ul>
+
+                    {/* NEW MEMBERSHIP FEATURES */}
+                    <div className="text-xs space-y-1 mb-4 text-muted-foreground">
+
+                      {plan.contactViews !== undefined && (
+                        <div>Contact Views: {plan.contactViews === 0 ? "Unlimited" : plan.contactViews}</div>
+                      )}
+
+                      {plan.chatProfilesLimit !== undefined && (
+                        <div>Profiles: {plan.chatProfilesLimit}</div>
+                      )}
+
+                      <div>Chat: {plan.allowChat ? "Yes" : "No"}</div>
+                      <div>Call: {plan.allowCall ? "Yes" : "No"}</div>
+
+                      {plan.millionClub && (
+                        <Badge className="bg-yellow-100 text-yellow-700 text-xs">
+                          Million Club
+                        </Badge>
+                      )}
+
+                    </div>
+
                     <div className="flex items-center justify-between pt-4 border-t border-border/50">
                       <span className="text-xs text-muted-foreground">
-                        {plan.status === 'Active' ? 'Active Plan' : 'Inactive Plan'}
+                        {plan.isActive ? 'Active Plan' : 'Inactive Plan'}
                       </span>
+
                       <Badge
                         variant="secondary"
-                        className={plan.status === 'Active' ? "bg-chart-green/10 text-chart-green" : "bg-destructive/10 text-destructive"}
+                        className={
+                          plan.isActive
+                            ? "bg-chart-green/10 text-chart-green"
+                            : "bg-destructive/10 text-destructive"
+                        }
                       >
-                        {plan.status}
+                        {plan.isActive ? "Active" : "Inactive"}
                       </Badge>
                     </div>
+
                   </CardContent>
+
                 </Card>
               ))}
+
               {plans.length === 0 && !loading && (
                 <div className="col-span-full text-center py-10 text-muted-foreground">
                   No membership plans found. Create one to get started.
@@ -310,27 +257,23 @@ const Payment = () => {
         </Tabs>
       </div>
 
-      {/* Transaction View Dialog */}
       <TransactionViewDialog
         open={viewTransactionOpen}
         onOpenChange={setViewTransactionOpen}
         transaction={selectedTransaction}
       />
 
-      {/* Add Offline Payment Dialog */}
       <AddOfflinePaymentDialog
         open={addPaymentOpen}
         onOpenChange={setAddPaymentOpen}
       />
 
-      {/* Plan Dialog */}
       <PlanDialog
         open={planDialogOpen}
         onOpenChange={setPlanDialogOpen}
         plan={selectedPlan}
       />
 
-      {/* Delete Confirmation Dialog */}
       <AlertDialog open={!!deletePlanId} onOpenChange={(open) => !open && setDeletePlanId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -339,9 +282,13 @@ const Payment = () => {
               This action cannot be undone. This will permanently delete the membership plan.
             </AlertDialogDescription>
           </AlertDialogHeader>
+
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction className="bg-destructive text-destructive-foreground hover:bg-destructive/90" onClick={confirmDeletePlan}>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={confirmDeletePlan}
+            >
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -36,24 +36,77 @@ export interface PlanFeature {
 
 export interface MembershipPlan {
   _id: string;
-  name: string;
+
+  // basic info
+  title: string;
+  heading?: string | null;
+
+  // pricing
   price: number;
-  duration: string | { value: number; unit: string };
-  durationInMonths: number;
-  features: string[] | PlanFeature[];
-  status: 'Active' | 'Inactive';
-  subscribers?: number;
+  currency?: string;
+
+  // duration
+  duration?: {
+    value: number;
+    unit: "days" | "months" | "years";
+  };
+
+  // features
+  features: PlanFeature[];
+
+  // limits
+  contactViews?: number;
+  chatProfilesLimit: number;
+
+  // permissions
+  allowCall?: boolean;
+  allowChat?: boolean;
+
+  // special flags
+  millionClub?: boolean;
+  isPopular?: boolean;
+
+  // plan state
+  isActive?: boolean;
+
+  // analytics
+  subscribersCount?: number;
+  sortOrder?: number;
+
+  // audit
+  createdBy?: string;
+
+  // timestamps
   createdAt?: string;
   updatedAt?: string;
+
+  durationInMonths:string;
+  status:string;
 }
 
 export interface CreatePlanPayload {
-  name: string;
+  title: string;
+  heading?: string | null;
+
   price: number;
-  duration: string;
-  durationInMonths: number;
+  currency?: string;
+
   features: string[] | PlanFeature[];
-  status: 'Active' | 'Inactive';
+
+  contactViews?: number;
+
+  chatProfilesLimit: number;
+
+  allowCall?: boolean;
+  allowChat?: boolean;
+
+  millionClub?: boolean;
+
+  isPopular?: boolean;
+
+  isActive?: boolean;
+
+  sortOrder?: number;
 }
 
 export interface AddOfflinePaymentPayload {

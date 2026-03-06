@@ -1,6 +1,7 @@
 export interface Transaction {
   _id: string;
   transactionId: string;
+  userEmail:string;
   user: {
     _id: string;
     fullName: string;
@@ -110,8 +111,8 @@ export interface CreatePlanPayload {
 }
 
 export interface AddOfflinePaymentPayload {
-  userId: string;
-  planName: string;
+  userEmail:string
+  planId:string;
   amount: number;
   paymentMethod: string;
   referenceNo?: string;

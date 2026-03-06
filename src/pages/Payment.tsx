@@ -138,6 +138,110 @@ const Payment = () => {
             <TabsTrigger value="plans">Membership Plans</TabsTrigger>
           </TabsList>
 
+          {/* Transaction table */}
+
+          <TabsContent value="transactions" className="space-y-4">
+
+            <Card className="border-0 stat-card-shadow">
+              <CardContent className="p-0">
+
+                <Table>
+
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Transaction ID</TableHead>
+                      <TableHead>User</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Amount</TableHead>
+                      <TableHead>Method</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+
+                  <TableBody>
+
+                    {transactions.map((txn) => (
+
+                      <TableRow key={txn._id}>
+
+                        <TableCell className="font-medium">
+                          {txn.transactionId}
+                        </TableCell>
+
+                        <TableCell>
+                          {txn.user?.fullName || "-"}
+                        </TableCell>
+
+                        <TableCell>
+                          {txn.userEmail}
+                        </TableCell>
+
+                        <TableCell className="font-medium">
+                          ₹{txn.amount.toLocaleString()}
+                        </TableCell>
+
+                        <TableCell>
+                          <Badge variant="outline">
+                            {txn.paymentMethod}
+                          </Badge>
+                        </TableCell>
+
+                        <TableCell>
+
+                          <Badge
+                            className={
+                              txn.status === "Success"
+                                ? "bg-chart-green/10 text-chart-green"
+                                : "bg-destructive/10 text-destructive"
+                            }
+                          >
+                            {txn.status}
+
+                          </Badge>
+
+                        </TableCell>
+
+                        <TableCell>
+                          {new Date(txn.createdAt).toLocaleDateString()}
+                        </TableCell>
+
+                        <TableCell className="text-right">
+
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleViewTransaction(txn)}
+                          >
+
+                            <Eye className="w-4 h-4" />
+
+                          </Button>
+
+                        </TableCell>
+
+                      </TableRow>
+
+                    ))}
+
+                    {transactions.length === 0 && !loading && (
+                      <TableRow>
+                        <TableCell colSpan={8} className="text-center py-10 text-muted-foreground">
+                          No transactions found
+                        </TableCell>
+                      </TableRow>
+                    )}
+
+                  </TableBody>
+
+                </Table>
+
+              </CardContent>
+            </Card>
+
+          </TabsContent>
+
           {/* Plans Section */}
           <TabsContent value="plans" className="space-y-4">
             <div className="flex justify-end">

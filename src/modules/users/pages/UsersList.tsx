@@ -251,7 +251,7 @@ const Users = () => {
     ).length;
 
     const premiumUsers = users.filter(
-      (u) => u.profileStatus === "COMPLETE"
+      (u) => u.profileStatus !== "BASIC"
     ).length;
 
     return {

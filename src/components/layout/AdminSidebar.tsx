@@ -1,4 +1,4 @@
-import { Heart, LayoutDashboard, Users, UserCog, X, Ticket, Globe, CheckCircle, CreditCard, MessageSquare, Building2, Shield, BarChart3, FileText, Database, Settings } from "lucide-react";
+import { Heart, LayoutDashboard, Users, UserCog, X, Ticket, Globe, CheckCircle, CreditCard, MessageSquare, Building2, Shield, BarChart3, FileText, Database, Settings, Crown } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -12,6 +12,7 @@ import { permission } from "process";
 const menuItems = [
   { icon: LayoutDashboard, label: "DASHBOARD", path: "/" },
   { icon: Users, label: "USERS", path: "/users" },
+  { icon :Crown, label: "MILLION CLUB", path:"/million"},
   { icon: UserCog, label: "CONSULTANTS", path: "/consultants" },
   { icon: Ticket, label: "SUPPORT TICKETS", path: "/support" },
   { icon: Globe, label: "DEMOGRAPHICS", path: "/demographics" },

@@ -74,10 +74,7 @@ const Payment = () => {
             <h1 className="text-2xl font-semibold text-foreground">Payment Management</h1>
             <p className="text-sm text-muted-foreground">Manage subscriptions and transactions</p>
           </div>
-          <Button className="bg-primary hover:bg-primary/90" onClick={() => setAddPaymentOpen(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Add Offline Payment
-          </Button>
+
         </div>
 
         {/* Stats */}
@@ -141,6 +138,12 @@ const Payment = () => {
           {/* Transaction table */}
 
           <TabsContent value="transactions" className="space-y-4">
+            <div className="flex justify-end">
+              <Button className="bg-primary hover:bg-primary/90" onClick={() => setAddPaymentOpen(true)}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Offline Payment
+              </Button>
+            </div>
 
             <Card className="border-0 stat-card-shadow">
               <CardContent className="p-0">

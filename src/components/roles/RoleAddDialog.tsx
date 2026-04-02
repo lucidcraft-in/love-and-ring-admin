@@ -25,6 +25,7 @@ const permissionLabels: Record<string, string> = {
   manageStaff: "Manage Staff",
   manageAdmins: "Manage Admins",
   manageSettings: "Manage Settings",
+  findMatch: "Find Match"
 };
 
 export function RoleAddDialog({ open, onOpenChange }: RoleAddDialogProps) {

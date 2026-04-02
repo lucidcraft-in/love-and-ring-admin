@@ -30,6 +30,7 @@ import Settings from "./pages/Settings";
 import CMS from "./pages/CMS";
 import MasterData from "./pages/MasterData";
 import NotFound from "./pages/NotFound";
+import MillionClub from "./components/million-club/pages/MillionClubList";
 
 const queryClient = new QueryClient();
 
@@ -72,6 +73,7 @@ const App = () => (
             {/* Admin Protected Routes */}
             <Route path="/" element={<ProtectedRoute><AdminLayout><DashboardHome /></AdminLayout></ProtectedRoute>} />
             <Route path="/users" element={<ProtectedRoute><AdminLayout><UsersList /></AdminLayout></ProtectedRoute>} />
+            <Route path="/million" element={<ProtectedRoute><AdminLayout><MillionClub/></AdminLayout></ProtectedRoute>} />
             <Route path="/consultants" element={<ProtectedRoute><AdminLayout><ConsultantList /></AdminLayout></ProtectedRoute>} />
             <Route path="/admin/staff" element={<ProtectedRoute><AdminLayout><StaffList /></AdminLayout></ProtectedRoute>} />
             <Route path="/support" element={<ProtectedRoute><AdminLayout><SupportTickets /></AdminLayout></ProtectedRoute>} />

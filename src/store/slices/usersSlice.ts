@@ -99,6 +99,23 @@ export const deleteUserAsync = createAsyncThunk<
   }
 );
 
+export const fetchMillionClubUsersAsync = createAsyncThunk<
+  GetUsersResponse,
+  { skip?: number; take?: number },
+  { rejectValue: string }
+>(
+  'users/fetchMillionClubUsers',
+  async (params, { rejectWithValue }) => {
+    try {
+      return await userService.millionClubUsers(params);
+    } catch (error: any) {
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to fetch million club users'
+      );
+    }
+  }
+);
+
 const usersSlice = createSlice({
   name: 'users',
   initialState,
@@ -182,6 +199,28 @@ const usersSlice = createSlice({
       .addCase(deleteUserAsync.rejected, (state, action) => {
         state.deleteLoading = false;
         state.error = action.payload || 'Failed to delete user';
+      })
+      .addCase(fetchMillionClubUsersAsync.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(fetchMillionClubUsersAsync.fulfilled, (state, action) => {
+        state.isLoading = false;
+
+        // handle both array & paginated response
+        if (Array.isArray(action.payload)) {
+          state.users = action.payload;
+          state.total = action.payload.length;
+        } else {
+          state.users = action.payload.data;
+          state.total = action.payload.total;
+        }
+
+        state.error = null;
+      })
+      .addCase(fetchMillionClubUsersAsync.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload || 'Error';
       });
   },
 });

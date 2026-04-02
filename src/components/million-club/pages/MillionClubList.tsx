@@ -469,7 +469,6 @@ useEffect(() => {
                     <TableHead className="sticky top-0 bg-card z-10">Joined</TableHead>
                     {canShowActions &&
                       <TableHead className="sticky top-0 bg-card z-10 text-right">Actions</TableHead>
-
                     }
                   </TableRow>
                 </TableHeader>
@@ -574,6 +573,11 @@ useEffect(() => {
                                       <DropdownMenuItem onClick={() => handleEditUser(user)}>
                                         <Edit className="w-4 h-4 mr-2" /> Edit
                                       </DropdownMenuItem>
+                                    }
+                                    {auth?.permissions?.findMatch &&
+                                      <DropdownMenuItem>
+                                        <Ban className="w-4 h-4 mr-2" /> Find Match
+                                      </DropdownMenuItem> 
                                     }
 
                                     {/* <DropdownMenuItem>

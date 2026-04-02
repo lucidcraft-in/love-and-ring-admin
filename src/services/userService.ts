@@ -195,4 +195,16 @@ export const userService = {
     );
     return response.data.photos;
   },
+
+  // get million club users
+  millionClubUsers: async (params?: { skip?: number; take?: number }): Promise<GetUsersResponse> => {
+    const response = await Axios.get<GetUsersResponse>('/api/users/million', {
+      params: {
+        skip: params?.skip || 0,
+        take: params?.take || 10,
+      },
+    });
+
+    return response.data;
+  }
 };

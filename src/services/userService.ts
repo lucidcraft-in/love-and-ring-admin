@@ -206,5 +206,53 @@ export const userService = {
     });
 
     return response.data;
+  },
+
+  /**
+   * Get User Partner Preference
+   */
+  getUserPreference: async (userId: string): Promise<any> => {
+    const response = await Axios.get<any>(`/api/users/${userId}/preference`);
+    return response.data;
+  },
+
+  /**
+   * Update User Partner Preference
+   */
+  updateUserPreference: async (userId: string, data: any): Promise<any> => {
+    const response = await Axios.post<any>(`/api/users/${userId}/preference`, data);
+    return response.data;
+  },
+
+  /**
+   * Get User Matches
+   */
+  getUserMatches: async (userId: string, params?: { page?: number; limit?: number }): Promise<any> => {
+    const response = await Axios.get<any>(`/api/users/${userId}/matches`, { params });
+    return response.data;
+  },
+
+  /**
+   * Get User Interests (Sent/Received)
+   */
+  getUserInterests: async (userId: string, type: 'sent' | 'received'): Promise<any[]> => {
+    const response = await Axios.get<any[]>(`/api/users/${userId}/interests/${type}`);
+    return response.data;
+  },
+
+  /**
+   * Send Interest from User
+   */
+  sendInterest: async (userId: string, toUserId: string): Promise<any> => {
+    const response = await Axios.post<any>(`/api/users/${userId}/interests/send/${toUserId}`);
+    return response.data;
+  },
+
+  /**
+   * Manage Interest (Accept/Reject)
+   */
+  manageInterest: async (userId: string, interestId: string, action: 'accept' | 'reject'): Promise<any> => {
+    const response = await Axios.patch<any>(`/api/users/${userId}/interests/${interestId}/${action}`);
+    return response.data;
   }
 };

@@ -6,17 +6,19 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Download, UserPlus, MoreHorizontal, Eye, Edit, Ban, CheckCircle, Trash2, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import { Search, Filter, Download, UserPlus, MoreHorizontal, Eye, Edit, Ban, CheckCircle, Trash2, ChevronLeft, ChevronRight, RotateCcw, HeartHandshake } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AddUserDialog } from "@/components/users/AddUserDialog";
 import { EditUserDialog } from "@/components/users/EditUserDialog";
 import { ViewUserDialog } from "@/components/users/ViewUserDialog";
 import { UserFilterDialog, type UserFilters } from "@/components/users/UserFilterDialog";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
+import { useNavigate } from "react-router-dom";
 import { fetchUsersAsync, deleteUserAsync, fetchMillionClubUsersAsync } from "@/store/slices/usersSlice";
 
 const MillionClub = () => {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { users, isLoading, error, total } = useAppSelector((state) => state.users);
   console.log(users, "user data")
 
@@ -48,13 +50,13 @@ const MillionClub = () => {
 
 
 
-useEffect(() => {
-  const skip = (currentPage - 1) * pageSize;
-  dispatch(fetchMillionClubUsersAsync({
-    skip,
-    take: pageSize,
-  }));
-}, [dispatch, currentPage, pageSize]);
+  useEffect(() => {
+    const skip = (currentPage - 1) * pageSize;
+    dispatch(fetchMillionClubUsersAsync({
+      skip,
+      take: pageSize,
+    }));
+  }, [dispatch, currentPage, pageSize]);
 
   // Helper function to calculate age from date of birth
   const calculateAge = (dateOfBirth?: string) => {
@@ -156,17 +158,21 @@ useEffect(() => {
     setEditDialogOpen(true);
   };
 
+  const handleFindMatch = (user: any) => {
+    navigate(`/million/match/${user._id}`);
+  };
+
   const handleEditFromView = () => {
     setViewDialogOpen(false);
     setEditDialogOpen(true);
   };
 
   const handleUserAdded = () => {
-    dispatch(fetchMillionClubUsersAsync({take: 1000}));
+    dispatch(fetchMillionClubUsersAsync({ take: 1000 }));
   };
 
   const handleUserUpdated = () => {
-    dispatch(fetchMillionClubUsersAsync({ take:1000}));
+    dispatch(fetchMillionClubUsersAsync({ take: 1000 }));
   };
 
   const handleDeleteUser = (userId: string) => {
@@ -563,6 +569,12 @@ useEffect(() => {
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
+                                    {auth?.permissions?.findMatch &&
+                                      <DropdownMenuItem onClick={() => handleFindMatch(user)}>
+                                        <HeartHandshake className="w-4 h-4 mr-2" /> Find Match
+                                      </DropdownMenuItem>
+                                    }
+
                                     {auth?.permissions?.viewProfiles &&
                                       <DropdownMenuItem onClick={() => handleViewUser(user)}>
                                         <Eye className="w-4 h-4 mr-2" /> View Profile
@@ -574,12 +586,6 @@ useEffect(() => {
                                         <Edit className="w-4 h-4 mr-2" /> Edit
                                       </DropdownMenuItem>
                                     }
-                                    {auth?.permissions?.findMatch &&
-                                      <DropdownMenuItem>
-                                        <Ban className="w-4 h-4 mr-2" /> Find Match
-                                      </DropdownMenuItem> 
-                                    }
-
                                     {/* <DropdownMenuItem>
                                   <CheckCircle className="w-4 h-4 mr-2" /> Approve
                                 </DropdownMenuItem> */}

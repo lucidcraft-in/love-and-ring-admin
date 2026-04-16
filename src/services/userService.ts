@@ -186,13 +186,9 @@ export const userService = {
   /**
    * Delete User Photo
    */
-  deleteUserPhoto: async (userId: string, photoUrl: string): Promise<User['photos']> => {
+  deleteUserPhoto: async (userId: string, photoId: string): Promise<User['photos']> => {
     const response = await Axios.delete<{ message: string; photos: User['photos'] }>(
-      `/api/users/${userId}/photos`,
-      {
-        data: { photoUrl }
-      }
-    );
+      `/api/users/${userId}/photos/${photoId}`);
     return response.data.photos;
   },
 

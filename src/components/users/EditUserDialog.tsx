@@ -348,17 +348,18 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
     }
   };
 
-  const handleDeletePhoto = async (photoUrl: string) => {
+  const handleDeletePhoto = async (photoId: string) => {
     if (!user?._id) return;
+
     try {
-      const updatedPhotos = await userService.deleteUserPhoto(user._id, photoUrl);
+      const updatedPhotos = await userService.deleteUserPhoto(user._id, photoId);
       setPhotos(updatedPhotos);
+
       toast({
         title: "Success",
         description: "Photo deleted successfully",
       });
-      onUserUpdated?.();
-    } catch (error: any) {
+    } catch (error) {
       toast({
         title: "Error",
         description: "Failed to delete photo",
@@ -682,15 +683,15 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDeletePhoto(photos[0].url);
+                        handleDeletePhoto(photos[0]._id);
                       }}
                     >
                       <Trash2 className="w-4 h-4 mr-2" /> Remove
                     </Button>
                     <div className="relative">
-                      <Button variant="secondary" size="sm" className="pointer-events-none">
+                      {/* <Button variant="secondary" size="sm" className="pointer-events-none">
                         Change Photo
-                      </Button>
+                      </Button> */}
                       <input
                         type="file"
                         accept="image/*"

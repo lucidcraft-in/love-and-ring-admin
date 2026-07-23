@@ -9,6 +9,15 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
   const { isAuthenticated, isLoading } = useAppSelector((state) => state.auth);
   const location = useLocation();
 
+  // Check if token actually exists in localStorage or sessionStorage
+  const token =
+    localStorage.getItem("token") ||
+    localStorage.getItem("admin_token") ||
+    sessionStorage.getItem("token");
+
+  // Valid session ONLY if Redux says true AND token exists in storage
+  const hasValidSession = isAuthenticated && !!token;
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -17,7 +26,7 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!hasValidSession) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 

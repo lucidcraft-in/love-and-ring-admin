@@ -9,6 +9,14 @@ export function ConsultantProtectedRoute({ children }: ConsultantProtectedRouteP
   const { isAuthenticated, loginLoading } = useAppSelector((state) => state.consultant);
   const location = useLocation();
 
+  // Check if consultant token exists in storage
+  const token =
+    localStorage.getItem("consultant_token") ||
+    localStorage.getItem("token") ||
+    sessionStorage.getItem("consultant_token");
+
+  const hasValidSession = isAuthenticated && !!token;
+
   if (loginLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -17,7 +25,7 @@ export function ConsultantProtectedRoute({ children }: ConsultantProtectedRouteP
     );
   }
 
-  if (!isAuthenticated) {
+  if (!hasValidSession) {
     return <Navigate to="/consultant/login" state={{ from: location }} replace />;
   }
 

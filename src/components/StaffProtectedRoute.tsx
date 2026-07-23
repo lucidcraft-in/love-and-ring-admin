@@ -9,6 +9,14 @@ export function StaffProtectedRoute({ children }: StaffProtectedRouteProps) {
   const { isAuthenticated, loginLoading } = useAppSelector((state) => state.staff);
   const location = useLocation();
 
+  // Check if staff token exists in storage
+  const token =
+    localStorage.getItem("staff_token") ||
+    localStorage.getItem("token") ||
+    sessionStorage.getItem("staff_token");
+
+  const hasValidSession = isAuthenticated && !!token;
+
   if (loginLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -17,7 +25,7 @@ export function StaffProtectedRoute({ children }: StaffProtectedRouteProps) {
     );
   }
 
-  if (!isAuthenticated) {
+  if (!hasValidSession) {
     return <Navigate to="/staff/login" state={{ from: location }} replace />;
   }
 

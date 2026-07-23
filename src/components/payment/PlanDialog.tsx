@@ -10,7 +10,6 @@ import { AppDispatch } from "@/store/store";
 import { Loader2, Plus, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { MembershipPlan } from "@/types/payment";
-import { isAction } from "@reduxjs/toolkit";
 
 interface PlanDialogProps {
   open: boolean;
@@ -28,8 +27,8 @@ export const PlanDialog: React.FC<PlanDialogProps> = ({ open, onOpenChange, plan
     heading: "",
     price: "",
     currency: "INR",
-    duration: "1 Month",
-    durationInMonths: "1",
+    durationValue: "1",
+    durationUnit: "months",
     features: [""],
     status: "Active",
     contactViews: "0",
@@ -39,21 +38,26 @@ export const PlanDialog: React.FC<PlanDialogProps> = ({ open, onOpenChange, plan
     allowCall: "false",
     allowChat: "false",
     millionClub: "false",
-    isActive:'false'
+    isActive: "true",
   });
 
   useEffect(() => {
     if (plan) {
+      let durVal = "1";
+      let durUnit = "months";
+
+      if (typeof plan.duration === "object" && plan.duration) {
+        durVal = plan.duration.value?.toString() || "1";
+        durUnit = plan.duration.unit || "months";
+      }
+
       setFormData({
         title: plan.title || "",
         heading: plan.heading || "",
         price: plan.price?.toString() || "",
         currency: plan.currency || "INR",
-        duration:
-          typeof plan.duration === "object"
-            ? `${plan.duration.value} ${plan.duration.unit}`
-            : plan.duration || "1 Month",
-        durationInMonths: plan.durationInMonths?.toString() || "1",
+        durationValue: durVal,
+        durationUnit: durUnit,
         features: plan.features?.length
           ? plan.features.map((f: any) => (typeof f === "string" ? f : f.label))
           : [""],
@@ -65,7 +69,7 @@ export const PlanDialog: React.FC<PlanDialogProps> = ({ open, onOpenChange, plan
         allowCall: String(plan.allowCall || false),
         allowChat: String(plan.allowChat || false),
         millionClub: String(plan.millionClub || false),
-        isActive: String(plan.isActive || false)
+        isActive: String(plan.isActive ?? true),
       });
     } else {
       setFormData({
@@ -73,8 +77,8 @@ export const PlanDialog: React.FC<PlanDialogProps> = ({ open, onOpenChange, plan
         heading: "",
         price: "",
         currency: "INR",
-        duration: "1 Month",
-        durationInMonths: "1",
+        durationValue: "1",
+        durationUnit: "months",
         features: [""],
         status: "Active",
         contactViews: "0",
@@ -84,7 +88,7 @@ export const PlanDialog: React.FC<PlanDialogProps> = ({ open, onOpenChange, plan
         allowCall: "false",
         allowChat: "false",
         millionClub: "false",
-        isActive: "false",
+        isActive: "true",
       });
     }
   }, [plan, open]);
@@ -121,8 +125,12 @@ export const PlanDialog: React.FC<PlanDialogProps> = ({ open, onOpenChange, plan
       const payload = {
         title: formData.title,
         heading: formData.heading,
-        price: Number(formData.price),
+        price: formData.price !== "" && formData.price !== null ? Number(formData.price) : 0,
         currency: formData.currency,
+        duration: {
+          value: Number(formData.durationValue) || 1,
+          unit: formData.durationUnit || "months",
+        },
         contactViews: Number(formData.contactViews),
         isPopular: formData.isPopular === "true",
         sortOrder: Number(formData.sortOrder),
@@ -168,7 +176,6 @@ export const PlanDialog: React.FC<PlanDialogProps> = ({ open, onOpenChange, plan
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
-
           <div className="space-y-2">
             <Label>Plan Title</Label>
             <Input name="title" value={formData.title} onChange={handleChange} required />
@@ -182,12 +189,44 @@ export const PlanDialog: React.FC<PlanDialogProps> = ({ open, onOpenChange, plan
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Price</Label>
-              <Input type="number" name="price" value={formData.price} onChange={handleChange} required />
+              <Input type="number" name="price" value={formData.price} onChange={handleChange} placeholder="0 (For custom plans)" />
             </div>
 
             <div className="space-y-2">
               <Label>Currency</Label>
               <Input name="currency" value={formData.currency} onChange={handleChange} />
+            </div>
+          </div>
+
+          {/* Plan Duration Fields */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Duration Value</Label>
+              <Input
+                type="number"
+                name="durationValue"
+                value={formData.durationValue}
+                onChange={handleChange}
+                min="1"
+                required
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Duration Unit</Label>
+              <Select
+                value={formData.durationUnit}
+                onValueChange={(v) => handleSelectChange("durationUnit", v)}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select unit" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="days">Days</SelectItem>
+                  <SelectItem value="months">Months</SelectItem>
+                  <SelectItem value="years">Years</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
@@ -197,16 +236,6 @@ export const PlanDialog: React.FC<PlanDialogProps> = ({ open, onOpenChange, plan
               type="number"
               name="chatProfilesLimit"
               value={formData.chatProfilesLimit}
-              onChange={handleChange}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Contact Views</Label>
-            <Input
-              type="number"
-              name="contactViews"
-              value={formData.contactViews}
               onChange={handleChange}
             />
           </div>
@@ -245,9 +274,7 @@ export const PlanDialog: React.FC<PlanDialogProps> = ({ open, onOpenChange, plan
           </div>
 
           {/* Boolean Options */}
-
           <div className="grid grid-cols-2 gap-4">
-
             <div>
               <Label>Allow Call</Label>
               <Select
@@ -279,11 +306,9 @@ export const PlanDialog: React.FC<PlanDialogProps> = ({ open, onOpenChange, plan
                 </SelectContent>
               </Select>
             </div>
-
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-
+          <div className="grid grid-cols-3 gap-4">
             <div>
               <Label>Popular Plan</Label>
               <Select
@@ -315,6 +340,7 @@ export const PlanDialog: React.FC<PlanDialogProps> = ({ open, onOpenChange, plan
                 </SelectContent>
               </Select>
             </div>
+
             <div>
               <Label>Status</Label>
               <Select
@@ -330,7 +356,6 @@ export const PlanDialog: React.FC<PlanDialogProps> = ({ open, onOpenChange, plan
                 </SelectContent>
               </Select>
             </div>
-
           </div>
 
           <DialogFooter>
@@ -343,7 +368,6 @@ export const PlanDialog: React.FC<PlanDialogProps> = ({ open, onOpenChange, plan
               {plan ? "Update Plan" : "Create Plan"}
             </Button>
           </DialogFooter>
-
         </form>
       </DialogContent>
     </Dialog>

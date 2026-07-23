@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { authService, LoginCredentials, LoginResponse } from '@/services/authService';
-import { json } from 'stream/consumers';
 
 interface User {
   id: string;
@@ -17,10 +16,40 @@ interface AuthState {
   error: string | null;
 }
 
+// Safely retrieve token from localStorage
+const getInitialToken = (): string | null => {
+  const token = localStorage.getItem('token');
+  if (!token || token === 'null' || token === 'undefined') {
+    return null;
+  }
+  return token;
+};
+
+// Safely retrieve user data from localStorage on refresh
+const getInitialUser = (): User | null => {
+  try {
+    const storedAuth = localStorage.getItem('auth');
+    if (storedAuth) {
+      const parsed = JSON.parse(storedAuth);
+      return {
+        id: parsed.admin?._id || parsed.user?.id || '',
+        email: parsed.admin?.email || parsed.user?.email || '',
+        name: parsed.admin?.name || parsed.user?.name,
+        role: parsed.admin?.role || parsed.user?.role,
+      };
+    }
+  } catch (e) {
+    console.error("Failed to parse auth from localStorage", e);
+  }
+  return null;
+};
+
+const initialToken = getInitialToken();
+
 const initialState: AuthState = {
-  user: null,
-  token: localStorage.getItem('token'),
-  isAuthenticated: !!localStorage.getItem('token'),
+  user: getInitialUser(),
+  token: initialToken,
+  isAuthenticated: !!initialToken,
   isLoading: false,
   error: null,
 };
@@ -35,8 +64,8 @@ export const loginAsync = createAsyncThunk<
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await authService.login(credentials);
-      // Store token in localStorage
-      localStorage.setItem('auth', JSON.stringify(response))
+      // Store token and auth object in localStorage
+      localStorage.setItem('auth', JSON.stringify(response));
       localStorage.setItem('token', response.token);
       return response;
     } catch (error: any) {
@@ -55,7 +84,9 @@ const authSlice = createSlice({
       state.token = null;
       state.isAuthenticated = false;
       state.error = null;
+      // Clear all auth items from localStorage
       localStorage.removeItem('token');
+      localStorage.removeItem('auth');
     },
     clearError: (state) => {
       state.error = null;
@@ -85,6 +116,9 @@ const authSlice = createSlice({
         state.user = null;
         state.token = null;
         state.error = action.payload || 'An error occurred during login';
+        // Cleanup storage on failed login
+        localStorage.removeItem('token');
+        localStorage.removeItem('auth');
       });
   },
 });

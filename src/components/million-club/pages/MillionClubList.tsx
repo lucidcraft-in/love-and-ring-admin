@@ -1,638 +1,383 @@
 import { useEffect, useState, useMemo } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Download, UserPlus, MoreHorizontal, Eye, Edit, Ban, CheckCircle, Trash2, ChevronLeft, ChevronRight, RotateCcw, HeartHandshake } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { AddUserDialog } from "@/components/users/AddUserDialog";
-import { EditUserDialog } from "@/components/users/EditUserDialog";
-import { ViewUserDialog } from "@/components/users/ViewUserDialog";
-import { UserFilterDialog, type UserFilters } from "@/components/users/UserFilterDialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { HeartHandshake, CheckCircle2, XCircle, Search, RotateCcw } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { useNavigate } from "react-router-dom";
-import { fetchUsersAsync, deleteUserAsync, fetchMillionClubUsersAsync } from "@/store/slices/usersSlice";
+import { fetchMillionClubUsersAsync } from "@/store/slices/usersSlice";
+import { useToast } from "@/hooks/use-toast";
+import Axios from "@/axios/axios";
+
+interface MillionRequest {
+  _id: string;
+  user: any;
+  status: "PENDING" | "APPROVED" | "REJECTED";
+  createdAt: string;
+  notes?: string;
+}
 
 const MillionClub = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { users, isLoading, error, total } = useAppSelector((state) => state.users);
-  console.log(users, "user data")
+  const { toast } = useToast();
+  const { users, isLoading } = useAppSelector((state) => state.users);
 
-  const [addDialogOpen, setAddDialogOpen] = useState(false);
-  const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [viewDialogOpen, setViewDialogOpen] = useState(false);
-  const [filterDialogOpen, setFilterDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState("users");
+  const [requests, setRequests] = useState<MillionRequest[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
+
+  // Search & Filter State
   const [searchTerm, setSearchTerm] = useState("");
   const [genderFilter, setGenderFilter] = useState("all");
-  const [membershipFilter, setMembershipFilter] = useState("all");
-  const [statusFilter, setStatusFilter] = useState("all");
-  const [advancedFilters, setAdvancedFilters] = useState<UserFilters>({});
-  const [createdByFilter, setCreatedByFilter] = useState('all')
+  const [requestStatusFilter, setRequestStatusFilter] = useState("PENDING");
 
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [currentPage] = useState(1);
+  const [pageSize] = useState(100);
 
-  // get loged user data
-  const authString = localStorage.getItem("auth");
-  const auth = authString ? JSON.parse(authString) : null;
-  console.log(auth, "user data login");
-
-  const canShowActions =
-    auth?.permissions?.viewProfiles ||
-    auth?.permissions?.editProfiles ||
-    auth?.permissions?.deleteProfiles;
-
-
+  // Fetch Requests Function
+  const fetchRequests = async () => {
+    setLoadingRequests(true);
+    try {
+      const token = localStorage.getItem("token");
+      const res = await Axios.get("/api/million-club/requests", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setRequests(res.data);
+    } catch (err) {
+      console.error("Failed to fetch requests", err);
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
 
   useEffect(() => {
     const skip = (currentPage - 1) * pageSize;
-    dispatch(fetchMillionClubUsersAsync({
-      skip,
-      take: pageSize,
-    }));
+    dispatch(fetchMillionClubUsersAsync({ skip, take: pageSize }));
+    fetchRequests();
   }, [dispatch, currentPage, pageSize]);
 
-  // Helper function to calculate age from date of birth
-  const calculateAge = (dateOfBirth?: string) => {
-    if (!dateOfBirth) return "N/A";
-    const today = new Date();
-    const birthDate = new Date(dateOfBirth);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
+  // Handle Accept / Reject Action
+  const handleUpdateRequestStatus = async (requestId: string, status: "APPROVED" | "REJECTED") => {
+    try {
+      const token = localStorage.getItem("token");
+      await Axios.put(
+        `/api/million-club/requests/${requestId}`,
+        { status },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      toast({
+        title: "Status Updated",
+        description: `Request marked as ${status}. ${status === "APPROVED" ? "User is now a Million Club member." : ""}`,
+      });
+
+      // Refresh requests and million club users list
+      fetchRequests();
+      dispatch(fetchMillionClubUsersAsync({ skip: 0, take: pageSize }));
+    } catch (err: any) {
+      toast({
+        title: "Action Failed",
+        description: err.response?.data?.message || "Could not update request status",
+        variant: "destructive",
+      });
     }
-    return age;
   };
 
-  const filteredUsers = useMemo(() => {
+  // Reset Filters Function
+  const handleResetFilters = () => {
+    setSearchTerm("");
+    setGenderFilter("all");
+    setRequestStatusFilter("PENDING");
+  };
+
+  // 1. Filtered Members (Tab 1)
+  const filteredMembers = useMemo(() => {
     return users.filter((user) => {
-      // search
       const search = searchTerm.toLowerCase();
       const matchesSearch =
+        !searchTerm ||
         user.fullName?.toLowerCase().includes(search) ||
         user.email?.toLowerCase().includes(search) ||
         user.mobile?.includes(search);
 
-      // gender - use advanced filter if set, otherwise use main filter
-      const effectiveGender = advancedFilters.gender || genderFilter;
-      const matchesGender = effectiveGender === "all" || user.gender === effectiveGender;
+      const matchesGender =
+        genderFilter === "all" || user.gender === genderFilter;
 
-      // Creatd by
-      const created = advancedFilters.createdByModel || createdByFilter;
-      const matchCreated = created === "all" || user.createdByModel === created;
-
-      // Membership - use advanced filter if set, otherwise use main filter
-      const effectiveMembership = advancedFilters.membership || membershipFilter;
-      const matchesMembership =
-        effectiveMembership === "all" ||
-        (effectiveMembership === "premium" && user.profileStatus === "COMPLETE") ||
-        (effectiveMembership === "free" && user.profileStatus !== "COMPLETE");
-
-      // Status - use advanced filter if set, otherwise use main filter
-      const effectiveStatus = advancedFilters.status || statusFilter;
-      const normalizedStatus = effectiveStatus.toLowerCase();
-      const matchesStatus =
-        normalizedStatus === "all" ||
-        (normalizedStatus === "active" && user.approvalStatus === "APPROVED") ||
-        (normalizedStatus === "pending" && user.approvalStatus === "PENDING") ||
-        (normalizedStatus === "blocked" && user.approvalStatus === "REJECTED");
-
-      // Advanced filters
-      const matchesCity = !advancedFilters.city ||
-        user.city?.city?.toLowerCase().includes(advancedFilters.city.toLowerCase());
-
-      const matchesReligion = !advancedFilters.religion ||
-        (typeof user.religion === 'string'
-          ? user.religion.toLowerCase().includes(advancedFilters.religion.toLowerCase())
-          : (user.religion && typeof user.religion === 'object' && 'religion' in user.religion)
-            ? String((user.religion as any).religion || '').toLowerCase().includes(advancedFilters.religion.toLowerCase())
-            : false);
-
-      const matchesMaritalStatus = !advancedFilters.maritalStatus ||
-        user.maritalStatus === advancedFilters.maritalStatus;
-
-      // Age range filter
-      const userAge = user.dateOfBirth ? calculateAge(user.dateOfBirth) : null;
-      const matchesMinAge = advancedFilters.minAge === undefined ||
-        (userAge !== null && typeof userAge === 'number' && userAge >= advancedFilters.minAge);
-      const matchesMaxAge = advancedFilters.maxAge === undefined ||
-        (userAge !== null && typeof userAge === 'number' && userAge <= advancedFilters.maxAge);
-
-      // Date range filter
-      const matchesCreatedAfter = !advancedFilters.createdAfter ||
-        new Date(user.createdAt) >= new Date(advancedFilters.createdAfter);
-      const matchesCreatedBefore = !advancedFilters.createdBefore ||
-        new Date(user.createdAt) <= new Date(advancedFilters.createdBefore);
-
-      return (
-        matchesSearch &&
-        matchesGender &&
-        matchCreated &&
-        matchesMembership &&
-        matchesStatus &&
-        matchesCity &&
-        matchesReligion &&
-        matchesMaritalStatus &&
-        matchesMinAge &&
-        matchesMaxAge &&
-        matchesCreatedAfter &&
-        matchesCreatedBefore
-      );
-    })
-  }, [users, searchTerm, genderFilter, membershipFilter, statusFilter, advancedFilters, createdByFilter])
-
-  const handleViewUser = (user: any) => {
-    setSelectedUser(user);
-    setViewDialogOpen(true);
-  };
-
-  const handleEditUser = (user: any) => {
-    setSelectedUser(user);
-    setEditDialogOpen(true);
-  };
-
-  const handleFindMatch = (user: any) => {
-    navigate(`/million/match/${user._id}`);
-  };
-
-  const handleEditFromView = () => {
-    setViewDialogOpen(false);
-    setEditDialogOpen(true);
-  };
-
-  const handleUserAdded = () => {
-    dispatch(fetchMillionClubUsersAsync({ take: 1000 }));
-  };
-
-  const handleUserUpdated = () => {
-    dispatch(fetchMillionClubUsersAsync({ take: 1000 }));
-  };
-
-  const handleDeleteUser = (userId: string) => {
-    dispatch(deleteUserAsync(userId));
-  };
-
-  const handleApplyFilters = (filters: UserFilters) => {
-    setAdvancedFilters(filters);
-    // Sync main filters with advanced filters if they're set
-    if (filters.status) setStatusFilter(filters.status);
-    if (filters.membership) setMembershipFilter(filters.membership);
-    setCurrentPage(1);
-  };
-
-  const handleClearFilters = () => {
-    setAdvancedFilters({});
-    setGenderFilter("all");
-    setCreatedByFilter("all")
-    setMembershipFilter("all");
-    setStatusFilter("all");
-    setSearchTerm("");
-    setCurrentPage(1);
-  };
-
-  // Count active advanced filters (excluding those that match main filters)
-  const activeFilterCount = Object.keys(advancedFilters).filter((key) => {
-    if (key === 'gender' && advancedFilters.gender === genderFilter) return false;
-    if (key === 'status' && advancedFilters.status === statusFilter) return false;
-    if (key === 'membership' && advancedFilters.membership === membershipFilter) return false;
-    const value = advancedFilters[key as keyof UserFilters];
-    return value !== undefined && value !== "" && (Array.isArray(value) ? value.length > 0 : true);
-  }).length;
-
-  // Helper function to map approval status to display status
-  const getStatusDisplay = (approvalStatus?: string) => {
-    switch (approvalStatus) {
-      case "APPROVED":
-        return "Active";
-      case "PENDING":
-        return "Pending";
-      case "REJECTED":
-        return "Blocked";
-      default:
-        return "Pending";
-    }
-  };
-
-  // Helper function to format date
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-IN", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
+      return matchesSearch && matchesGender;
     });
-  };
+  }, [users, searchTerm, genderFilter]);
 
-  // Helper function to safely extract string from ObjectId or string fields
-  const getFieldValue = (field: any): string => {
-    if (!field) return "N/A";
-    // If it's an object with _id property (ObjectId), return the _id
-    if (typeof field === "object" && field._id) {
-      return field._id;
-    }
-    // If it's already a string, return it
-    if (typeof field === "string") {
-      return field;
-    }
-    return "N/A";
-  };
+  // 2. Filtered Requests (Tab 2)
+  const filteredRequests = useMemo(() => {
+    return requests.filter((req) => {
+      const search = searchTerm.toLowerCase();
+      const matchesSearch =
+        !searchTerm ||
+        req.user?.fullName?.toLowerCase().includes(search) ||
+        req.user?.email?.toLowerCase().includes(search) ||
+        req.user?.mobile?.includes(search);
 
-  const stats = useMemo(() => {
-    const totalUsers = total;
+      const matchesGender =
+        genderFilter === "all" || req.user?.gender === genderFilter;
 
-    // const activeUsers = users.filter(
-    //   (u) => u.approvalStatus === "APPROVED"
-    // ).length;
+      const matchesStatus =
+        requestStatusFilter === "all" || req.status === requestStatusFilter;
 
-    // const pendingUsers = users.filter(
-    //   (u) => u.approvalStatus === "PENDING"
-    // ).length;
+      return matchesSearch && matchesGender && matchesStatus;
+    });
+  }, [requests, searchTerm, genderFilter, requestStatusFilter]);
 
-    // const blockedUsers = users.filter(
-    //   (u) => u.approvalStatus === "REJECTED"
-    // ).length;
+  // Pending Count for Badge Indicator
+  const pendingRequestsCount = useMemo(() => {
+    return requests.filter((r) => r.status === "PENDING").length;
+  }, [requests]);
 
-    // const premiumUsers = users.filter(
-    //   (u) => u.profileStatus !== "BASIC"
-    // ).length;
-
-    const activeUsers = total;
-    const premiumUsers = total
-
-
-    return {
-      totalUsers,
-      activeUsers,
-      premiumUsers,
-      // pendingUsers,
-      // blockedUsers,
-    };
-  }, [users]);
-
+  const isFilterActive =
+    searchTerm !== "" || genderFilter !== "all" || (activeTab === "requests" && requestStatusFilter !== "PENDING");
 
   return (
-    <>
-      <div className="flex flex-col h-[calc(100vh-6rem)] gap-6 animate-fade-in">
-        {/* Fixed Header Section */}
-        <div className="flex-none space-y-6">
-          {/* Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-2xl font-semibold text-foreground">Million Club User Management</h1>
-              <p className="text-sm text-muted-foreground">Manage all million club users and profiles</p>
+    <div className="flex flex-col h-[calc(100vh-6rem)] gap-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Million Club Management</h1>
+          <p className="text-sm text-muted-foreground">
+            Manage Million Club profiles and membership access requests
+          </p>
+        </div>
+      </div>
+
+      {/* Search and Filters Bar */}
+      <Card className="stat-card-shadow border-0">
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-3 items-center justify-between">
+            {/* Search Input */}
+            <div className="relative flex-1 w-full">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by name, email, or mobile..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9"
+              />
             </div>
 
-            {/* {auth?.permissions?.createProfiles &&
-              <Button className="bg-primary hover:bg-primary/90" onClick={() => setAddDialogOpen(true)}>
-                <UserPlus className="w-4 h-4 mr-2" />
-                Add User
-              </Button>
-            } */}
-          </div>
+            {/* Filters */}
+            <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+              {/* Gender Filter */}
+              <Select value={genderFilter} onValueChange={setGenderFilter}>
+                <SelectTrigger className="w-32">
+                  <SelectValue placeholder="Gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Gender</SelectItem>
+                  <SelectItem value="Male">Male</SelectItem>
+                  <SelectItem value="Female">Female</SelectItem>
+                </SelectContent>
+              </Select>
 
-          {/* Stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card className="stat-card-shadow border-0">
-              <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Total Users</p>
-                <p className="text-2xl font-semibold text-primary mt-1">{stats.totalUsers}</p>
-              </CardContent>
-            </Card>
-            <Card className="stat-card-shadow border-0">
-              <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Active Users</p>
-                <p className="text-2xl font-semibold text-chart-green mt-1">{stats.activeUsers}</p>
-              </CardContent>
-            </Card>
-            <Card className="stat-card-shadow border-0">
-              <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Premium Users</p>
-                <p className="text-2xl font-semibold text-chart-orange mt-1">{stats.premiumUsers}</p>
-              </CardContent>
-            </Card>
-            {/* <Card className="stat-card-shadow border-0">
-              <CardContent className="p-4">
-                <p className="text-xs text-muted-foreground uppercase tracking-wide">Pending Approval</p>
-                <p className="text-2xl font-semibold text-chart-purple mt-1">{stats.pendingUsers}</p>
-              </CardContent>
-            </Card> */}
-          </div>
+              {/* Status Filter (Only active on Requests tab) */}
+              {activeTab === "requests" && (
+                <Select value={requestStatusFilter} onValueChange={setRequestStatusFilter}>
+                  <SelectTrigger className="w-36">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="APPROVED">Approved</SelectItem>
+                    <SelectItem value="REJECTED">Rejected</SelectItem>
+                    <SelectItem value="all">All Statuses</SelectItem>
+                  </SelectContent>
+                </Select>
+              )}
 
-          {/* Filters */}
+              {/* Clear Filters Button */}
+              {isFilterActive && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleResetFilters}
+                  title="Reset Filters"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="bg-muted/50 mb-4">
+          <TabsTrigger value="users">
+            Million Club Members ({filteredMembers.length})
+          </TabsTrigger>
+          <TabsTrigger value="requests" className="relative">
+            Membership Requests
+            {pendingRequestsCount > 0 && (
+              <Badge
+                variant="destructive"
+                className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+              >
+                {pendingRequestsCount}
+              </Badge>
+            )}
+          </TabsTrigger>
+        </TabsList>
+
+        {/* TAB 1: MEMBERS TABLE */}
+        <TabsContent value="users" className="space-y-4">
           <Card className="stat-card-shadow border-0">
-            <CardContent className="p-4">
-              <div className="flex flex-col lg:flex-row gap-4">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search users by name, email, or phone..."
-                    className="pl-10"
-                    value={searchTerm}
-                    onChange={(e) => {
-                      setSearchTerm(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                  />
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Select defaultValue={genderFilter} onValueChange={setGenderFilter}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="Gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Gender</SelectItem>
-                      <SelectItem value="Male">Male</SelectItem>
-                      <SelectItem value="Female">Female</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select defaultValue={createdByFilter} onValueChange={setCreatedByFilter}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="Gender" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Users</SelectItem>
-                      <SelectItem value="Admin">Admin</SelectItem>
-                      <SelectItem value="User">User</SelectItem>
-                      <SelectItem value="Staff">Staff</SelectItem>
-                      <SelectItem value="Consultant">Consultant</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select defaultValue={membershipFilter} onValueChange={setMembershipFilter}>
-                    <SelectTrigger className="w-36">
-                      <SelectValue placeholder="Membership" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Membership</SelectItem>
-                      <SelectItem value="premium">Premium</SelectItem>
-                      <SelectItem value="free">Free</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select defaultValue={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Pending">Pending</SelectItem>
-                      <SelectItem value="Blocked">Blocked</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className="relative"
-                    onClick={() => setFilterDialogOpen(true)}
-                  >
-                    <Filter className="w-4 h-4" />
-                    {activeFilterCount > 0 && (
-                      <Badge
-                        variant="destructive"
-                        className="absolute -top-2 -right-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
-                      >
-                        {activeFilterCount}
-                      </Badge>
-                    )}
-                  </Button>
-                  {(searchTerm || genderFilter !== "all" || membershipFilter !== "all" || statusFilter !== "all" || activeFilterCount > 0) && (
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={handleClearFilters}
-                      title="Reset Filters"
-                    >
-                      <RotateCcw className="w-4 h-4" />
-                    </Button>
-                  )}
-                  {/* Compact Pagination Controls */}
-                  <div className="flex items-center gap-2 border-l pl-2 ml-1">
-                    <Select value={pageSize.toString()} onValueChange={(value) => {
-                      setPageSize(Number(value));
-                      setCurrentPage(1);
-                    }}>
-                      <SelectTrigger className="w-16 h-9">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="5">5</SelectItem>
-                        <SelectItem value="10">10</SelectItem>
-                        <SelectItem value="20">20</SelectItem>
-                        <SelectItem value="50">50</SelectItem>
-                        <SelectItem value="100">100</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-9 w-9"
-                      onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                      disabled={currentPage === 1}
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                    </Button>
-                    <span className="text-sm font-medium min-w-[3rem] text-center">
-                      {currentPage}/{Math.ceil(total / pageSize)}
-                    </span>
-                    <Button
-                      variant="outline"
-                      size="icon"
-                      className="h-9 w-9"
-                      onClick={() => setCurrentPage(prev => Math.min(Math.ceil(total / pageSize), prev + 1))}
-                      disabled={currentPage >= Math.ceil(total / pageSize)}
-                    >
-                      <ChevronRight className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Scrollable Table Section */}
-        <div className="flex-1 min-h-0 overflow-hidden">
-          <Card className="stat-card-shadow border-0 h-full flex flex-col">
-            <CardContent className="p-0 flex-1 overflow-auto">
+            <CardContent className="p-0">
               <Table>
                 <TableHeader>
-                  <TableRow className="border-border/50">
-                    <TableHead className="sticky top-0 bg-card z-10">User</TableHead>
-                    <TableHead className="sticky top-0 bg-card z-10">Contact</TableHead>
-                    <TableHead className="sticky top-0 bg-card z-10">Gender</TableHead>
-                    <TableHead className="sticky top-0 bg-card z-10">Age</TableHead>
-                    {/* <TableHead className="sticky top-0 bg-card z-10">Location</TableHead> */}
-                    <TableHead className="sticky top-0 bg-card z-10">Membership</TableHead>
-                    <TableHead className="sticky top-0 bg-card z-10">Status</TableHead>
-                    <TableHead className="sticky top-0 bg-card z-10">Created</TableHead>
-                    <TableHead className="sticky top-0 bg-card z-10">Created By</TableHead>
-                    <TableHead className="sticky top-0 bg-card z-10">Joined</TableHead>
-                    {canShowActions &&
-                      <TableHead className="sticky top-0 bg-card z-10 text-right">Actions</TableHead>
-                    }
+                  <TableRow>
+                    <TableHead>User</TableHead>
+                    <TableHead>Contact</TableHead>
+                    <TableHead>Gender</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Joined</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {isLoading ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center py-8">
-                        <div className="flex items-center justify-center gap-2">
-                          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
-                          <span className="text-muted-foreground">Loading users...</span>
-                        </div>
+                      <TableCell colSpan={6} className="text-center py-8">
+                        Loading members...
                       </TableCell>
                     </TableRow>
-                  ) : error ? (
+                  ) : filteredMembers.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={9} className="text-center py-8">
-                        <div className="text-destructive">
-                          <p className="font-medium">Error loading users</p>
-                          <p className="text-sm text-muted-foreground mt-1">{error}</p>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ) : filteredUsers.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={9} className="text-center py-8">
-                        <p className="text-muted-foreground">No users found</p>
+                      <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                        No Million Club members found.
                       </TableCell>
                     </TableRow>
                   ) : (
-                    filteredUsers
-                      // .slice((currentPage - 1) * pageSize, currentPage * pageSize)
-                      .map((user) => {
-                        const status = getStatusDisplay(user.approvalStatus);
-                        return (
-                          <TableRow key={user._id} className="border-border/50">
-                            <TableCell>
-                              <div className="flex items-center gap-3">
-                                <Avatar className="w-9 h-9">
-                                  {user.photos && user.photos.length > 0 ? (
-                                    <AvatarImage
-                                      src={user.photos.find((p: any) => p.isPrimary)?.url || user.photos[0].url}
-                                      className="object-cover"
-                                    />
-                                  ) : (
-                                    <AvatarImage src={`https://ui-avatars.com/api/?name=${user.fullName || user.email}&size=64`} />
-                                  )}
-                                  <AvatarFallback>{(user.fullName?.charAt(0) || user.email.charAt(0)).toUpperCase()}</AvatarFallback>
-                                </Avatar>
-                                <span className="font-medium">{user.fullName || "Unnamed"}</span>
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              <div className="text-sm">
-                                <p>{user.email}</p>
-                                <p className="text-muted-foreground">
-                                  {user.mobile ? `${user.countryCode || ""} ${user.mobile}` : "N/A"}
-                                </p>
-                              </div>
-                            </TableCell>
-                            <TableCell>{user.gender || "N/A"}</TableCell>
-                            <TableCell>{calculateAge(user.dateOfBirth)}</TableCell>
-                            {/* <TableCell>{user?.city?.city}</TableCell> */}
-                            <TableCell>
-                              <Badge variant={user.profileStatus === "COMPLETE" ? "default" : "secondary"}>
-                                {user.profileStatus || "Basic"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant="outline"
-                                className={
-                                  status === "Active"
-                                    ? "border-chart-green text-chart-green"
-                                    : status === "Pending"
-                                      ? "border-chart-orange text-chart-orange"
-                                      : "border-destructive text-destructive"
-                                }
-                              >
-                                {status}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{user?.createdByModel || "User"}</TableCell>
-                            <TableCell>{user?.createdBy?.fullName || user?.fullName}</TableCell>
-                            <TableCell>{formatDate(user.createdAt)}</TableCell>
-                            {canShowActions &&
-                              <TableCell className="text-right">
-
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8">
-                                      <MoreHorizontal className="w-4 h-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    {auth?.permissions?.findMatch &&
-                                      <DropdownMenuItem onClick={() => handleFindMatch(user)}>
-                                        <HeartHandshake className="w-4 h-4 mr-2" /> Find Match
-                                      </DropdownMenuItem>
-                                    }
-
-                                    {auth?.permissions?.viewProfiles &&
-                                      <DropdownMenuItem onClick={() => handleViewUser(user)}>
-                                        <Eye className="w-4 h-4 mr-2" /> View Profile
-                                      </DropdownMenuItem>
-                                    }
-
-                                    {auth?.permissions?.editProfiles &&
-                                      <DropdownMenuItem onClick={() => handleEditUser(user)}>
-                                        <Edit className="w-4 h-4 mr-2" /> Edit
-                                      </DropdownMenuItem>
-                                    }
-                                    {/* <DropdownMenuItem>
-                                  <CheckCircle className="w-4 h-4 mr-2" /> Approve
-                                </DropdownMenuItem> */}
-                                    {auth?.permissions?.deleteProfiles &&
-                                      <DropdownMenuItem className="text-destructive"
-                                        onClick={() => handleDeleteUser(user._id)}
-                                      >
-                                        <Trash2 className="w-4 h-4 mr-2" /> Delete
-                                      </DropdownMenuItem>
-                                    }
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
-                              </TableCell>
-                            }
-                          </TableRow>
-                        );
-                      })
+                    filteredMembers.map((user) => (
+                      <TableRow key={user._id}>
+                        <TableCell className="font-medium">{user.fullName || "Unnamed"}</TableCell>
+                        <TableCell>
+                          <div>{user.email}</div>
+                          <div className="text-xs text-muted-foreground">{user.mobile}</div>
+                        </TableCell>
+                        <TableCell>{user.gender || "N/A"}</TableCell>
+                        <TableCell>
+                          <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
+                            Million Club
+                          </Badge>
+                        </TableCell>
+                        <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => navigate(`/million/match/${user._id}`)}
+                            title="Find Match"
+                          >
+                            <HeartHandshake className="w-4 h-4 text-primary" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
                   )}
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
-        </div>
-      </div>
+        </TabsContent>
 
-      {/* Dialogs */}
-      <AddUserDialog open={addDialogOpen} onOpenChange={setAddDialogOpen} onUserAdded={handleUserAdded} />
-      <ViewUserDialog
-        open={viewDialogOpen}
-        onOpenChange={setViewDialogOpen}
-        user={selectedUser}
-        onEdit={handleEditFromView}
-      />
-      <EditUserDialog
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-        user={selectedUser}
-        onUserUpdated={handleUserUpdated}
-      />
-      <UserFilterDialog
-        open={filterDialogOpen}
-        onOpenChange={setFilterDialogOpen}
-        filters={advancedFilters}
-        onApplyFilters={handleApplyFilters}
-        onClearFilters={handleClearFilters}
-      />
-    </>
+        {/* TAB 2: REQUESTS TABLE */}
+        <TabsContent value="requests" className="space-y-4">
+          <Card className="stat-card-shadow border-0">
+            <CardContent className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Requested By</TableHead>
+                    <TableHead>Email / Phone</TableHead>
+                    <TableHead>Requested Date</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {loadingRequests ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8">
+                        Loading requests...
+                      </TableCell>
+                    </TableRow>
+                  ) : filteredRequests.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        No requests found matching your filters.
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    filteredRequests.map((req) => (
+                      <TableRow key={req._id}>
+                        <TableCell className="font-medium">
+                          {req.user?.fullName || "Unnamed User"}
+                        </TableCell>
+                        <TableCell>
+                          <div>{req.user?.email}</div>
+                          <div className="text-xs text-muted-foreground">{req.user?.mobile}</div>
+                        </TableCell>
+                        <TableCell>{new Date(req.createdAt).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <Badge
+                            className={
+                              req.status === "APPROVED"
+                                ? "bg-chart-green/10 text-chart-green"
+                                : req.status === "PENDING"
+                                ? "bg-yellow-500/10 text-yellow-600"
+                                : "bg-destructive/10 text-destructive"
+                            }
+                          >
+                            {req.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          {req.status === "PENDING" ? (
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                size="sm"
+                                className="bg-chart-green text-white hover:bg-chart-green/90"
+                                onClick={() => handleUpdateRequestStatus(req._id, "APPROVED")}
+                              >
+                                <CheckCircle2 className="w-4 h-4 mr-1" /> Accept
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="destructive"
+                                onClick={() => handleUpdateRequestStatus(req._id, "REJECTED")}
+                              >
+                                <XCircle className="w-4 h-4 mr-1" /> Reject
+                              </Button>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground capitalize">
+                              {req.status.toLowerCase()}
+                            </span>
+                          )}
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 };
 

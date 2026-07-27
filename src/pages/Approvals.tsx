@@ -67,7 +67,7 @@ const Approvals = () => {
   // I can get it from the store hook.
   const { selectedProfile } = useAppSelector(state => state.approvals);
 
-  const onConfirmAction = async () => {
+  const onConfirmAction = async (reason?: string) => {
     if (!selectedProfile) return;
     setIsSubmitting(true);
     try {
@@ -75,8 +75,8 @@ const Approvals = () => {
         await dispatch(approveProfileAsync(selectedProfile._id)).unwrap();
         toast({ title: "Approved", description: "Consultant approved successfully." });
       } else {
-        await dispatch(rejectProfileAsync(selectedProfile._id)).unwrap();
-        toast({ title: "Rejected", description: "Consultant rejected." });
+        await dispatch(rejectProfileAsync({ id: selectedProfile._id, reason })).unwrap();
+        toast({ title: "Rejected", description: "Consultant rejected notification sent." });
       }
       setActionDialogOpen(false);
     } catch (error) {
@@ -218,10 +218,10 @@ const Approvals = () => {
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="font-semibold">{profile.fullName || "Unknown"}</h3>
-                        <Badge variant="outline" className="text-xs">New Profile</Badge>
+                        {profile.username && <span className="text-xs text-muted-foreground">(@{profile.username})</span>}
+                        <Badge variant="outline" className="text-xs">Pending Consultant</Badge>
                       </div>
-                      <p className="text-sm text-muted-foreground">{profile.email}</p>
-                      <p className="text-sm text-muted-foreground">{profile.agencyName || "No Agency"}</p>
+                      <p className="text-sm text-muted-foreground">{profile.email} {profile.phone ? `• ${profile.phone}` : ''}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">

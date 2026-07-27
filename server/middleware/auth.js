@@ -1,10 +1,8 @@
-/**
- * Authentication Middleware
- * Handles JWT verification and role-based access control
- */
+
 const jwt = require('jsonwebtoken');
 const Consultant = require('../models/Consultant');
-const User = require('../models/User'); // Assuming you have a User model for admins
+const User = require('../models/User'); 
+const Staff = require('../models/Staff');
 
 /**
  * Verify JWT token and attach user to request
@@ -41,11 +39,18 @@ const authMiddleware = (allowedRoles = []) => {
             }
           });
         }
-        throw jwtError;
+        return res.status(401).json({
+          success: false,
+          error: {
+            code: 'INVALID_TOKEN',
+            message: 'Invalid or malformed token.'
+          }
+        });
       }
       
       // Get user based on role
-      let user;
+      let user = null;
+
       if (decoded.role === 'consultant') {
         user = await Consultant.findById(decoded.id).select('-passwordHash');
         
@@ -77,6 +82,7 @@ const authMiddleware = (allowedRoles = []) => {
         
         req.consultant = user;
         req.userRole = 'consultant';
+
       } else if (decoded.role === 'admin') {
         user = await User.findById(decoded.id).select('-password');
         
@@ -92,6 +98,34 @@ const authMiddleware = (allowedRoles = []) => {
         
         req.admin = user;
         req.userRole = 'admin';
+
+      } else if (decoded.role === 'staff') {
+        // Fetch from Staff model (or User model if staff are stored in User)
+        user = Staff 
+          ? await Staff.findById(decoded.id).select('-password')
+          : await User.findById(decoded.id).select('-password');
+        
+        if (!user) {
+          return res.status(401).json({
+            success: false,
+            error: {
+              code: 'USER_NOT_FOUND',
+              message: 'Staff user not found.'
+            }
+          });
+        }
+
+        req.staff = user;
+        req.userRole = 'staff';
+
+      } else {
+        return res.status(403).json({
+          success: false,
+          error: {
+            code: 'INVALID_ROLE',
+            message: 'User role is not recognized.'
+          }
+        });
       }
       
       req.user = user;
@@ -111,11 +145,11 @@ const authMiddleware = (allowedRoles = []) => {
       next();
     } catch (error) {
       console.error('Auth middleware error:', error);
-      return res.status(401).json({
+      return res.status(500).json({
         success: false,
         error: {
-          code: 'INVALID_TOKEN',
-          message: 'Invalid token.'
+          code: 'SERVER_ERROR',
+          message: 'Internal server authentication error.'
         }
       });
     }
@@ -131,6 +165,11 @@ const adminOnly = authMiddleware(['admin']);
  * Consultant only middleware
  */
 const consultantOnly = authMiddleware(['consultant']);
+
+/**
+ * Staff only middleware
+ */
+const staffOnly = authMiddleware(['staff']);
 
 /**
  * Permission middleware for consultants
@@ -151,6 +190,16 @@ const requirePermission = (permissionKey) => {
       // Refresh consultant permissions from DB
       const consultant = await Consultant.findById(req.consultant._id);
       
+      if (!consultant) {
+        return res.status(404).json({
+          success: false,
+          error: {
+            code: 'CONSULTANT_NOT_FOUND',
+            message: 'Consultant profile not found.'
+          }
+        });
+      }
+
       if (!consultant.permissions || !consultant.permissions[permissionKey]) {
         return res.status(403).json({
           success: false,
@@ -179,5 +228,6 @@ module.exports = {
   authMiddleware,
   adminOnly,
   consultantOnly,
+  staffOnly,
   requirePermission
 };

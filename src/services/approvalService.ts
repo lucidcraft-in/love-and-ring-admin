@@ -3,7 +3,9 @@ import Axios from "../axios/axios";
 export interface PendingProfile {
   _id: string;
   fullName: string;
+  username?: string;
   email: string;
+  phone?: string;
   agencyName?: string;
   regions?: string[];
   createdAt: string;
@@ -37,7 +39,7 @@ export const approvalService = {
     await Axios.put(`/api/approvals/profiles/${id}/approve`);
   },
 
-  rejectProfile: async (id: string): Promise<void> => {
-    await Axios.put(`/api/approvals/profiles/${id}/reject`);
+  rejectProfile: async (id: string, reason?: string): Promise<void> => {
+    await Axios.put(`/api/approvals/profiles/${id}/reject`, { reason });
   }
 };

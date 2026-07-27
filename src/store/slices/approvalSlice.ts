@@ -60,9 +60,9 @@ export const approveProfileAsync = createAsyncThunk(
 
 export const rejectProfileAsync = createAsyncThunk(
   "approvals/rejectProfile",
-  async (id: string, { rejectWithValue, dispatch }) => {
+  async ({ id, reason }: { id: string; reason?: string }, { rejectWithValue, dispatch }) => {
     try {
-      await approvalService.rejectProfile(id);
+      await approvalService.rejectProfile(id, reason);
       dispatch(fetchApprovalStatsAsync()); // Refresh stats
       return id;
     } catch (error: any) {

@@ -39,7 +39,8 @@ export function ApprovalDetailsDialog({ open, onOpenChange, onApprove, onReject 
               </Avatar>
               <div>
                 <h3 className="text-xl font-semibold">{profile.fullName}</h3>
-                <p className="text-muted-foreground">{profile.email}</p>
+                <p className="text-muted-foreground">{profile.email} {profile.username ? `(@${profile.username})` : ''}</p>
+                {profile.phone && <p className="text-xs text-muted-foreground mt-0.5">Phone: {profile.phone}</p>}
                 <div className="flex gap-2 mt-2">
                   <Badge variant="outline">Pending Approval</Badge>
                   <Badge variant="secondary">Consultant</Badge>

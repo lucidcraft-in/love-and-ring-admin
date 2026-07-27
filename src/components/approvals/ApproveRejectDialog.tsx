@@ -1,22 +1,36 @@
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, Loader2, AlertTriangle } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { CheckCircle, Loader2, AlertTriangle } from "lucide-react";
 import { useAppSelector } from "@/store/hooks";
 
 interface ApproveRejectDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   type: "approve" | "reject";
-  onConfirm: () => void;
+  onConfirm: (reason?: string) => void;
   isSubmitting: boolean;
 }
 
 export function ApproveRejectDialog({ open, onOpenChange, type, onConfirm, isSubmitting }: ApproveRejectDialogProps) {
   const { selectedProfile: profile } = useAppSelector((state) => state.approvals);
+  const [reason, setReason] = useState("");
+
+  useEffect(() => {
+    if (open) {
+      setReason("");
+    }
+  }, [open, type]);
 
   if (!profile) return null;
 
   const isApprove = type === "approve";
+
+  const handleConfirm = () => {
+    onConfirm(isApprove ? undefined : reason);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -37,6 +51,21 @@ export function ApproveRejectDialog({ open, onOpenChange, type, onConfirm, isSub
           </DialogDescription>
         </DialogHeader>
 
+        {!isApprove && (
+          <div className="space-y-2 py-2">
+            <Label htmlFor="rejectionReason" className="text-sm font-medium">
+              Rejection Reason <span className="text-muted-foreground">(Optional, will be sent in email)</span>
+            </Label>
+            <Textarea
+              id="rejectionReason"
+              placeholder="Specify reason for rejection (e.g. Invalid document, Incomplete profile details...)"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className="min-h-[90px] text-sm resize-none"
+            />
+          </div>
+        )}
+
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Cancel
@@ -44,7 +73,7 @@ export function ApproveRejectDialog({ open, onOpenChange, type, onConfirm, isSub
           <Button
             variant={isApprove ? "default" : "destructive"}
             className={isApprove ? "bg-chart-green hover:bg-chart-green/90" : ""}
-            onClick={onConfirm}
+            onClick={handleConfirm}
             disabled={isSubmitting}
           >
             {isSubmitting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

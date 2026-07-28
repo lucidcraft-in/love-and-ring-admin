@@ -11,11 +11,13 @@ export function ConsultantProtectedRoute({ children }: ConsultantProtectedRouteP
 
   // Check if consultant token exists in storage
   const token =
+    localStorage.getItem("consultantToken") ||
     localStorage.getItem("consultant_token") ||
     localStorage.getItem("token") ||
+    sessionStorage.getItem("consultantToken") ||
     sessionStorage.getItem("consultant_token");
 
-  const hasValidSession = isAuthenticated && !!token;
+  const hasValidSession = isAuthenticated || !!token;
 
   if (loginLoading) {
     return (

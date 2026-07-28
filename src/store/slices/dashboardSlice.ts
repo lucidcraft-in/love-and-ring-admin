@@ -3,6 +3,7 @@ import {
   dashboardService,
   DashboardAnalytics,
   CmsStats,
+  DashboardQueryParams,
 } from "../../services/dashboardService";
 
 interface DashboardState {
@@ -21,9 +22,9 @@ const initialState: DashboardState = {
 
 export const fetchDashboardAnalyticsAsync = createAsyncThunk(
   "dashboard/fetchAnalytics",
-  async (_, { rejectWithValue }) => {
+  async (params: DashboardQueryParams | undefined, { rejectWithValue }) => {
     try {
-      return await dashboardService.getAnalytics();
+      return await dashboardService.getAnalytics(params);
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to fetch dashboard analytics");
     }

@@ -401,6 +401,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
                     <SelectItem value="Brother">Brother</SelectItem>
                     <SelectItem value="Sister">Sister</SelectItem>
                     <SelectItem value="Relative">Relative</SelectItem>
+                    <SelectItem value="Friend">Friend</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

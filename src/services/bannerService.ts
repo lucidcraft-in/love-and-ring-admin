@@ -7,11 +7,11 @@ import Axios from '@/axios/axios';
 export interface Banner {
   _id: string;
   title: string;
-  subtitle: string;
+  subtitle?: string;
   imageUrl: string;
-  targetUrl: string;
-  startDate: string;
-  endDate: string;
+  targetUrl?: string;
+  startDate?: string;
+  endDate?: string;
   status: 'Active' | 'Inactive';
   createdAt?: string;
   updatedAt?: string;
@@ -27,11 +27,11 @@ export interface DataCount {
 
 export interface CreateBannerPayload {
   title: string;
-  subtitle: string;
-  targetUrl: string;
-  startDate: string;
-  endDate: string;
-  status: 'Active' | 'Inactive';
+  subtitle?: string;
+  targetUrl?: string;
+  startDate?: string;
+  endDate?: string;
+  status?: 'Active' | 'Inactive';
   image: File;
 }
 
@@ -64,11 +64,11 @@ export const bannerService = {
   createBanner: async (payload: CreateBannerPayload): Promise<Banner> => {
     const formData = new FormData();
     formData.append('title', payload.title);
-    formData.append('subtitle', payload.subtitle);
-    formData.append('targetUrl', payload.targetUrl);
-    formData.append('startDate', payload.startDate);
-    formData.append('endDate', payload.endDate);
-    formData.append('status', payload.status);
+    if (payload.subtitle) formData.append('subtitle', payload.subtitle);
+    if (payload.targetUrl) formData.append('targetUrl', payload.targetUrl);
+    if (payload.startDate) formData.append('startDate', payload.startDate);
+    if (payload.endDate) formData.append('endDate', payload.endDate);
+    formData.append('status', payload.status || 'Active');
     formData.append('image', payload.image);
 
     const response = await Axios.post<Banner>('/api/cms/banners', formData, {
@@ -85,14 +85,14 @@ export const bannerService = {
   updateBanner: async (id: string, payload: UpdateBannerPayload): Promise<Banner> => {
     const formData = new FormData();
     if (payload.title) formData.append('title', payload.title);
-    if (payload.subtitle) formData.append('subtitle', payload.subtitle);
-    if (payload.targetUrl) formData.append('targetUrl', payload.targetUrl);
+    if (payload.subtitle !== undefined) formData.append('subtitle', payload.subtitle);
+    if (payload.targetUrl !== undefined) formData.append('targetUrl', payload.targetUrl);
     if (payload.startDate) formData.append('startDate', payload.startDate);
     if (payload.endDate) formData.append('endDate', payload.endDate);
     if (payload.status) formData.append('status', payload.status);
     if (payload.image) formData.append('image', payload.image);
 
-    const response = await Axios.put<Banner>(`/api/banners/${id}`, formData, {
+    const response = await Axios.put<Banner>(`/api/cms/banners/${id}`, formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
       },

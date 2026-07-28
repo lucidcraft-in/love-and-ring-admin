@@ -22,7 +22,7 @@ export function VisitorsChart({ data, range, onRangeChange }: VisitorsChartProps
   });
 
   return (
-    <Card className="stat-card-shadow border-0">
+    <Card className="stat-card-shadow border-0 h-full flex flex-col">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-base font-semibold">Visitors</CardTitle>
         <Select value={range} onValueChange={onRangeChange}>
@@ -37,8 +37,8 @@ export function VisitorsChart({ data, range, onRangeChange }: VisitorsChartProps
           </SelectContent>
         </Select>
       </CardHeader>
-      <CardContent>
-        <div className="h-48">
+      <CardContent className="flex-1 flex flex-col justify-end min-h-[260px] pb-4">
+        <div className="h-full min-h-[220px] w-full">
           {chartData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={chartData}>

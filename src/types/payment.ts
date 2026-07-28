@@ -8,6 +8,7 @@ export interface Transaction {
     email: string;
   };
   planName: string;
+  plan?: string | { _id?: string; title?: string; name?: string };
   amount: number;
   paymentMethod: string;
   paymentGateway: string;

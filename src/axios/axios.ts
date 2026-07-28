@@ -10,25 +10,44 @@ const Axios: AxiosInstance = axios.create({
 });
 
 Axios.interceptors.request.use((config) => {
-  const consultantToken = localStorage.getItem("consultantToken");
-  const adminToken = localStorage.getItem("token");
-  const staffToken = localStorage.getItem("staffToken");
+  const pathname = window.location.pathname;
+  let token: string | null = null;
 
-  // choose token by route
-  if (window.location.pathname.startsWith("/consultant")) {
-    if (consultantToken) {
-      config.headers.Authorization = `Bearer ${consultantToken}`;
+  if (pathname.startsWith("/consultant")) {
+    token = localStorage.getItem("consultantToken");
+    if (!token || token === "null" || token === "undefined") {
+      try {
+        const consultant = JSON.parse(localStorage.getItem("currentConsultant") || "{}");
+        token = consultant?.token || null;
+      } catch (e) {}
     }
-  } else if (window.location.pathname.startsWith("/staff")) {
-    if (staffToken) {
-      config.headers.Authorization = `Bearer ${staffToken}`;
+  } else if (pathname.startsWith("/staff")) {
+    token = localStorage.getItem("staffToken");
+    if (!token || token === "null" || token === "undefined") {
+      try {
+        const staff = JSON.parse(localStorage.getItem("currentStaff") || "{}");
+        token = staff?.token || null;
+      } catch (e) {}
     }
-  } else {
-    if (adminToken) {
-      config.headers.Authorization = `Bearer ${adminToken}`;
-    }
+  }
+
+  // Fallback to admin/user token
+  if (!token || token === "null" || token === "undefined") {
+    token = localStorage.getItem("token") || localStorage.getItem("admin_token");
+  }
+
+  if (!token || token === "null" || token === "undefined") {
+    try {
+      const auth = JSON.parse(localStorage.getItem("auth") || "{}");
+      token = auth?.token || auth?.accessToken || null;
+    } catch (e) {}
+  }
+
+  if (token && token !== "null" && token !== "undefined") {
+    config.headers.Authorization = `Bearer ${token}`;
   }
 
   return config;
 });
+
 export default Axios;

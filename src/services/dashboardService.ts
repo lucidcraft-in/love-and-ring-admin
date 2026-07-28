@@ -11,6 +11,7 @@ export interface VisitorStat {
   _id: {
     day: number;
     month: number;
+    year?: number;
   };
   count: number;
 }
@@ -20,10 +21,31 @@ export interface DemographicStat {
   users: number;
 }
 
+export interface ActivityItem {
+  id: string;
+  user: string;
+  avatar?: string;
+  action: string;
+  time?: string;
+  createdAt?: string;
+  type?: string;
+}
+
+export interface ChatRequestItem {
+  id: string;
+  userId?: string;
+  name: string;
+  avatar?: string;
+  status: string;
+  createdAt?: string;
+}
+
 export interface DashboardAnalytics {
   cards: DashboardCards;
   visitors: VisitorStat[];
   demographics: DemographicStat[];
+  activities?: ActivityItem[];
+  chatRequests?: ChatRequestItem[];
 }
 
 export interface CmsStats {
@@ -32,9 +54,14 @@ export interface CmsStats {
   banners: number;
 }
 
+export interface DashboardQueryParams {
+  timeframe?: string;
+  visitorsRange?: string;
+}
+
 export const dashboardService = {
-  getAnalytics: async (): Promise<DashboardAnalytics> => {
-    const response = await Axios.get<{ success: boolean; data: DashboardAnalytics }>("/api/dashboard/analytics");
+  getAnalytics: async (params?: DashboardQueryParams): Promise<DashboardAnalytics> => {
+    const response = await Axios.get<{ success: boolean; data: DashboardAnalytics }>("/api/dashboard/analytics", { params });
     return response.data.data;
   },
 

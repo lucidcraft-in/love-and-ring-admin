@@ -83,13 +83,13 @@ export function TicketReplyDialog({ open, onOpenChange }: TicketReplyDialogProps
           <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
             <Avatar className="w-10 h-10">
               <AvatarImage src={ticket.user?.avatar} />
-              <AvatarFallback>{ticket.user?.fullName?.charAt(0) || "?"}</AvatarFallback>
+              <AvatarFallback>{(ticket.user?.fullName || ticket.guestName || "?").charAt(0).toUpperCase()}</AvatarFallback>
             </Avatar>
             <div className="flex-1">
-              <p className="font-medium">{ticket.user?.fullName || "Unknown User"}</p>
+              <p className="font-medium">{ticket.user?.fullName || ticket.guestName || "Guest User"}</p>
               <p className="text-sm text-muted-foreground truncate">{ticket.subject}</p>
             </div>
-            <Badge variant="outline">#{ticket._id.slice(-6).toUpperCase()}</Badge>
+            <Badge variant="outline">{ticket.ticketId || `#${ticket._id.slice(-6).toUpperCase()}`}</Badge>
           </div>
 
           {/* Reply Input */}

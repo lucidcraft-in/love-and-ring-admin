@@ -28,15 +28,21 @@ export interface ActivityItem {
   action: string;
   time?: string;
   createdAt?: string;
-  type?: string;
+  type?: string; // "view" | "interest" | "signup" | "like"
 }
 
-export interface ChatRequestItem {
+export interface SupportTicketDashboardItem {
   id: string;
-  userId?: string;
+  ticketId: string;
   name: string;
+  email?: string;
   avatar?: string;
+  subject: string;
+  category?: string;
+  priority?: string;
   status: string;
+  message: string;
+  messages?: any[];
   createdAt?: string;
 }
 
@@ -45,7 +51,7 @@ export interface DashboardAnalytics {
   visitors: VisitorStat[];
   demographics: DemographicStat[];
   activities?: ActivityItem[];
-  chatRequests?: ChatRequestItem[];
+  supportTickets?: SupportTicketDashboardItem[];
 }
 
 export interface CmsStats {

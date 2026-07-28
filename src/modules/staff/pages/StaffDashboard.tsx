@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Users, TrendingUp, Clock, Heart, Activity, Eye, Edit, Trash2, Plus, LogOut,
-  Bell, Settings, Search, Briefcase
+  Bell, Settings, Search, Briefcase, UserPlus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,6 +26,15 @@ import { AddUserDialog } from "@/components/users/AddUserDialog";
 import { ViewUserDialog } from "@/components/users/ViewUserDialog";
 import { EditUserDialog } from "@/components/users/EditUserDialog";
 import { DeleteUserDialog } from "@/components/users/DeleteUserDialog";
+import { formatDistanceToNow } from "date-fns";
+
+interface ActivityItem {
+  id: string;
+  action: string;
+  details: string;
+  timestamp: string;
+  type: "create" | "edit" | "delete" | "view" | "login";
+}
 
 export default function StaffDashboard() {
   const navigate = useNavigate();
@@ -34,7 +43,6 @@ export default function StaffDashboard() {
 
   // Redux state
   const { currentStaffUser, isAuthenticated } = useAppSelector((state) => state.staff);
-  console.log(currentStaffUser, "current user data in the staff")
   const { users, isLoading: usersLoading, deleteLoading } = useAppSelector((state) => state.users);
 
   // Dialog state
@@ -45,12 +53,65 @@ export default function StaffDashboard() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
+  const staffUser = currentStaffUser || JSON.parse(localStorage.getItem("staffUser") || "{}");
+  const permissions = staffUser?.permissions || {
+    viewProfile: true,
+    createProfile: true,
+    editProfile: true,
+    deleteProfile: true,
+  };
+
+  const activityKey = `staff_activities_${staffUser?._id || "default"}`;
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
+
+  // Load activities from localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(activityKey);
+      if (saved) {
+        setActivities(JSON.parse(saved));
+      } else {
+        // Initial login activity
+        const initial: ActivityItem[] = [
+          {
+            id: Date.now().toString(),
+            action: "Logged in",
+            details: "Logged into Staff Dashboard",
+            timestamp: new Date().toISOString(),
+            type: "login",
+          },
+        ];
+        setActivities(initial);
+        localStorage.setItem(activityKey, JSON.stringify(initial));
+      }
+    } catch (e) {
+      setActivities([]);
+    }
+  }, [activityKey]);
+
+  const logActivity = (action: string, details: string, type: ActivityItem["type"]) => {
+    const newItem: ActivityItem = {
+      id: Date.now().toString(),
+      action,
+      details,
+      timestamp: new Date().toISOString(),
+      type,
+    };
+    setActivities((prev) => {
+      const updated = [newItem, ...prev].slice(0, 20);
+      try {
+        localStorage.setItem(activityKey, JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+  };
+
   // Fetch users when component mounts
   useEffect(() => {
-    if (isAuthenticated && currentStaffUser) {
+    if (isAuthenticated || localStorage.getItem("staffToken")) {
       dispatch(fetchUsersAsync({ take: 1000 }));
     }
-  }, [dispatch, isAuthenticated, currentStaffUser]);
+  }, [dispatch, isAuthenticated]);
 
   const handleLogout = () => {
     dispatch(logoutStaff());
@@ -62,8 +123,8 @@ export default function StaffDashboard() {
   };
 
   const handleUserAdded = () => {
-    // Refresh users list
     dispatch(fetchUsersAsync({ take: 1000 }));
+    logActivity("Created Profile", "Created a new member profile", "create");
     toast({
       title: "Success",
       description: "User profile created successfully",
@@ -73,6 +134,7 @@ export default function StaffDashboard() {
   const handleViewUser = (user: User) => {
     setSelectedUser(user);
     setViewDialogOpen(true);
+    logActivity("Viewed Profile", `Viewed details for ${user.fullName || user.email}`, "view");
   };
 
   const handleEditUser = (user: User) => {
@@ -89,7 +151,9 @@ export default function StaffDashboard() {
     if (!selectedUser) return;
 
     try {
+      const userName = selectedUser.fullName || selectedUser.email;
       await dispatch(deleteUserAsync(selectedUser._id)).unwrap();
+      logActivity("Deleted Profile", `Deleted profile for ${userName}`, "delete");
       toast({
         title: "Success",
         description: "User deleted successfully",
@@ -106,8 +170,8 @@ export default function StaffDashboard() {
   };
 
   const handleUserUpdated = () => {
-    // Refresh users list
     dispatch(fetchUsersAsync({ take: 1000 }));
+    logActivity("Updated Profile", `Updated profile details for ${selectedUser?.fullName || selectedUser?.email || "member"}`, "edit");
   };
 
   // Filter users based on search term
@@ -173,7 +237,7 @@ export default function StaffDashboard() {
   };
 
   // Show loading state
-  if (!currentStaffUser || usersLoading) {
+  if (usersLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -201,20 +265,20 @@ export default function StaffDashboard() {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="flex items-center gap-2">
                   <Avatar className="h-8 w-8">
-                    <AvatarFallback>{currentStaffUser.fullName.charAt(0)}</AvatarFallback>
+                    <AvatarFallback>{staffUser?.fullName?.charAt(0)?.toUpperCase() || "S"}</AvatarFallback>
                   </Avatar>
-                  <span className="hidden md:inline">{currentStaffUser.fullName}</span>
+                  <span className="hidden md:inline font-medium text-sm">{staffUser?.fullName || "Staff"}</span>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-60 p-2">
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-semibold text-foreground">{staffUser?.fullName || "Staff User"}</p>
+                    <p className="text-xs text-muted-foreground font-mono">{staffUser?.email || "staff@loveandring.com"}</p>
+                  </div>
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <Settings className="mr-2 h-4 w-4" />
-                  Settings
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+                <DropdownMenuItem onClick={handleLogout} className="text-destructive cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
                   Logout
                 </DropdownMenuItem>
@@ -228,17 +292,15 @@ export default function StaffDashboard() {
         {/* Welcome Section */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold">Welcome back, {currentStaffUser.fullName}!</h1>
+            <h1 className="text-2xl font-bold">Welcome back, {staffUser?.fullName || "Staff"}!</h1>
             <p className="text-muted-foreground">Manage your assigned tasks and profiles</p>
           </div>
-          {/* Check permissions if available in currentStaffUser, otherwise default to show */}
-          {currentStaffUser.permissions.createProfile &&
+          {permissions.createProfile && (
             <Button onClick={() => setAddDialogOpen(true)}>
               <Plus className="mr-2 h-4 w-4" />
               Create Profile
             </Button>
-          }
-
+          )}
         </div>
 
         {/* Stats Cards */}
@@ -319,7 +381,7 @@ export default function StaffDashboard() {
                           </TableCell>
                           <TableCell className="text-right">
                             <div className="flex justify-end gap-1">
-                              {currentStaffUser.permissions.viewProfile &&
+                              {permissions.viewProfile && (
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -328,8 +390,8 @@ export default function StaffDashboard() {
                                 >
                                   <Eye className="h-4 w-4" />
                                 </Button>
-                              }
-                              {currentStaffUser.permissions.editProfile &&
+                              )}
+                              {permissions.editProfile && (
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -338,8 +400,8 @@ export default function StaffDashboard() {
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
-                              }
-                              {currentStaffUser.permissions.deleteProfile &&
+                              )}
+                              {permissions.deleteProfile && (
                                 <Button
                                   variant="ghost"
                                   size="icon"
@@ -348,8 +410,7 @@ export default function StaffDashboard() {
                                 >
                                   <Trash2 className="h-4 w-4" />
                                 </Button>
-                              }
-
+                              )}
                             </div>
                           </TableCell>
                         </TableRow>
@@ -361,19 +422,56 @@ export default function StaffDashboard() {
             </CardContent>
           </Card>
 
-          {/* Activity Feed - Coming Soon */}
+          {/* Activity Feed */}
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base font-semibold">
+                <Activity className="h-4 w-4 text-primary" />
                 Recent Activity
               </CardTitle>
-              <CardDescription>Your latest actions and events</CardDescription>
+              <CardDescription className="text-xs">Your latest actions in the staff portal</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center text-muted-foreground py-8">
-                Activity tracking coming soon...
-              </div>
+              {activities.length === 0 ? (
+                <div className="text-center text-muted-foreground py-8 border border-dashed rounded-lg">
+                  <Clock className="w-6 h-6 mx-auto mb-2 opacity-40" />
+                  <p className="text-xs font-medium">No recent activity recorded</p>
+                </div>
+              ) : (
+                <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1">
+                  {activities.map((act) => {
+                    const getIcon = () => {
+                      switch (act.type) {
+                        case "create": return <UserPlus className="w-3.5 h-3.5 text-emerald-600" />;
+                        case "edit": return <Edit className="w-3.5 h-3.5 text-blue-600" />;
+                        case "delete": return <Trash2 className="w-3.5 h-3.5 text-rose-600" />;
+                        case "view": return <Eye className="w-3.5 h-3.5 text-indigo-600" />;
+                        default: return <Activity className="w-3.5 h-3.5 text-amber-600" />;
+                      }
+                    };
+
+                    let timeAgo = "-";
+                    try {
+                      timeAgo = formatDistanceToNow(new Date(act.timestamp), { addSuffix: true });
+                    } catch (e) {
+                      timeAgo = act.timestamp;
+                    }
+
+                    return (
+                      <div key={act.id} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-muted/40 border border-border/40 text-xs">
+                        <div className="p-1.5 rounded-md bg-background shadow-xs mt-0.5">
+                          {getIcon()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-foreground truncate">{act.action}</p>
+                          <p className="text-muted-foreground truncate">{act.details}</p>
+                          <span className="text-[10px] text-muted-foreground/80 mt-1 block">{timeAgo}</span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -385,22 +483,21 @@ export default function StaffDashboard() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              <Badge variant={currentStaffUser.permissions.viewProfile ? "default" : "secondary"}>
-                {currentStaffUser.permissions.viewProfile ? "✓" : "✗"} View Profiles
+              <Badge variant={permissions.viewProfile ? "default" : "secondary"}>
+                {permissions.viewProfile ? "✓" : "✗"} View Profiles
               </Badge>
-              <Badge variant={currentStaffUser.permissions.createProfile ? "default" : "secondary"}>
-                {currentStaffUser.permissions.createProfile ? "✓" : "✗"} Create Profiles
+              <Badge variant={permissions.createProfile ? "default" : "secondary"}>
+                {permissions.createProfile ? "✓" : "✗"} Create Profiles
               </Badge>
-              <Badge variant={currentStaffUser.permissions.editProfile ? "default" : "secondary"}>
-                {currentStaffUser.permissions.editProfile ? "✓" : "✗"} Edit Profiles
+              <Badge variant={permissions.editProfile ? "default" : "secondary"}>
+                {permissions.editProfile ? "✓" : "✗"} Edit Profiles
               </Badge>
-              <Badge variant={currentStaffUser.permissions.deleteProfile ? "default" : "secondary"}>
-                {currentStaffUser.permissions.deleteProfile ? "✓" : "✗"} Delete Profiles
+              <Badge variant={permissions.deleteProfile ? "default" : "secondary"}>
+                {permissions.deleteProfile ? "✓" : "✗"} Delete Profiles
               </Badge>
             </div>
           </CardContent>
         </Card>
-
       </main>
 
       {/* User Creation Dialog */}

@@ -7,7 +7,8 @@ import {
   MembershipDistribution,
   TopBranch,
   BranchPerformance,
-  StaffActivity
+  StaffActivity,
+  ReportQueryParams
 } from '@/services/reportService';
 
 // ============================================================================
@@ -63,13 +64,13 @@ const initialState: ReportState = {
 
 export const fetchReportSummaryAsync = createAsyncThunk<
   ReportSummary,
-  void,
+  ReportQueryParams | undefined,
   { rejectValue: string }
 >(
   'reports/fetchSummary',
-  async (_, { rejectWithValue }) => {
+  async (params, { rejectWithValue }) => {
     try {
-      return await reportService.getSummary();
+      return await reportService.getSummary(params?.timeframe, params?.year);
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch report summary');
     }
@@ -78,13 +79,13 @@ export const fetchReportSummaryAsync = createAsyncThunk<
 
 export const fetchUserTrendAsync = createAsyncThunk<
   UserTrend[],
-  void,
+  ReportQueryParams | undefined,
   { rejectValue: string }
 >(
   'reports/fetchUserTrend',
-  async (_, { rejectWithValue }) => {
+  async (params, { rejectWithValue }) => {
     try {
-      return await reportService.getUserTrend();
+      return await reportService.getUserTrend(params?.timeframe, params?.year);
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch user trends');
     }
@@ -93,13 +94,13 @@ export const fetchUserTrendAsync = createAsyncThunk<
 
 export const fetchRevenueVsTargetAsync = createAsyncThunk<
   RevenueTrend[],
-  void,
+  ReportQueryParams | undefined,
   { rejectValue: string }
 >(
   'reports/fetchRevenueVsTarget',
-  async (_, { rejectWithValue }) => {
+  async (params, { rejectWithValue }) => {
     try {
-      return await reportService.getRevenueVsTarget();
+      return await reportService.getRevenueVsTarget(params?.timeframe, params?.year);
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch revenue trends');
     }
@@ -108,43 +109,28 @@ export const fetchRevenueVsTargetAsync = createAsyncThunk<
 
 export const fetchMembershipDistributionAsync = createAsyncThunk<
   MembershipDistribution[],
-  void,
+  ReportQueryParams | undefined,
   { rejectValue: string }
 >(
   'reports/fetchMembershipDistribution',
-  async (_, { rejectWithValue }) => {
+  async (params, { rejectWithValue }) => {
     try {
-      return await reportService.getMembershipDistribution();
+      return await reportService.getMembershipDistribution(params?.timeframe, params?.year);
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch membership distribution');
     }
   }
 );
 
-// export const fetchTopBranchesAsync = createAsyncThunk<
-//   TopBranch[],
-//   void,
-//   { rejectValue: string }
-// >(
-//   'reports/fetchTopBranches',
-//   async (_, { rejectWithValue }) => {
-//     try {
-//       return await reportService.getTopBranches();
-//     } catch (error: any) {
-//       return rejectWithValue(error.response?.data?.message || 'Failed to fetch top branches');
-//     }
-//   }
-// );
-
 export const fetchBranchPerformanceAsync = createAsyncThunk<
   BranchPerformance[],
-  void,
+  ReportQueryParams | undefined,
   { rejectValue: string }
 >(
   'reports/fetchBranchPerformance',
-  async (_, { rejectWithValue }) => {
+  async (params, { rejectWithValue }) => {
     try {
-      return await reportService.getBranchPerformance();
+      return await reportService.getBranchPerformance(params?.timeframe, params?.year);
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch branch performance');
     }
@@ -153,13 +139,13 @@ export const fetchBranchPerformanceAsync = createAsyncThunk<
 
 export const fetchStaffActivityAsync = createAsyncThunk<
   StaffActivity[],
-  void,
+  ReportQueryParams | undefined,
   { rejectValue: string }
 >(
   'reports/fetchStaffActivity',
-  async (_, { rejectWithValue }) => {
+  async (params, { rejectWithValue }) => {
     try {
-      return await reportService.getStaffActivity();
+      return await reportService.getStaffActivity(params?.timeframe, params?.year);
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch staff activity');
     }
@@ -235,20 +221,6 @@ const reportSlice = createSlice({
         state.membershipLoading = false;
         state.error = action.payload as string;
       })
-
-      // Top Branches
-      // .addCase(fetchTopBranchesAsync.pending, (state) => {
-      //   state.topBranchesLoading = true;
-      //   state.error = null;
-      // })
-      // .addCase(fetchTopBranchesAsync.fulfilled, (state, action) => {
-      //   state.topBranchesLoading = false;
-      //   state.topBranches = action.payload;
-      // })
-      // .addCase(fetchTopBranchesAsync.rejected, (state, action) => {
-      //   state.topBranchesLoading = false;
-      //   state.error = action.payload as string;
-      // })
 
       // Branch Performance
       .addCase(fetchBranchPerformanceAsync.pending, (state) => {

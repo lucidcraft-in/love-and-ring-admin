@@ -3,7 +3,6 @@ import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
-import { permission } from "process";
 
 
 
@@ -16,7 +15,6 @@ const menuItems = [
   { icon: UserCog, label: "CONSULTANTS", path: "/consultants" },
   { icon: Ticket, label: "SUPPORT TICKETS", path: "/support" },
   { icon: Globe, label: "DEMOGRAPHICS", path: "/demographics" },
-  { icon: CheckCircle, label: "APPROVALS", path: "/approvals", permission: "approveProfiles" },
   { icon: CreditCard, label: "PAYMENT", path: "/payment" , permission:"managePayments"},
   // { icon: MessageSquare, label: "CONTACT", path: "/contact" },
   // { icon: Building2, label: "BRANCHES", path: "/branches" },

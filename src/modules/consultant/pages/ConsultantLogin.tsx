@@ -25,10 +25,14 @@ export default function ConsultantLogin() {
     password: "",
   });
 
-  // Clear errors on mount
+  // Clear errors on mount and redirect if logged in
   useEffect(() => {
     dispatch(clearConsultantError());
-  }, [dispatch]);
+    const token = localStorage.getItem("consultantToken") || localStorage.getItem("consultant_token");
+    if (isAuthenticated || token) {
+      navigate("/consultant/dashboard");
+    }
+  }, [dispatch, isAuthenticated, navigate]);
   
 
   const handleSubmit = async (e: React.FormEvent) => {

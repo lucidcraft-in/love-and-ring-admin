@@ -93,11 +93,11 @@ export default function ConsultantList({ initialTab }: ConsultantListProps) {
     dispatch(getConsultantStatsAsync());
   }, [dispatch]);
 
-  // Fetch approval pending profiles & stats on mount and on tab switch
+  // Fetch approval pending profiles & stats on mount
   useEffect(() => {
     dispatch(fetchPendingProfilesAsync({ take: 50, skip: 0 }));
     dispatch(fetchApprovalStatsAsync());
-  }, [dispatch, activeTab]);
+  }, [dispatch]);
 
   // Filter consultants
   const filteredConsultants = consultants.filter(c => {
@@ -269,6 +269,8 @@ export default function ConsultantList({ initialTab }: ConsultantListProps) {
         status: statusFilter === "all" ? undefined : statusFilter as any,
       }));
       dispatch(getConsultantStatsAsync());
+      dispatch(fetchApprovalStatsAsync());
+      dispatch(fetchPendingProfilesAsync({ take: 50, skip: 0 }));
     } catch (error) {
       toast({ title: "Error", description: "Action failed. Please try again.", variant: "destructive" });
     } finally {
@@ -281,6 +283,8 @@ export default function ConsultantList({ initialTab }: ConsultantListProps) {
     profile.fullName.toLowerCase().includes(approvalSearchQuery.toLowerCase()) ||
     profile.email.toLowerCase().includes(approvalSearchQuery.toLowerCase())
   );
+
+  const pendingCount = approvalStats?.pendingConsultants ?? pendingProfiles.length;
 
   return (
     <div className="space-y-6 animate-fade-in pb-10">
@@ -302,16 +306,16 @@ export default function ConsultantList({ initialTab }: ConsultantListProps) {
           <TabsTrigger value="consultants">
             Consultants List ({filteredConsultants.length})
           </TabsTrigger>
-          <TabsTrigger value="approvals" className="relative">
-            Approval Requests
-            {approvalStats?.pendingConsultants ? (
+          <TabsTrigger value="approvals" className="relative flex items-center gap-2">
+            <span>Approval Requests</span>
+            {pendingCount > 0 && (
               <Badge
                 variant="destructive"
-                className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs"
+                className="h-5 min-w-5 rounded-full px-1.5 flex items-center justify-center text-xs font-bold"
               >
-                {approvalStats.pendingConsultants}
+                {pendingCount}
               </Badge>
-            ) : null}
+            )}
           </TabsTrigger>
         </TabsList>
 

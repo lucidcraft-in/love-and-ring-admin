@@ -24,10 +24,14 @@ export default function StaffLogin() {
     password: "",
   });
 
-  // Clear errors on mount
+  // Clear errors on mount and redirect if logged in
   useEffect(() => {
     dispatch(clearLoginError());
-  }, [dispatch]);
+    const token = localStorage.getItem("staffToken") || localStorage.getItem("staff_token");
+    if (isAuthenticated || token) {
+      navigate("/staff/dashboard");
+    }
+  }, [dispatch, isAuthenticated, navigate]);
 
 
   const handleSubmit = async (e: React.FormEvent) => {

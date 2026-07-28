@@ -88,17 +88,53 @@ export function TicketDetailsDialog({ open, onOpenChange }: TicketDetailsDialogP
             <ScrollArea className="h-[250px] pr-4">
               <div className="space-y-4">
                 {ticket.messages && ticket.messages.map((msg) => {
-                  // Handle message sender name resolution safely
-                  const senderName = typeof msg.sender === 'object' ? msg.sender.fullName : "Unknown";
-                  // Ideally we check msg.senderType or ID. Assuming STAFF means current user or admin team.
+                  let senderName = "User";
+
+                  const getAdminName = () => {
+                    try {
+                      const stored = localStorage.getItem("auth");
+                      if (stored) {
+                        const parsed = JSON.parse(stored);
+                        return (
+                          parsed?.admin?.fullName ||
+                          parsed?.admin?.name ||
+                          parsed?.user?.fullName ||
+                          parsed?.user?.name ||
+                          parsed?.fullName ||
+                          parsed?.name ||
+                          "Admin"
+                        );
+                      }
+                    } catch (e) {}
+                    return "Admin";
+                  };
+
+                  if (msg.senderType === "STAFF") {
+                    if (typeof msg.sender === 'object' && msg.sender) {
+                      senderName =
+                        (msg.sender as any).fullName ||
+                        (msg.sender as any).name ||
+                        getAdminName();
+                    } else {
+                      senderName = getAdminName();
+                    }
+                  } else {
+                    if (typeof msg.sender === 'object' && msg.sender && 'fullName' in msg.sender && (msg.sender as any).fullName) {
+                      senderName = (msg.sender as any).fullName;
+                    } else {
+                      senderName = ticket.user?.fullName || ticket.guestName || "User";
+                    }
+                  }
+
+                  const avatarLetter = senderName ? senderName.charAt(0).toUpperCase() : "A";
 
                   return (
                     <div
-                      key={msg._id}
+                      key={msg._id || Math.random().toString()}
                       className={`flex gap-3 ${msg.senderType === "STAFF" ? "flex-row-reverse" : ""}`}
                     >
                       <Avatar className="w-8 h-8">
-                        <AvatarFallback>{senderName.charAt(0)}</AvatarFallback>
+                        <AvatarFallback>{avatarLetter}</AvatarFallback>
                       </Avatar>
                       <div className={`flex-1 ${msg.senderType === "STAFF" ? "text-right" : ""}`}>
                         <div
@@ -110,11 +146,11 @@ export function TicketDetailsDialog({ open, onOpenChange }: TicketDetailsDialogP
                           <p className="text-sm">{msg.message}</p>
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
-                          {senderName} • {format(new Date(msg.createdAt), "dd MMM, hh:mm a")}
+                          {senderName} • {msg.createdAt ? format(new Date(msg.createdAt), "dd MMM, hh:mm a") : ""}
                         </p>
                       </div>
                     </div>
-                  )
+                  );
                 })}
                 {(!ticket.messages || ticket.messages.length === 0) && (
                   <div className="text-center text-muted-foreground text-sm py-4">No messages yet.</div>

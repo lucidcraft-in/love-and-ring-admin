@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { 
-  Users, UserPlus, FileText, Clock, TrendingUp, 
+import {
+  Users, UserPlus, FileText, Clock, TrendingUp,
   Activity, Eye, Edit, Trash2, Plus, LogOut,
   Heart, Bell, Settings, Search
 } from "lucide-react";
@@ -110,31 +110,31 @@ export default function ConsultantDashboard() {
   );
 
   const stats = [
-    { 
-      title: "Total Profiles", 
-      value: profiles.length, 
-      icon: Users, 
+    {
+      title: "Total Profiles",
+      value: profiles.length,
+      icon: Users,
       color: "text-blue-600 dark:text-blue-400",
       bgColor: "bg-blue-100 dark:bg-blue-900/30"
     },
-    { 
-      title: "Active Profiles", 
-      value: profiles.filter(p => p.status === "active").length, 
-      icon: TrendingUp, 
+    {
+      title: "Active Profiles",
+      value: profiles.filter(p => p.status === "active").length,
+      icon: TrendingUp,
       color: "text-green-600 dark:text-green-400",
       bgColor: "bg-green-100 dark:bg-green-900/30"
     },
-    { 
-      title: "Pending Review", 
-      value: profiles.filter(p => p.status === "pending").length, 
-      icon: Clock, 
+    {
+      title: "Pending Review",
+      value: profiles.filter(p => p.status === "pending").length,
+      icon: Clock,
       color: "text-yellow-600 dark:text-yellow-400",
       bgColor: "bg-yellow-100 dark:bg-yellow-900/30"
     },
-    { 
-      title: "Matched", 
-      value: profiles.filter(p => p.status === "matched").length, 
-      icon: Heart, 
+    {
+      title: "Matched",
+      value: profiles.filter(p => p.status === "matched").length,
+      icon: Heart,
       color: "text-pink-600 dark:text-pink-400",
       bgColor: "bg-pink-100 dark:bg-pink-900/30"
     },
@@ -234,108 +234,81 @@ export default function ConsultantDashboard() {
           ))}
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Profiles Table */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                  <CardTitle>Member Profiles</CardTitle>
-                  <CardDescription>Profiles you've created and manage</CardDescription>
-                </div>
-                <div className="relative w-full md:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search profiles..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
+        {/* Profiles Table */}
+        <Card className="w-full">
+          <CardHeader>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <CardTitle>Member Profiles</CardTitle>
+                <CardDescription>Profiles you've created and manage</CardDescription>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead className="hidden md:table-cell">Age</TableHead>
-                      <TableHead className="hidden md:table-cell">Location</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+              <div className="relative w-full md:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search profiles..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead className="hidden md:table-cell">Age</TableHead>
+                    <TableHead className="hidden md:table-cell">Location</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredProfiles.map((profile) => (
+                    <TableRow key={profile.id}>
+                      <TableCell className="font-medium">
+                        <div>
+                          {profile.name}
+                          <p className="text-xs text-muted-foreground md:hidden">
+                            {profile.age}y • {profile.location}
+                          </p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="hidden md:table-cell">{profile.age}</TableCell>
+                      <TableCell className="hidden md:table-cell">{profile.location}</TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className={getStatusBadge(profile.status)}>
+                          {profile.status}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          {consultant.permissions.view_profile && (
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {consultant.permissions.edit_profile && (
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          )}
+                          {consultant.permissions.delete_profile && (
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredProfiles.map((profile) => (
-                      <TableRow key={profile.id}>
-                        <TableCell className="font-medium">
-                          <div>
-                            {profile.name}
-                            <p className="text-xs text-muted-foreground md:hidden">
-                              {profile.age}y • {profile.location}
-                            </p>
-                          </div>
-                        </TableCell>
-                        <TableCell className="hidden md:table-cell">{profile.age}</TableCell>
-                        <TableCell className="hidden md:table-cell">{profile.location}</TableCell>
-                        <TableCell>
-                          <Badge variant="secondary" className={getStatusBadge(profile.status)}>
-                            {profile.status}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
-                            {consultant.permissions.view_profile && (
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <Eye className="h-4 w-4" />
-                              </Button>
-                            )}
-                            {consultant.permissions.edit_profile && (
-                              <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            )}
-                            {consultant.permissions.delete_profile && (
-                              <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive">
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            )}
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Activity Feed */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Activity className="h-5 w-5" />
-                Recent Activity
-              </CardTitle>
-              <CardDescription>Your latest actions and events</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {activity.map((log) => (
-                  <div key={log.id} className="flex gap-3 pb-4 border-b last:border-0 last:pb-0">
-                    <div className="w-2 h-2 mt-2 rounded-full bg-primary shrink-0" />
-                    <div className="space-y-1">
-                      <p className="text-sm font-medium">{log.action}</p>
-                      <p className="text-xs text-muted-foreground">{log.description}</p>
-                      <p className="text-xs text-muted-foreground">{log.timestamp}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Permissions Card */}
         <Card>

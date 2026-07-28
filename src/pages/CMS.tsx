@@ -196,7 +196,7 @@ const CMS = () => {
                         </TableCell>
                         <TableCell className="text-muted-foreground">{banner.targetUrl}</TableCell>
                         <TableCell className="text-sm text-muted-foreground">
-                          {new Date(banner.startDate).toLocaleDateString()} - {new Date(banner.endDate).toLocaleDateString()}
+                          {banner.createdAt ? new Date(banner.createdAt).toLocaleDateString() : "Always Active"}
                         </TableCell>
                         <TableCell>
                           <Badge

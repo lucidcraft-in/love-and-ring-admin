@@ -195,7 +195,10 @@ export const AddOfflinePaymentDialog: React.FC<AddOfflinePaymentDialogProps> = (
               <SelectContent>
                 <SelectItem value="Cash">Cash</SelectItem>
                 <SelectItem value="UPI">UPI</SelectItem>
+                <SelectItem value="Online">Online</SelectItem>
+                <SelectItem value="Credit/Debit Card">Credit / Debit Card</SelectItem>
                 <SelectItem value="Bank Transfer">Bank Transfer</SelectItem>
+                <SelectItem value="Net Banking">Net Banking</SelectItem>
                 <SelectItem value="Cheque">Cheque</SelectItem>
               </SelectContent>
 

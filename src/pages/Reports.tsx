@@ -200,7 +200,7 @@ const Reports = () => {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="users">User Reports</TabsTrigger>
           <TabsTrigger value="revenue">Revenue Reports</TabsTrigger>
-          <TabsTrigger value="staff">Staff Activity</TabsTrigger>
+          {/* <TabsTrigger value="staff">Staff Activity</TabsTrigger> */}
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">

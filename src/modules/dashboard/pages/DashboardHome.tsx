@@ -1,12 +1,12 @@
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { VisitorsChart } from "@/components/dashboard/VisitorsChart";
 import { ActivityFeed } from "@/components/dashboard/ActivityFeed";
-import { ChatRequests } from "@/components/dashboard/ChatRequests";
+import { SupportTicketFeed } from "@/components/dashboard/SupportTicketFeed";
 import { Demographics } from "@/components/dashboard/Demographics";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchDashboardAnalyticsAsync, fetchDashboardCmsStatsAsync } from "@/store/slices/dashboardSlice";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 
 // Mock chart data for small sparklines in cards
@@ -18,18 +18,31 @@ export default function DashboardHome() {
   const dispatch = useAppDispatch();
   const { analytics, loading } = useAppSelector((state) => state.dashboard);
 
+  const [timeframe, setTimeframe] = useState<string>("month");
+  const [visitorsRange, setVisitorsRange] = useState<string>("15days");
+
+  const refreshAnalytics = () => {
+    dispatch(fetchDashboardAnalyticsAsync({ timeframe, visitorsRange }));
+  };
+
   useEffect(() => {
-    dispatch(fetchDashboardAnalyticsAsync());
+    refreshAnalytics();
     dispatch(fetchDashboardCmsStatsAsync());
-  }, [dispatch]);
+  }, [dispatch, timeframe, visitorsRange]);
 
   if (loading && !analytics) {
-    return <div className="flex h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin" /></div>;
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   const cards = analytics?.cards || { totalUsers: 0, paidUsers: 0, freeUsers: 0, newUsers: 0 };
   const visitors = analytics?.visitors || [];
   const demographicsData = analytics?.demographics || [];
+  const activitiesData = analytics?.activities || [];
+  const supportTicketsData = analytics?.supportTickets || [];
 
   return (
     <div className="space-y-6 animate-fade-in pb-10">
@@ -38,14 +51,15 @@ export default function DashboardHome() {
         <div>
           <h1 className="text-sm text-muted-foreground font-medium">User Analytics</h1>
         </div>
-        <Select defaultValue="month">
-          <SelectTrigger className="w-36 h-9">
+        <Select value={timeframe} onValueChange={setTimeframe}>
+          <SelectTrigger className="w-36 h-9 text-xs">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="week">This Week</SelectItem>
             <SelectItem value="month">This Month</SelectItem>
             <SelectItem value="year">This Year</SelectItem>
+            <SelectItem value="all">All Time</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -74,7 +88,7 @@ export default function DashboardHome() {
           gradientId="freeUsers"
         />
         <StatsCard
-          title="New Users (MoM)"
+          title="New Users"
           value={cards.newUsers.toLocaleString()}
           chartData={mockSparklineData}
           chartColor="hsl(270, 50%, 60%)"
@@ -85,14 +99,18 @@ export default function DashboardHome() {
       {/* Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
-          <VisitorsChart data={visitors} />
+          <VisitorsChart
+            data={visitors}
+            range={visitorsRange}
+            onRangeChange={setVisitorsRange}
+          />
         </div>
-        <ActivityFeed />
+        <ActivityFeed data={activitiesData} />
       </div>
 
       {/* Bottom Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <ChatRequests />
+        <SupportTicketFeed data={supportTicketsData} onRefresh={refreshAnalytics} />
         <Demographics data={demographicsData} />
       </div>
     </div>

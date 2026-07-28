@@ -87,7 +87,9 @@ export function TransactionViewDialog({ open, onOpenChange, transaction }: Trans
               </div>
               <div className="flex-1">
                 <p className="text-sm text-muted-foreground">Plan</p>
-                <p className="font-medium">{transaction.planName}</p>
+                <p className="font-medium">
+                  {transaction.planName || (typeof transaction.plan === 'object' ? transaction.plan?.title || transaction.plan?.name : transaction.plan) || "Membership Plan"}
+                </p>
               </div>
             </div>
 
@@ -118,16 +120,16 @@ export function TransactionViewDialog({ open, onOpenChange, transaction }: Trans
           <div className="p-3 bg-muted/30 rounded-lg text-sm space-y-2">
             <div className="flex justify-between">
               <span className="text-muted-foreground">Payment Gateway</span>
-              <span className="font-medium">{transaction.paymentGateway || "Razorpay"}</span>
+              <span className="font-medium">{transaction.paymentGateway || "Online"}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Reference No.</span>
-              <span className="font-mono text-xs">{transaction.referenceNo || `RZP${transaction.transactionId.replace("TXN-", "")}`}</span>
+              <span className="font-mono text-xs">{transaction.referenceNo || transaction.transactionId}</span>
             </div>
-            {transaction.user?.email && (
+            {transaction.userEmail && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Email</span>
-                <span className="font-medium">{transaction.user.email}</span>
+                <span className="font-medium">{transaction.userEmail}</span>
               </div>
             )}
           </div>

@@ -56,9 +56,11 @@ export const fetchTicketByIdAsync = createAsyncThunk(
 
 export const replyToTicketAsync = createAsyncThunk(
   "supportTickets/reply",
-  async ({ id, message, status }: { id: string; message: string; status?: string }, { rejectWithValue }) => {
+  async ({ id, message, status }: { id: string; message: string; status?: string }, { rejectWithValue, dispatch }) => {
     try {
-      return await supportTicketService.replyToTicket(id, message, status);
+      const res = await supportTicketService.replyToTicket(id, message, status);
+      dispatch(fetchTicketStatsAsync());
+      return res;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to reply to ticket");
     }
@@ -67,9 +69,11 @@ export const replyToTicketAsync = createAsyncThunk(
 
 export const updateTicketStatusAsync = createAsyncThunk(
   "supportTickets/updateStatus",
-  async ({ id, status }: { id: string; status: string }, { rejectWithValue }) => {
+  async ({ id, status }: { id: string; status: string }, { rejectWithValue, dispatch }) => {
     try {
-      return await supportTicketService.updateTicketStatus(id, status);
+      const res = await supportTicketService.updateTicketStatus(id, status);
+      dispatch(fetchTicketStatsAsync());
+      return res;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to update ticket status");
     }
@@ -78,9 +82,11 @@ export const updateTicketStatusAsync = createAsyncThunk(
 
 export const resolveTicketAsync = createAsyncThunk(
   "supportTickets/resolve",
-  async ({ id, resolutionNote }: { id: string; resolutionNote: string }, { rejectWithValue }) => {
+  async ({ id, resolutionNote }: { id: string; resolutionNote: string }, { rejectWithValue, dispatch }) => {
     try {
-      return await supportTicketService.resolveTicket(id, resolutionNote);
+      const res = await supportTicketService.resolveTicket(id, resolutionNote);
+      dispatch(fetchTicketStatsAsync());
+      return res;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to resolve ticket");
     }

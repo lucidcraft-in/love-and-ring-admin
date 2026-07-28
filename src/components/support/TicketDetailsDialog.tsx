@@ -21,7 +21,7 @@ export function TicketDetailsDialog({ open, onOpenChange }: TicketDetailsDialogP
       <DialogContent className="max-w-2xl max-h-[90vh]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            Ticket Details - #{ticket._id.slice(-6).toUpperCase()}
+            Ticket Details - {ticket.ticketId || `#${ticket._id.slice(-6).toUpperCase()}`}
           </DialogTitle>
           <DialogDescription>
             View ticket information and conversation history
@@ -34,11 +34,11 @@ export function TicketDetailsDialog({ open, onOpenChange }: TicketDetailsDialogP
             <div className="flex items-center gap-3">
               <Avatar className="w-10 h-10">
                 <AvatarImage src={ticket.user?.avatar} />
-                <AvatarFallback>{ticket.user?.fullName?.charAt(0) || "?"}</AvatarFallback>
+                <AvatarFallback>{(ticket.user?.fullName || ticket.guestName || "?").charAt(0).toUpperCase()}</AvatarFallback>
               </Avatar>
               <div>
-                <p className="font-medium">{ticket.user?.fullName || "Unknown User"}</p>
-                <p className="text-sm text-muted-foreground">User</p>
+                <p className="font-medium">{ticket.user?.fullName || ticket.guestName || "Guest User"}</p>
+                <p className="text-sm text-muted-foreground">{ticket.user?.email || ticket.guestEmail || "User"}</p>
               </div>
             </div>
             <div className="flex flex-wrap gap-2 items-center justify-end">

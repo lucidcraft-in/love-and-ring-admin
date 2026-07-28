@@ -7,7 +7,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { updateBannerAsync, clearBannerError } from "@/store/slices/bannerSlice";
 import { Banner, UpdateBannerPayload } from "@/services/bannerService";
 import { useState, useEffect } from "react";
-import { Loader2, Upload, X } from "lucide-react";
+import { Loader2, Upload } from "lucide-react";
 
 interface BannerEditDialogProps {
   open: boolean;
@@ -23,8 +23,6 @@ export function BannerEditDialog({ open, onOpenChange, banner }: BannerEditDialo
     title: "",
     subtitle: "",
     targetUrl: "",
-    startDate: "",
-    endDate: "",
     status: "Active" as "Active" | "Inactive",
     image: null as File | null,
   });
@@ -35,11 +33,9 @@ export function BannerEditDialog({ open, onOpenChange, banner }: BannerEditDialo
     if (open && banner) {
       dispatch(clearBannerError());
       setFormData({
-        title: banner.title,
-        subtitle: banner.subtitle,
-        targetUrl: banner.targetUrl,
-        startDate: banner.startDate?.split('T')[0] || "",
-        endDate: banner.endDate?.split('T')[0] || "",
+        title: banner.title || "",
+        subtitle: banner.subtitle || "",
+        targetUrl: banner.targetUrl || "",
         status: banner.status,
         image: null,
       });
@@ -67,8 +63,6 @@ export function BannerEditDialog({ open, onOpenChange, banner }: BannerEditDialo
       title: formData.title,
       subtitle: formData.subtitle,
       targetUrl: formData.targetUrl,
-      startDate: formData.startDate,
-      endDate: formData.endDate,
       status: formData.status,
     };
 
@@ -87,11 +81,11 @@ export function BannerEditDialog({ open, onOpenChange, banner }: BannerEditDialo
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>Edit Banner</DialogTitle>
           <DialogDescription>
-            Update banner details and image.
+            Update banner title, link, or image.
           </DialogDescription>
         </DialogHeader>
 
@@ -102,63 +96,30 @@ export function BannerEditDialog({ open, onOpenChange, banner }: BannerEditDialo
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-title">Title</Label>
-              <Input
-                id="edit-title"
-                value={formData.title}
-                onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                placeholder="Summer Sale"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-subtitle">Subtitle</Label>
-              <Input
-                id="edit-subtitle"
-                value={formData.subtitle}
-                onChange={(e) => setFormData((prev) => ({ ...prev, subtitle: e.target.value }))}
-                placeholder="Up to 50% off"
-                required
-              />
-            </div>
-          </div>
-
+          {/* Banner Title */}
           <div className="space-y-2">
-            <Label htmlFor="edit-targetUrl">Target URL</Label>
+            <Label htmlFor="edit-title">Banner Title <span className="text-destructive">*</span></Label>
             <Input
-              id="edit-targetUrl"
-              value={formData.targetUrl}
-              onChange={(e) => setFormData((prev) => ({ ...prev, targetUrl: e.target.value }))}
-              placeholder="/promotions/summer-sale"
+              id="edit-title"
+              value={formData.title}
+              onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+              placeholder="Summer Offer"
               required
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-startDate">Start Date</Label>
-              <Input
-                id="edit-startDate"
-                type="date"
-                value={formData.startDate}
-                onChange={(e) => setFormData((prev) => ({ ...prev, startDate: e.target.value }))}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-endDate">End Date</Label>
-              <Input
-                id="edit-endDate"
-                type="date"
-                value={formData.endDate}
-                onChange={(e) => setFormData((prev) => ({ ...prev, endDate: e.target.value }))}
-                required
-              />
-            </div>
+          {/* Target URL */}
+          <div className="space-y-2">
+            <Label htmlFor="edit-targetUrl">Click Link / Target URL <span className="text-xs text-muted-foreground">(Optional)</span></Label>
+            <Input
+              id="edit-targetUrl"
+              value={formData.targetUrl}
+              onChange={(e) => setFormData((prev) => ({ ...prev, targetUrl: e.target.value }))}
+              placeholder="e.g. /pricing"
+            />
           </div>
 
+          {/* Status */}
           <div className="space-y-2">
             <Label htmlFor="edit-status">Status</Label>
             <Select
@@ -169,17 +130,18 @@ export function BannerEditDialog({ open, onOpenChange, banner }: BannerEditDialo
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="Active">Active</SelectItem>
+                <SelectItem value="Active">Active (Visible in Dashboard)</SelectItem>
                 <SelectItem value="Inactive">Inactive</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
+          {/* Banner Image */}
           <div className="space-y-2">
             <Label>Banner Image</Label>
             <div className="flex gap-4 items-start">
               {imagePreview && (
-                <div className="relative rounded-lg overflow-hidden border border-border w-32 h-20 shrink-0">
+                <div className="relative rounded-lg overflow-hidden border border-border w-36 h-24 shrink-0">
                   <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
                 </div>
               )}
@@ -193,11 +155,12 @@ export function BannerEditDialog({ open, onOpenChange, banner }: BannerEditDialo
                 />
                 <label
                   htmlFor="edit-banner-image"
-                  className="flex items-center justify-center w-full h-20 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                  className="flex items-center justify-center w-full h-24 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
                 >
                   <div className="flex flex-col items-center">
-                    <Upload className="w-5 h-5 text-muted-foreground mb-1" />
-                    <span className="text-xs text-muted-foreground">Change Image</span>
+                    <Upload className="w-5 h-5 text-primary mb-1" />
+                    <span className="text-xs font-medium text-foreground">Change Image</span>
+                    <span className="text-[10px] text-muted-foreground mt-0.5">PNG, JPG, WEBP</span>
                   </div>
                 </label>
               </div>
@@ -208,7 +171,7 @@ export function BannerEditDialog({ open, onOpenChange, banner }: BannerEditDialo
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={updateLoading}>
               Cancel
             </Button>
-            <Button type="submit" disabled={updateLoading}>
+            <Button type="submit" disabled={updateLoading || !formData.title}>
               {updateLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Save Changes
             </Button>

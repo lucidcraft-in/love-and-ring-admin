@@ -22,10 +22,10 @@ Axios.interceptors.request.use((config) => {
       } catch (e) {}
     }
   } else if (pathname.startsWith("/staff")) {
-    token = localStorage.getItem("staffToken");
+    token = localStorage.getItem("staffToken") || localStorage.getItem("staff_token");
     if (!token || token === "null" || token === "undefined") {
       try {
-        const staff = JSON.parse(localStorage.getItem("currentStaff") || "{}");
+        const staff = JSON.parse(localStorage.getItem("staffUser") || localStorage.getItem("currentStaff") || "{}");
         token = staff?.token || null;
       } catch (e) {}
     }

@@ -97,8 +97,8 @@ export default function DashboardHome() {
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-stretch">
+        <div className="lg:col-span-2 h-full">
           <VisitorsChart
             data={visitors}
             range={visitorsRange}
@@ -109,7 +109,7 @@ export default function DashboardHome() {
       </div>
 
       {/* Bottom Row */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-stretch">
         <SupportTicketFeed data={supportTicketsData} onRefresh={refreshAnalytics} />
         <Demographics data={demographicsData} />
       </div>

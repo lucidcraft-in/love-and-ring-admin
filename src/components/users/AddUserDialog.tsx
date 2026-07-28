@@ -246,6 +246,7 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
                     <SelectItem value="Brother">Brother</SelectItem>
                     <SelectItem value="Sister">Sister</SelectItem>
                     <SelectItem value="Relative">Relative</SelectItem>
+                    <SelectItem value="Friend">Friend</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

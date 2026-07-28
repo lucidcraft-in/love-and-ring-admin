@@ -22,9 +22,8 @@ export function MarkResolvedDialog({ open, onOpenChange }: MarkResolvedDialogPro
   const [resolutionNote, setResolutionNote] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  if (!ticket) return null;
-
   const handleConfirm = async () => {
+    if (!ticket) return;
     setIsSubmitting(true);
     try {
       await dispatch(resolveTicketAsync({
@@ -50,68 +49,70 @@ export function MarkResolvedDialog({ open, onOpenChange }: MarkResolvedDialogPro
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <CheckCircle2 className="w-5 h-5 text-chart-green" />
-            Mark as Resolved
-          </DialogTitle>
-          <DialogDescription>
-            Confirm that this support ticket has been resolved
-          </DialogDescription>
-        </DialogHeader>
+    <Dialog open={open && !!ticket} onOpenChange={onOpenChange}>
+      {ticket && (
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-chart-green" />
+              Mark as Resolved
+            </DialogTitle>
+            <DialogDescription>
+              Confirm that this support ticket has been resolved
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="space-y-4">
-          {/* Ticket Info */}
-          <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-            <Avatar className="w-10 h-10">
-              <AvatarImage src={ticket.user?.avatar} />
-              <AvatarFallback>{ticket.user?.fullName?.charAt(0) || "?"}</AvatarFallback>
-            </Avatar>
-            <div className="flex-1">
-              <p className="font-medium">{ticket.user?.fullName || "Unknown User"}</p>
-              <p className="text-sm text-muted-foreground truncate">{ticket.subject}</p>
+          <div className="space-y-4">
+            {/* Ticket Info */}
+            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
+              <Avatar className="w-10 h-10">
+                <AvatarImage src={ticket.user?.avatar} />
+                <AvatarFallback>{(ticket.user?.fullName || ticket.guestName || "?").charAt(0).toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div className="flex-1">
+                <p className="font-medium">{ticket.user?.fullName || ticket.guestName || "Guest User"}</p>
+                <p className="text-sm text-muted-foreground truncate">{ticket.subject}</p>
+              </div>
+              <Badge variant="outline">{ticket.ticketId || `#${ticket._id.slice(-6).toUpperCase()}`}</Badge>
             </div>
-            <Badge variant="outline">#{ticket._id.slice(-6).toUpperCase()}</Badge>
+
+            {/* Resolution Note */}
+            <div className="space-y-2">
+              <Label htmlFor="resolution">Resolution Note (Optional)</Label>
+              <Textarea
+                id="resolution"
+                placeholder="Add a note about how this ticket was resolved..."
+                value={resolutionNote}
+                onChange={(e) => setResolutionNote(e.target.value)}
+                rows={4}
+              />
+            </div>
+
+            <div className="p-3 bg-chart-green/10 rounded-lg text-sm text-chart-green">
+              <p>This action will:</p>
+              <ul className="list-disc list-inside mt-1 space-y-1">
+                <li>Change ticket status to "Resolved"</li>
+                <li>Send a resolution notification to the user</li>
+                <li>Close the ticket conversation</li>
+              </ul>
+            </div>
           </div>
 
-          {/* Resolution Note */}
-          <div className="space-y-2">
-            <Label htmlFor="resolution">Resolution Note (Optional)</Label>
-            <Textarea
-              id="resolution"
-              placeholder="Add a note about how this ticket was resolved..."
-              value={resolutionNote}
-              onChange={(e) => setResolutionNote(e.target.value)}
-              rows={4}
-            />
-          </div>
-
-          <div className="p-3 bg-chart-green/10 rounded-lg text-sm text-chart-green">
-            <p>This action will:</p>
-            <ul className="list-disc list-inside mt-1 space-y-1">
-              <li>Change ticket status to "Resolved"</li>
-              <li>Send a resolution notification to the user</li>
-              <li>Close the ticket conversation</li>
-            </ul>
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleConfirm}
-            className="bg-chart-green hover:bg-chart-green/90 text-white"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
-            Confirm Resolution
-          </Button>
-        </DialogFooter>
-      </DialogContent>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleConfirm}
+              className="bg-chart-green hover:bg-chart-green/90 text-white"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-2" />}
+              Confirm Resolution
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      )}
     </Dialog>
   );
 }

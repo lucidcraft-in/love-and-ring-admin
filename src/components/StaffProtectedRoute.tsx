@@ -11,11 +11,13 @@ export function StaffProtectedRoute({ children }: StaffProtectedRouteProps) {
 
   // Check if staff token exists in storage
   const token =
+    localStorage.getItem("staffToken") ||
     localStorage.getItem("staff_token") ||
     localStorage.getItem("token") ||
+    sessionStorage.getItem("staffToken") ||
     sessionStorage.getItem("staff_token");
 
-  const hasValidSession = isAuthenticated && !!token;
+  const hasValidSession = isAuthenticated || !!token;
 
   if (loginLoading) {
     return (

@@ -322,161 +322,106 @@ export default function StaffDashboard() {
           ))}
         </div>
 
-        <div className="grid lg:grid-cols-3 gap-6">
-          {/* Profiles Table */}
-          <Card className="lg:col-span-2">
-            <CardHeader>
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                <div>
-                  <CardTitle>Member Profiles</CardTitle>
-                  <CardDescription>Profiles you manage</CardDescription>
-                </div>
-                <div className="relative w-full md:w-64">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search profiles..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
+        {/* Profiles Table */}
+        <Card className="w-full">
+          <CardHeader>
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+              <div>
+                <CardTitle>Member Profiles</CardTitle>
+                <CardDescription>Profiles you manage</CardDescription>
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="rounded-md border">
-                <Table>
-                  <TableHeader>
+              <div className="relative w-full md:w-64">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search profiles..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="rounded-md border">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Name</TableHead>
+                    <TableHead className="hidden md:table-cell">Age</TableHead>
+                    <TableHead className="hidden md:table-cell">Location</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredUsers.length === 0 ? (
                     <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead className="hidden md:table-cell">Age</TableHead>
-                      <TableHead className="hidden md:table-cell">Location</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
+                        No users found
+                      </TableCell>
                     </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredUsers.length === 0 ? (
-                      <TableRow>
-                        <TableCell colSpan={5} className="text-center text-muted-foreground py-8">
-                          No users found
+                  ) : (
+                    filteredUsers.map((user) => (
+                      <TableRow key={user._id}>
+                        <TableCell className="font-medium">
+                          <div>
+                            {user.fullName || user.email}
+                            <p className="text-xs text-muted-foreground md:hidden">
+                              {calculateAge(user.dateOfBirth)}y • {user.city?.city || "N/A"}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell className="hidden md:table-cell">{calculateAge(user.dateOfBirth)}</TableCell>
+                        <TableCell className="hidden md:table-cell">{user.city?.city || "N/A"}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className={getStatusBadge(user.approvalStatus)}>
+                            {user.approvalStatus || "PENDING"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            {permissions.viewProfile && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleViewUser(user)}
+                              >
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {permissions.editProfile && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8"
+                                onClick={() => handleEditUser(user)}
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            )}
+                            {permissions.deleteProfile && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="h-8 w-8 text-destructive"
+                                onClick={() => handleDeleteUser(user)}
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
+                          </div>
                         </TableCell>
                       </TableRow>
-                    ) : (
-                      filteredUsers.map((user) => (
-                        <TableRow key={user._id}>
-                          <TableCell className="font-medium">
-                            <div>
-                              {user.fullName || user.email}
-                              <p className="text-xs text-muted-foreground md:hidden">
-                                {calculateAge(user.dateOfBirth)}y • {user.city?.city || "N/A"}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell className="hidden md:table-cell">{calculateAge(user.dateOfBirth)}</TableCell>
-                          <TableCell className="hidden md:table-cell">{user.city?.city || "N/A"}</TableCell>
-                          <TableCell>
-                            <Badge variant="secondary" className={getStatusBadge(user.approvalStatus)}>
-                              {user.approvalStatus || "PENDING"}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <div className="flex justify-end gap-1">
-                              {permissions.viewProfile && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={() => handleViewUser(user)}
-                                >
-                                  <Eye className="h-4 w-4" />
-                                </Button>
-                              )}
-                              {permissions.editProfile && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8"
-                                  onClick={() => handleEditUser(user)}
-                                >
-                                  <Edit className="h-4 w-4" />
-                                </Button>
-                              )}
-                              {permissions.deleteProfile && (
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-destructive"
-                                  onClick={() => handleDeleteUser(user)}
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              )}
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      ))
-                    )}
-                  </TableBody>
-                </Table>
-              </div>
-            </CardContent>
-          </Card>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </CardContent>
+        </Card>
 
-          {/* Activity Feed */}
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="flex items-center gap-2 text-base font-semibold">
-                <Activity className="h-4 w-4 text-primary" />
-                Recent Activity
-              </CardTitle>
-              <CardDescription className="text-xs">Your latest actions in the staff portal</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {activities.length === 0 ? (
-                <div className="text-center text-muted-foreground py-8 border border-dashed rounded-lg">
-                  <Clock className="w-6 h-6 mx-auto mb-2 opacity-40" />
-                  <p className="text-xs font-medium">No recent activity recorded</p>
-                </div>
-              ) : (
-                <div className="space-y-3 max-h-[360px] overflow-y-auto pr-1">
-                  {activities.map((act) => {
-                    const getIcon = () => {
-                      switch (act.type) {
-                        case "create": return <UserPlus className="w-3.5 h-3.5 text-emerald-600" />;
-                        case "edit": return <Edit className="w-3.5 h-3.5 text-blue-600" />;
-                        case "delete": return <Trash2 className="w-3.5 h-3.5 text-rose-600" />;
-                        case "view": return <Eye className="w-3.5 h-3.5 text-indigo-600" />;
-                        default: return <Activity className="w-3.5 h-3.5 text-amber-600" />;
-                      }
-                    };
-
-                    let timeAgo = "-";
-                    try {
-                      timeAgo = formatDistanceToNow(new Date(act.timestamp), { addSuffix: true });
-                    } catch (e) {
-                      timeAgo = act.timestamp;
-                    }
-
-                    return (
-                      <div key={act.id} className="flex items-start gap-2.5 p-2.5 rounded-lg bg-muted/40 border border-border/40 text-xs">
-                        <div className="p-1.5 rounded-md bg-background shadow-xs mt-0.5">
-                          {getIcon()}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-foreground truncate">{act.action}</p>
-                          <p className="text-muted-foreground truncate">{act.details}</p>
-                          <span className="text-[10px] text-muted-foreground/80 mt-1 block">{timeAgo}</span>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-
-        <Card>
+        {/* <Card>
           <CardHeader>
             <CardTitle>Your Permissions</CardTitle>
             <CardDescription>Access levels assigned by admin</CardDescription>
@@ -497,7 +442,7 @@ export default function StaffDashboard() {
               </Badge>
             </div>
           </CardContent>
-        </Card>
+        </Card> */}
       </main>
 
       {/* User Creation Dialog */}

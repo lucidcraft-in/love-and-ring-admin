@@ -3,47 +3,47 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { BarChart3, Users, IndianRupee, TrendingUp, Download, FileText, Calendar, Building2 } from "lucide-react";
+import { BarChart3, Users, IndianRupee, TrendingUp, Download } from "lucide-react";
 import { AreaChart, Area, XAxis, YAxis, Tooltip, ResponsiveContainer, BarChart, Bar, LineChart, Line, Legend, PieChart, Pie, Cell } from "recharts";
-import { useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   fetchReportSummaryAsync,
   fetchUserTrendAsync,
   fetchRevenueVsTargetAsync,
   fetchMembershipDistributionAsync,
-  // fetchTopBranchesAsync,
   fetchBranchPerformanceAsync,
   fetchStaffActivityAsync,
 } from "@/store/slices/reportSlice";
 
 const Reports = () => {
   const dispatch = useAppDispatch();
+  const [timeFrame, setTimeFrame] = useState("this-month");
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
+
   const {
     summary,
     userTrends,
     revenueTrends,
     membershipDistribution,
-    topBranches,
     branchPerformance,
     staffActivity,
-    summaryLoading
   } = useAppSelector((state) => state.reports);
 
   useEffect(() => {
-    dispatch(fetchReportSummaryAsync());
-    dispatch(fetchUserTrendAsync());
-    dispatch(fetchRevenueVsTargetAsync());
-    dispatch(fetchMembershipDistributionAsync());
-    // dispatch(fetchTopBranchesAsync());
-    dispatch(fetchBranchPerformanceAsync());
-    dispatch(fetchStaffActivityAsync());
-  }, [dispatch]);
+    const query = { timeframe: timeFrame, year: selectedYear };
+    dispatch(fetchReportSummaryAsync(query));
+    dispatch(fetchUserTrendAsync(query));
+    dispatch(fetchRevenueVsTargetAsync(query));
+    dispatch(fetchMembershipDistributionAsync(query));
+    dispatch(fetchBranchPerformanceAsync(query));
+    dispatch(fetchStaffActivityAsync(query));
+  }, [dispatch, timeFrame, selectedYear]);
 
   // Helper to map month number to name
   const getMonthName = (month: number) => {
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-    return months[month - 1] || "";
+    return months[month - 1] || `Period ${month}`;
   };
 
   const registrationData = useMemo(() => {
@@ -66,7 +66,7 @@ const Reports = () => {
       branch: item.name,
       users: item.totalUsers,
       revenue: item.revenue,
-      growth: 0 // Backend doesn't provide growth yet
+      growth: 0
     }));
   }, [branchPerformance]);
 
@@ -88,8 +88,8 @@ const Reports = () => {
       ticketsResolved: item.ticketsResolved || 0
     }));
   }, [staffActivity]);
-  return (
 
+  return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -97,18 +97,34 @@ const Reports = () => {
           <h1 className="text-2xl font-semibold text-foreground">Reports & Analytics</h1>
           <p className="text-sm text-muted-foreground">Comprehensive insights and performance metrics</p>
         </div>
-        <div className="flex gap-2">
-          <Select defaultValue="this-month">
+        <div className="flex flex-wrap gap-2 items-center">
+          <Select value={timeFrame} onValueChange={setTimeFrame}>
             <SelectTrigger className="w-36">
-              <SelectValue />
+              <SelectValue placeholder="Timeframe" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="this-week">This Week</SelectItem>
               <SelectItem value="this-month">This Month</SelectItem>
               <SelectItem value="this-quarter">This Quarter</SelectItem>
               <SelectItem value="this-year">This Year</SelectItem>
+              <SelectItem value="yearly">Yearly Filter</SelectItem>
             </SelectContent>
           </Select>
+
+          {timeFrame === "yearly" && (
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="w-28">
+                <SelectValue placeholder="Year" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="2026">2026</SelectItem>
+                <SelectItem value="2025">2025</SelectItem>
+                <SelectItem value="2024">2024</SelectItem>
+                <SelectItem value="2023">2023</SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+
           <Button variant="outline">
             <Download className="w-4 h-4 mr-2" />
             Export
@@ -126,7 +142,17 @@ const Reports = () => {
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">New Registrations</p>
               <p className="text-xl font-semibold text-foreground">{summary?.newRegistrations || 0}</p>
-              <p className="text-xs text-chart-green">+18% vs last month</p>
+              <p className="text-xs text-chart-green">
+                {timeFrame === "this-week"
+                  ? "This Week"
+                  : timeFrame === "this-month"
+                  ? "This Month"
+                  : timeFrame === "this-quarter"
+                  ? "This Quarter"
+                  : timeFrame === "yearly"
+                  ? `Year ${selectedYear}`
+                  : "This Year"}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -136,9 +162,9 @@ const Reports = () => {
               <IndianRupee className="w-5 h-5 text-chart-green" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Monthly Revenue</p>
-              <p className="text-xl font-semibold text-foreground">₹{((summary?.monthlyRevenue || 0) / 100000).toFixed(2)}L</p>
-              <p className="text-xs text-chart-green">+12% vs last month</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-wide">Revenue</p>
+              <p className="text-xl font-semibold text-foreground">₹{(summary?.monthlyRevenue || 0).toLocaleString('en-IN')}</p>
+              <p className="text-xs text-chart-green">Total for Period</p>
             </div>
           </CardContent>
         </Card>
@@ -150,7 +176,7 @@ const Reports = () => {
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Conversion Rate</p>
               <p className="text-xl font-semibold text-foreground">{summary?.conversionRate || 0}%</p>
-              <p className="text-xs text-chart-green">+3.2% vs last month</p>
+              <p className="text-xs text-chart-green">Paid user ratio</p>
             </div>
           </CardContent>
         </Card>
@@ -162,7 +188,7 @@ const Reports = () => {
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wide">Avg Revenue/User</p>
               <p className="text-xl font-semibold text-foreground">₹{summary?.avgRevenuePerUser || 0}</p>
-              <p className="text-xs text-chart-green">+8% vs last month</p>
+              <p className="text-xs text-chart-green">Per active member</p>
             </div>
           </CardContent>
         </Card>
@@ -174,7 +200,6 @@ const Reports = () => {
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="users">User Reports</TabsTrigger>
           <TabsTrigger value="revenue">Revenue Reports</TabsTrigger>
-          {/* <TabsTrigger value="branches">Branch Performance</TabsTrigger> */}
           <TabsTrigger value="staff">Staff Activity</TabsTrigger>
         </TabsList>
 
@@ -280,30 +305,6 @@ const Reports = () => {
                 </div>
               </CardContent>
             </Card>
-
-            {/* <Card className="stat-card-shadow border-0 lg:col-span-2">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base">Top Performing Branches</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="h-48">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={transformedBranchPerformance} layout="vertical">
-                      <XAxis type="number" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} />
-                      <YAxis dataKey="branch" type="category" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 12 }} width={80} />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: 'hsl(var(--card))',
-                          border: '1px solid hsl(var(--border))',
-                          borderRadius: '8px',
-                        }}
-                      />
-                      <Bar dataKey="users" fill="hsl(270, 50%, 60%)" radius={[0, 4, 4, 0]} name="Users" />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </CardContent>
-            </Card> */}
           </div>
         </TabsContent>
 
@@ -431,7 +432,6 @@ const Reports = () => {
         </TabsContent>
       </Tabs>
     </div>
-
   );
 };
 

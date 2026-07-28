@@ -153,7 +153,7 @@ const SupportTickets = () => {
                     <SelectItem value="pending">Pending</SelectItem>
                   </SelectContent>
                 </Select>
-                <Select value={priorityFilter} onValueChange={setPriorityFilter}>
+                {/* <Select value={priorityFilter} onValueChange={setPriorityFilter}>
                   <SelectTrigger className="w-32">
                     <SelectValue placeholder="Priority" />
                   </SelectTrigger>
@@ -164,8 +164,8 @@ const SupportTickets = () => {
                     <SelectItem value="medium">Medium</SelectItem>
                     <SelectItem value="low">Low</SelectItem>
                   </SelectContent>
-                </Select>
-                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                </Select> */}
+                {/* <Select value={categoryFilter} onValueChange={setCategoryFilter}>
                   <SelectTrigger className="w-32">
                     <SelectValue placeholder="Category" />
                   </SelectTrigger>
@@ -176,7 +176,7 @@ const SupportTickets = () => {
                     <SelectItem value="account">Account</SelectItem>
                     <SelectItem value="general">General</SelectItem>
                   </SelectContent>
-                </Select>
+                </Select> */}
                 {/* <Button variant="outline" size="icon" onClick={() => {
                   setSearchTerm("");
                   setStatusFilter("all-status");
@@ -204,8 +204,8 @@ const SupportTickets = () => {
                     <TableHead>Ticket ID</TableHead>
                     <TableHead>User</TableHead>
                     <TableHead>Subject</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Priority</TableHead>
+                    {/* <TableHead>Category</TableHead> */}
+                    {/* <TableHead>Priority</TableHead> */}
                     <TableHead>Status</TableHead>
                     <TableHead>Last Update</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -230,7 +230,7 @@ const SupportTickets = () => {
                         </div>
                       </TableCell>
                       <TableCell className="max-w-[200px] truncate">{ticket.subject}</TableCell>
-                      <TableCell>
+                      {/* <TableCell>
                         <Badge variant="outline">{ticket.category}</Badge>
                       </TableCell>
                       <TableCell>
@@ -248,7 +248,7 @@ const SupportTickets = () => {
                         >
                           {ticket.priority}
                         </Badge>
-                      </TableCell>
+                      </TableCell> */}
                       <TableCell>
                         <Badge
                           variant="secondary"

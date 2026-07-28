@@ -21,8 +21,6 @@ export function BannerAddDialog({ open, onOpenChange }: BannerAddDialogProps) {
     title: "",
     subtitle: "",
     targetUrl: "",
-    startDate: "",
-    endDate: "",
     status: "Active" as "Active" | "Inactive",
     image: null as File | null,
   });
@@ -37,8 +35,6 @@ export function BannerAddDialog({ open, onOpenChange }: BannerAddDialogProps) {
         title: "",
         subtitle: "",
         targetUrl: "",
-        startDate: "",
-        endDate: "",
         status: "Active",
         image: null,
       });
@@ -68,11 +64,9 @@ export function BannerAddDialog({ open, onOpenChange }: BannerAddDialogProps) {
     if (!formData.image) return;
 
     const result = await dispatch(createBannerAsync({
-      title: formData.title,
-      subtitle: formData.subtitle,
-      targetUrl: formData.targetUrl,
-      startDate: formData.startDate,
-      endDate: formData.endDate,
+      title: formData.title || "Banner",
+      subtitle: formData.subtitle || undefined,
+      targetUrl: formData.targetUrl || "#",
       status: formData.status,
       image: formData.image,
     }));
@@ -84,11 +78,11 @@ export function BannerAddDialog({ open, onOpenChange }: BannerAddDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
+      <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>Add New Banner</DialogTitle>
           <DialogDescription>
-            Create a new promotional banner for the homepage.
+            Upload a banner image to showcase on the user dashboard.
           </DialogDescription>
         </DialogHeader>
 
@@ -99,81 +93,11 @@ export function BannerAddDialog({ open, onOpenChange }: BannerAddDialogProps) {
             </div>
           )}
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="title">Title</Label>
-              <Input
-                id="title"
-                value={formData.title}
-                onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                placeholder="Summer Sale"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="subtitle">Subtitle</Label>
-              <Input
-                id="subtitle"
-                value={formData.subtitle}
-                onChange={(e) => setFormData((prev) => ({ ...prev, subtitle: e.target.value }))}
-                placeholder="Up to 50% off"
-                required
-              />
-            </div>
-          </div>
-
+          {/* Banner Image Upload (Required & Prominent) */}
           <div className="space-y-2">
-            <Label htmlFor="targetUrl">Target URL</Label>
-            <Input
-              id="targetUrl"
-              value={formData.targetUrl}
-              onChange={(e) => setFormData((prev) => ({ ...prev, targetUrl: e.target.value }))}
-              placeholder="/promotions/summer-sale"
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="startDate">Start Date</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={formData.startDate}
-                onChange={(e) => setFormData((prev) => ({ ...prev, startDate: e.target.value }))}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="endDate">End Date</Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={formData.endDate}
-                onChange={(e) => setFormData((prev) => ({ ...prev, endDate: e.target.value }))}
-                required
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="status">Status</Label>
-            <Select
-              value={formData.status}
-              onValueChange={(value: "Active" | "Inactive") => setFormData((prev) => ({ ...prev, status: value }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Active">Active</SelectItem>
-                <SelectItem value="Inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Banner Image</Label>
+            <Label className="text-sm font-semibold">
+              Banner Image <span className="text-destructive">*</span>
+            </Label>
             {!imagePreview ? (
               <div className="border-2 border-dashed border-border rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-muted/50 transition-colors">
                 <input
@@ -185,34 +109,74 @@ export function BannerAddDialog({ open, onOpenChange }: BannerAddDialogProps) {
                   required
                 />
                 <label htmlFor="banner-image" className="cursor-pointer flex flex-col items-center">
-                  <Upload className="w-8 h-8 text-muted-foreground mb-2" />
+                  <Upload className="w-8 h-8 text-primary mb-2" />
                   <span className="text-sm font-medium">Click to upload image</span>
-                  <span className="text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</span>
+                  <span className="text-xs text-muted-foreground mt-1">PNG, JPG, WEBP up to 5MB</span>
                 </label>
               </div>
             ) : (
               <div className="relative rounded-lg overflow-hidden border border-border">
-                <img src={imagePreview} alt="Preview" className="w-full h-40 object-cover" />
+                <img src={imagePreview} alt="Preview" className="w-full h-44 object-cover" />
                 <Button
                   type="button"
                   variant="destructive"
                   size="icon"
-                  className="absolute top-2 right-2 h-6 w-6 rounded-full"
+                  className="absolute top-2 right-2 h-7 w-7 rounded-full"
                   onClick={removeImage}
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-4 h-4" />
                 </Button>
               </div>
             )}
+          </div>
+
+          {/* Banner Title */}
+          <div className="space-y-2">
+            <Label htmlFor="title">Banner Title <span className="text-destructive">*</span></Label>
+            <Input
+              id="title"
+              value={formData.title}
+              onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+              placeholder="e.g. Special Offer or Event Title"
+              required
+            />
+          </div>
+
+          {/* Target URL (Optional) */}
+          <div className="space-y-2">
+            <Label htmlFor="targetUrl">Click Link / Target URL <span className="text-xs text-muted-foreground">(Optional)</span></Label>
+            <Input
+              id="targetUrl"
+              value={formData.targetUrl}
+              onChange={(e) => setFormData((prev) => ({ ...prev, targetUrl: e.target.value }))}
+              placeholder="e.g. /pricing or https://..."
+            />
+          </div>
+
+          {/* Status */}
+          <div className="space-y-2">
+            <Label htmlFor="status">Status</Label>
+            <Select
+              value={formData.status}
+              onValueChange={(value: "Active" | "Inactive") => setFormData((prev) => ({ ...prev, status: value }))}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Active">Active (Visible in Dashboard)</SelectItem>
+                <SelectItem value="Inactive">Inactive</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={createLoading}>
               Cancel
             </Button>
-            <Button type="submit" disabled={createLoading || !formData.image}>
+            <Button type="submit" className="bg-primary hover:bg-primary/90" disabled={createLoading || !formData.image || !formData.title}>
               {createLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Create Banner
+              Save & Add Banner
             </Button>
           </DialogFooter>
         </form>

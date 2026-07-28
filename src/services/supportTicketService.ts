@@ -15,12 +15,17 @@ export interface TicketMessage {
 export interface TicketUser {
   _id: string;
   fullName: string;
-  avatar?: string; // Optional if not populated or not in schema yet
+  email?: string;
+  avatar?: string;
 }
 
 export interface SupportTicket {
   _id: string;
-  user: TicketUser;
+  ticketId?: string;
+  isGuest?: boolean;
+  guestName?: string;
+  guestEmail?: string;
+  user?: TicketUser;
   subject: string;
   category: string;
   priority: "Low" | "Medium" | "High" | "Critical";

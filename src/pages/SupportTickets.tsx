@@ -38,25 +38,28 @@ const SupportTickets = () => {
 
   const handleViewDetails = (ticket: SupportTicket) => {
     dispatch(setSelectedTicket(ticket));
-    setDetailsOpen(true);
+    setTimeout(() => setDetailsOpen(true), 0);
   };
 
   const handleReply = (ticket: SupportTicket) => {
     dispatch(setSelectedTicket(ticket));
-    setReplyOpen(true);
+    setTimeout(() => setReplyOpen(true), 0);
   };
 
   const handleMarkResolved = (ticket: SupportTicket) => {
     dispatch(setSelectedTicket(ticket));
-    setResolveOpen(true);
+    setTimeout(() => setResolveOpen(true), 0);
   };
 
   // Filter Logic
   const filteredTickets = tickets.filter((ticket) => {
+    const userName = ticket?.user?.fullName || ticket?.guestName || "";
+    const userEmail = ticket?.user?.email || ticket?.guestEmail || "";
     const matchesSearch =
-      ticket._id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (ticket.ticketId || ticket._id).toLowerCase().includes(searchTerm.toLowerCase()) ||
       ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      ticket?.user?.fullName?.toLowerCase()?.includes(searchTerm.toLowerCase());
+      userName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      userEmail.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesStatus = statusFilter === "all-status" || ticket.status.toLowerCase() === statusFilter.replace("-", " ");
     const matchesPriority = priorityFilter === "all-priority" || ticket.priority.toLowerCase() === priorityFilter;
@@ -211,14 +214,19 @@ const SupportTickets = () => {
                 <TableBody>
                   {filteredTickets.map((ticket) => (
                     <TableRow key={ticket._id} className="border-border/50">
-                      <TableCell className="font-medium text-primary text-xs">#{ticket._id.slice(-6).toUpperCase()}</TableCell>
+                      <TableCell className="font-semibold text-primary text-xs">
+                        {ticket.ticketId || `#${ticket._id.slice(-6).toUpperCase()}`}
+                      </TableCell>
                       <TableCell>
                         <div className="flex items-center gap-3">
                           <Avatar className="w-8 h-8">
                             <AvatarImage src={ticket.user?.avatar} />
-                            <AvatarFallback>{ticket.user?.fullName?.charAt(0) || "?"}</AvatarFallback>
+                            <AvatarFallback>{(ticket.user?.fullName || ticket.guestName || "?").charAt(0).toUpperCase()}</AvatarFallback>
                           </Avatar>
-                          <span className="text-sm">{ticket.user?.fullName || "Unknown User"}</span>
+                          <div>
+                            <span className="text-sm font-medium block">{ticket.user?.fullName || ticket.guestName || "Guest User"}</span>
+                            <span className="text-xs text-muted-foreground">{ticket.user?.email || ticket.guestEmail || ""}</span>
+                          </div>
                         </div>
                       </TableCell>
                       <TableCell className="max-w-[200px] truncate">{ticket.subject}</TableCell>
@@ -268,13 +276,13 @@ const SupportTickets = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleViewDetails(ticket)}>
+                            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleViewDetails(ticket); }}>
                               <Eye className="w-4 h-4 mr-2" /> View Details
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleReply(ticket)}>
+                            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleReply(ticket); }}>
                               <Reply className="w-4 h-4 mr-2" /> Reply
                             </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleMarkResolved(ticket)}>
+                            <DropdownMenuItem onSelect={(e) => { e.preventDefault(); handleMarkResolved(ticket); }}>
                               <CheckCircle2 className="w-4 h-4 mr-2" /> Mark Resolved
                             </DropdownMenuItem>
                           </DropdownMenuContent>

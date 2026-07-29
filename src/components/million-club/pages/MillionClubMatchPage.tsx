@@ -123,19 +123,24 @@ export default function MillionClubMatchPage() {
     if (!id) return;
     setDataLoading(prev => ({ ...prev, received: true, sent: true }));
     try {
-      const [received, sent] = await Promise.all([
+      const [received, sent, accepted] = await Promise.all([
         userService.getUserInterests(id, 'received'),
-        userService.getUserInterests(id, 'sent')
+        userService.getUserInterests(id, 'sent'),
+        userService.getUserInterests(id, 'accepted')
       ]);
       setReceivedInterests(received || []);
       setSentInterests(sent || []);
       
-      // Filter accepted matches from interests
-      const accepted = [
-        ...received.filter((i: any) => i.status === "ACCEPTED").map((i: any) => ({ ...i, partner: i.fromUser })),
-        ...sent.filter((i: any) => i.status === "ACCEPTED").map((i: any) => ({ ...i, partner: i.toUser }))
-      ];
-      setAcceptedMatches(accepted);
+      // Map accepted interests to extract the partner object correctly
+      const formattedAccepted = (accepted || []).map((i: any) => {
+        const partner = String(i.fromUser?._id) === String(id) ? i.toUser : i.fromUser;
+        return {
+          ...i,
+          partner
+        };
+      });
+
+      setAcceptedMatches(formattedAccepted);
     } catch (error) {
       toast.error("Failed to load interests");
     } finally {
@@ -210,100 +215,119 @@ export default function MillionClubMatchPage() {
     return (
       <Card 
         className={cn(
-          "overflow-hidden group hover:border-primary/50 transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer",
+          "overflow-hidden group hover:border-primary/50 transition-all duration-300 shadow-sm hover:shadow-md cursor-pointer flex flex-col h-full",
           isSelectedFiltered ? "border-primary ring-1 ring-primary/20 bg-primary/[0.02]" : "bg-card/50"
         )}
         onClick={() => fetchUserDetails(user._id)}
       >
-        <div className="flex flex-col sm:flex-row h-full scale-w-full">
-          <div className="w-full sm:w-32 h-40 sm:h-auto relative shrink-0">
-            <Avatar className="w-full h-full rounded-none">
-              {user?.photos?.[0] ? (
-                <AvatarImage src={user.photos[0].url} className="object-cover" />
-              ) : (
-                <AvatarFallback className="rounded-none text-xl">{user?.fullName?.charAt(0)}</AvatarFallback>
+        <div className="relative w-full h-44 shrink-0 overflow-hidden bg-muted">
+          <Avatar className="w-full h-full rounded-none">
+            {user?.photos?.[0] ? (
+              <AvatarImage src={user.photos[0].url} className="object-cover" />
+            ) : (
+              <AvatarFallback className="rounded-none text-2xl font-bold">{user?.fullName?.charAt(0)}</AvatarFallback>
+            )}
+          </Avatar>
+          {score && (
+            <div className="absolute top-2 left-2 bg-primary/90 text-primary-foreground text-[10px] font-bold px-2 py-0.5 rounded shadow-lg flex items-center gap-1 backdrop-blur-sm">
+              <Sparkles className="w-3 h-3" />
+              {score}%
+            </div>
+          )}
+          {status && !isAccepted && (
+            <div className={`absolute bottom-2 right-2 px-2 py-0.5 rounded text-[10px] font-bold border backdrop-blur-sm ${
+              status === 'PENDING' ? 'bg-orange-500/90 text-white border-orange-400' : 
+              status === 'REJECTED' ? 'bg-red-500/90 text-white border-red-400' : 
+              'bg-emerald-500/90 text-white border-emerald-400'
+            }`}>
+              {status}
+            </div>
+          )}
+        </div>
+        
+        <div className="flex-1 p-3 flex flex-col justify-between space-y-2 min-w-0">
+          <div className="space-y-1.5">
+            <div className="flex justify-between items-start gap-1">
+              <h3 className="font-bold text-sm leading-tight truncate">{user?.fullName}</h3>
+              {isAccepted && (
+                <Badge className="bg-emerald-500 text-white h-4 text-[9px] px-1.5 shrink-0">Matched</Badge>
               )}
-            </Avatar>
-            {score && (
-              <div className="absolute top-1 left-1 bg-primary/90 text-primary-foreground text-[8px] font-bold px-1.5 py-0.5 rounded shadow-lg flex items-center gap-0.5 backdrop-blur-sm">
-                <Sparkles className="w-2.5 h-2.5" />
-                {score}%
+            </div>
+            
+            <div className="grid grid-cols-1 gap-1 text-[11px] text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <User className="w-3 h-3 text-primary/70 shrink-0" />
+                <span className="truncate">{age} yrs • {user?.gender} • {user?.heightCm ? `${user.heightCm}cm` : 'N/A'}</span>
               </div>
-            )}
-            {status && !isAccepted && (
-              <div className={`absolute bottom-1 right-1 px-1.5 py-0.5 rounded text-[8px] font-bold border ${
-                status === 'PENDING' ? 'bg-orange-500/10 text-orange-500 border-orange-500/20' : 
-                status === 'REJECTED' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 
-                'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
-              }`}>
-                {status}
+              <div className="flex items-center gap-1.5">
+                <MapPin className="w-3 h-3 text-primary/70 shrink-0" />
+                <span className="truncate">{user?.city?.name || user?.city || "N/A"}</span>
               </div>
-            )}
-          </div>
-          
-          <div className="flex-1 p-3 flex flex-col justify-between min-w-0">
-            <div className="space-y-2">
-              <div className="flex justify-between items-start gap-1">
-                <h3 className="font-bold text-sm leading-tight truncate">{user?.fullName}</h3>
-                {isAccepted && (
-                  <Badge className="bg-emerald-500 h-4 text-[9px] px-1.5">Matched</Badge>
-                )}
-              </div>
-              
-              <div className="grid grid-cols-1 gap-1 text-[11px]">
-                <div className="flex items-center gap-1.5 text-muted-foreground">
-                  <User className="w-3 h-3 text-primary/70 shrink-0" />
-                  <span className="truncate">{age} yrs • {user?.gender} • {user?.heightCm}cm</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-muted-foreground">
-                  <MapPin className="w-3 h-3 text-primary/70 shrink-0" />
-                  <span className="truncate">{user?.city?.name || "N/A"}</span>
-                </div>
-                <div className="flex items-center gap-1.5 text-muted-foreground">
-                  <Award className="w-3 h-3 text-primary/70 shrink-0" />
-                  <span className="truncate">{user?.highestEducation?.name || "N/A"}</span>
-                </div>
+              <div className="flex items-center gap-1.5">
+                <Award className="w-3 h-3 text-primary/70 shrink-0" />
+                <span className="truncate">{user?.highestEducation?.name || user?.highestEducation || "N/A"}</span>
               </div>
             </div>
+          </div>
 
-            <div className="mt-3 pt-2 border-t border-border/50 flex gap-2">
-              <Button 
-                  size="sm" 
-                  variant="outline"
-                  className="flex-1 gap-1.5 text-[10px] h-7 font-medium"
+          <div className="pt-2 border-t border-border/50 flex items-center gap-1.5">
+            <Button 
+                size="sm" 
+                variant="outline"
+                className="flex-1 gap-1 text-[10px] h-7 px-1 font-medium"
+            >
+                <Eye className="w-3 h-3 shrink-0" />
+                <span className="truncate">View Profile</span>
+            </Button>
+            
+            {isAccepted ? (
+              <Button
+                size="sm"
+                disabled
+                className="flex-1 gap-1 text-[10px] h-7 px-1 font-semibold bg-emerald-600 text-white cursor-default opacity-100"
               >
-                  <Eye className="w-3 h-3" /> View Profile
+                <CheckCircle2 className="w-3 h-3 shrink-0" />
+                <span className="truncate">Matched</span>
               </Button>
-              
-              {!interestId && !isAccepted ? (
+            ) : !interestId ? (
+              <Button 
+                size="sm" 
+                className="flex-1 gap-1 text-[10px] h-7 px-1 font-medium bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={(e) => handleSendInterest(e, user._id)}
+              >
+                <Heart className="w-3 h-3 shrink-0" />
+                <span className="truncate">Connect</span>
+              </Button>
+            ) : isReceived && status === 'PENDING' ? (
+              <div className="flex gap-1 flex-1">
+                 <Button 
+                  size="sm" 
+                  variant="default" 
+                  className="flex-1 h-7 bg-emerald-600 hover:bg-emerald-700 p-0 text-[10px]"
+                  onClick={(e) => handleManageInterest(e, interestId, 'accept')}
+                >
+                  <CheckCircle2 className="w-3 h-3 mr-0.5" /> Accept
+                </Button>
                 <Button 
                   size="sm" 
-                  className="flex-1 gap-1.5 text-[10px] h-7 font-medium"
-                  onClick={(e) => handleSendInterest(e, user._id)}
+                  variant="outline" 
+                  className="flex-1 h-7 border-red-200 text-red-500 hover:bg-red-50 p-0 text-[10px]"
+                  onClick={(e) => handleManageInterest(e, interestId, 'reject')}
                 >
-                  <Heart className="w-3 h-3" /> Connect
+                  <XCircle className="w-3 h-3 mr-0.5" /> Reject
                 </Button>
-              ) : isReceived && status === 'PENDING' ? (
-                <div className="flex gap-1 flex-1">
-                   <Button 
-                    size="sm" 
-                    variant="default" 
-                    className="flex-1 h-7 bg-emerald-600 hover:bg-emerald-700 p-0"
-                    onClick={(e) => handleManageInterest(e, interestId, 'accept')}
-                  >
-                    <CheckCircle2 className="w-3 h-3" />
-                  </Button>
-                  <Button 
-                    size="sm" 
-                    variant="outline" 
-                    className="flex-1 h-7 border-red-200 text-red-500 hover:bg-red-50 p-0"
-                    onClick={(e) => handleManageInterest(e, interestId, 'reject')}
-                  >
-                    <XCircle className="w-3 h-3" />
-                  </Button>
-                </div>
-              ) : null}
-            </div>
+              </div>
+            ) : status === 'PENDING' ? (
+              <Button
+                size="sm"
+                disabled
+                variant="secondary"
+                className="flex-1 gap-1 text-[10px] h-7 px-1 font-medium text-orange-600 bg-orange-50 cursor-default opacity-100"
+              >
+                <UserCheck className="w-3 h-3 shrink-0" />
+                <span className="truncate">Pending</span>
+              </Button>
+            ) : null}
           </div>
         </div>
       </Card>

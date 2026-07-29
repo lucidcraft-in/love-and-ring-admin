@@ -231,7 +231,7 @@ export const userService = {
   /**
    * Get User Interests (Sent/Received)
    */
-  getUserInterests: async (userId: string, type: 'sent' | 'received'): Promise<any[]> => {
+  getUserInterests: async (userId: string, type: 'sent' | 'received' | 'accepted'): Promise<any[]> => {
     const response = await Axios.get<any[]>(`/api/users/${userId}/interests/${type}`);
     return response.data;
   },

@@ -44,7 +44,7 @@ export function Demographics({ data }: DemographicsProps) {
       </CardHeader>
 
       <CardContent className="flex-1 flex items-center justify-center p-6">
-        {cityData.length > 0 ? (
+        {cityData.length > 0 && totalUsers > 0 ? (
           <div className="w-full grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
             {/* Donut Chart */}
             <div className="md:col-span-5 h-[170px] relative flex items-center justify-center">
@@ -110,8 +110,10 @@ export function Demographics({ data }: DemographicsProps) {
             </div>
           </div>
         ) : (
-          <div className="py-12 text-center text-xs text-muted-foreground">
-            No demographic data available.
+          <div className="py-12 text-center text-xs text-muted-foreground flex flex-col items-center gap-1">
+            <MapPin className="w-8 h-8 opacity-30 text-primary" />
+            <p className="font-medium text-sm text-foreground/80">No Demographic Data</p>
+            <p className="text-xs text-muted-foreground">No users recorded for the selected timeframe.</p>
           </div>
         )}
       </CardContent>

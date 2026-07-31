@@ -50,6 +50,8 @@ export interface StaffActivity {
 export interface ReportQueryParams {
   timeframe?: string;
   year?: string;
+  startDate?: string;
+  endDate?: string;
 }
 
 // ============================================================================
@@ -60,9 +62,9 @@ export const reportService = {
   /**
    * Get report summary cards data
    */
-  getSummary: async (timeframe?: string, year?: string): Promise<ReportSummary> => {
+  getSummary: async (params?: ReportQueryParams): Promise<ReportSummary> => {
     const response = await Axios.get<ReportSummary>('/api/report/summary', {
-      params: { timeframe, year }
+      params
     });
     return response.data;
   },
@@ -70,9 +72,9 @@ export const reportService = {
   /**
    * Get user registration trend
    */
-  getUserTrend: async (timeframe?: string, year?: string): Promise<UserTrend[]> => {
+  getUserTrend: async (params?: ReportQueryParams): Promise<UserTrend[]> => {
     const response = await Axios.get<UserTrend[]>('/api/report/users/trend', {
-      params: { timeframe, year }
+      params
     });
     return response.data;
   },
@@ -80,9 +82,9 @@ export const reportService = {
   /**
    * Get revenue vs target
    */
-  getRevenueVsTarget: async (timeframe?: string, year?: string): Promise<RevenueTrend[]> => {
+  getRevenueVsTarget: async (params?: ReportQueryParams): Promise<RevenueTrend[]> => {
     const response = await Axios.get<RevenueTrend[]>('/api/report/revenue-vs-target', {
-      params: { timeframe, year }
+      params
     });
     return response.data;
   },
@@ -90,9 +92,9 @@ export const reportService = {
   /**
    * Get membership distribution
    */
-  getMembershipDistribution: async (timeframe?: string, year?: string): Promise<MembershipDistribution[]> => {
+  getMembershipDistribution: async (params?: ReportQueryParams): Promise<MembershipDistribution[]> => {
     const response = await Axios.get<MembershipDistribution[]>('/api/report/membership', {
-      params: { timeframe, year }
+      params
     });
     return response.data;
   },
@@ -100,9 +102,9 @@ export const reportService = {
   /**
    * Get top branches
    */
-  getTopBranches: async (timeframe?: string, year?: string): Promise<TopBranch[]> => {
+  getTopBranches: async (params?: ReportQueryParams): Promise<TopBranch[]> => {
     const response = await Axios.get<TopBranch[]>('/api/report/top-branches', {
-      params: { timeframe, year }
+      params
     });
     return response.data;
   },
@@ -110,9 +112,9 @@ export const reportService = {
   /**
    * Get branch performance
    */
-  getBranchPerformance: async (timeframe?: string, year?: string): Promise<BranchPerformance[]> => {
+  getBranchPerformance: async (params?: ReportQueryParams): Promise<BranchPerformance[]> => {
     const response = await Axios.get<BranchPerformance[]>('/api/report/branch-performance', {
-      params: { timeframe, year }
+      params
     });
     return response.data;
   },
@@ -120,9 +122,9 @@ export const reportService = {
   /**
    * Get staff activity
    */
-  getStaffActivity: async (timeframe?: string, year?: string): Promise<StaffActivity[]> => {
+  getStaffActivity: async (params?: ReportQueryParams): Promise<StaffActivity[]> => {
     const response = await Axios.get<StaffActivity[]>('/api/report/staff-activity', {
-      params: { timeframe, year }
+      params
     });
     return response.data;
   },

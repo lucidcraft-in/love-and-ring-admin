@@ -70,7 +70,7 @@ export const fetchReportSummaryAsync = createAsyncThunk<
   'reports/fetchSummary',
   async (params, { rejectWithValue }) => {
     try {
-      return await reportService.getSummary(params?.timeframe, params?.year);
+      return await reportService.getSummary(params);
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch report summary');
     }
@@ -85,7 +85,7 @@ export const fetchUserTrendAsync = createAsyncThunk<
   'reports/fetchUserTrend',
   async (params, { rejectWithValue }) => {
     try {
-      return await reportService.getUserTrend(params?.timeframe, params?.year);
+      return await reportService.getUserTrend(params);
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch user trends');
     }
@@ -100,7 +100,7 @@ export const fetchRevenueVsTargetAsync = createAsyncThunk<
   'reports/fetchRevenueVsTarget',
   async (params, { rejectWithValue }) => {
     try {
-      return await reportService.getRevenueVsTarget(params?.timeframe, params?.year);
+      return await reportService.getRevenueVsTarget(params);
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch revenue trends');
     }
@@ -115,7 +115,7 @@ export const fetchMembershipDistributionAsync = createAsyncThunk<
   'reports/fetchMembershipDistribution',
   async (params, { rejectWithValue }) => {
     try {
-      return await reportService.getMembershipDistribution(params?.timeframe, params?.year);
+      return await reportService.getMembershipDistribution(params);
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch membership distribution');
     }
@@ -130,7 +130,7 @@ export const fetchBranchPerformanceAsync = createAsyncThunk<
   'reports/fetchBranchPerformance',
   async (params, { rejectWithValue }) => {
     try {
-      return await reportService.getBranchPerformance(params?.timeframe, params?.year);
+      return await reportService.getBranchPerformance(params);
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch branch performance');
     }
@@ -145,7 +145,7 @@ export const fetchStaffActivityAsync = createAsyncThunk<
   'reports/fetchStaffActivity',
   async (params, { rejectWithValue }) => {
     try {
-      return await reportService.getStaffActivity(params?.timeframe, params?.year);
+      return await reportService.getStaffActivity(params);
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch staff activity');
     }

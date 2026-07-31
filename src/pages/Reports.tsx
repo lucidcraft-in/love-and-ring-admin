@@ -1,6 +1,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { BarChart3, Users, IndianRupee, TrendingUp, Download } from "lucide-react";
@@ -20,6 +21,13 @@ const Reports = () => {
   const dispatch = useAppDispatch();
   const [timeFrame, setTimeFrame] = useState("this-month");
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+
+  const yearsOptions = useMemo(() => {
+    const current = new Date().getFullYear();
+    return Array.from({ length: 5 }, (_, i) => (current - i).toString());
+  }, []);
 
   const {
     summary,
@@ -31,14 +39,21 @@ const Reports = () => {
   } = useAppSelector((state) => state.reports);
 
   useEffect(() => {
-    const query = { timeframe: timeFrame, year: selectedYear };
+    let query: any = { timeframe: timeFrame };
+    if (timeFrame === "yearly") {
+      query.year = selectedYear;
+    } else if (timeFrame === "custom") {
+      if (!startDate || !endDate) return;
+      query = { startDate, endDate };
+    }
+
     dispatch(fetchReportSummaryAsync(query));
     dispatch(fetchUserTrendAsync(query));
     dispatch(fetchRevenueVsTargetAsync(query));
     dispatch(fetchMembershipDistributionAsync(query));
     dispatch(fetchBranchPerformanceAsync(query));
     dispatch(fetchStaffActivityAsync(query));
-  }, [dispatch, timeFrame, selectedYear]);
+  }, [dispatch, timeFrame, selectedYear, startDate, endDate]);
 
   // Helper to map month number to name
   const getMonthName = (month: number) => {
@@ -92,14 +107,14 @@ const Reports = () => {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Reports & Analytics</h1>
           <p className="text-sm text-muted-foreground">Comprehensive insights and performance metrics</p>
         </div>
         <div className="flex flex-wrap gap-2 items-center">
           <Select value={timeFrame} onValueChange={setTimeFrame}>
-            <SelectTrigger className="w-36">
+            <SelectTrigger className="w-40">
               <SelectValue placeholder="Timeframe" />
             </SelectTrigger>
             <SelectContent>
@@ -108,6 +123,7 @@ const Reports = () => {
               <SelectItem value="this-quarter">This Quarter</SelectItem>
               <SelectItem value="this-year">This Year</SelectItem>
               <SelectItem value="yearly">Yearly Filter</SelectItem>
+              <SelectItem value="custom">Custom Date Range</SelectItem>
             </SelectContent>
           </Select>
 
@@ -117,18 +133,42 @@ const Reports = () => {
                 <SelectValue placeholder="Year" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="2026">2026</SelectItem>
-                <SelectItem value="2025">2025</SelectItem>
-                <SelectItem value="2024">2024</SelectItem>
-                <SelectItem value="2023">2023</SelectItem>
+                {yearsOptions.map((year) => (
+                  <SelectItem key={year} value={year}>{year}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           )}
 
-          <Button variant="outline">
+          {timeFrame === "custom" && (
+            <div className="flex items-center gap-2 bg-card border border-input rounded-md px-2.5 py-1 shadow-sm">
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">From:</span>
+                <Input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="w-[145px] text-xs h-8 px-2 border-0 bg-transparent focus-visible:ring-0 cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-80"
+                />
+              </div>
+              <span className="text-xs font-medium text-muted-foreground px-1">to</span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">To:</span>
+                <Input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-[145px] text-xs h-8 px-2 border-0 bg-transparent focus-visible:ring-0 cursor-pointer [&::-webkit-calendar-picker-indicator]:cursor-pointer [&::-webkit-calendar-picker-indicator]:opacity-80"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Export section commented out as requested */}
+          {/* <Button variant="outline">
             <Download className="w-4 h-4 mr-2" />
             Export
-          </Button>
+          </Button> */}
         </div>
       </div>
 

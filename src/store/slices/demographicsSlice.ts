@@ -2,6 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import {
   demographicsService,
   DemographicsData,
+  DemographicsQueryParams,
 } from "../../services/demographicsService";
 
 interface DemographicsState {
@@ -18,9 +19,9 @@ const initialState: DemographicsState = {
 
 export const fetchDemographicsAsync = createAsyncThunk(
   "demographics/fetchDemographics",
-  async (_, { rejectWithValue }) => {
+  async (params: DemographicsQueryParams | string | undefined, { rejectWithValue }) => {
     try {
-      return await demographicsService.getDemographics();
+      return await demographicsService.getDemographics(params);
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || "Failed to fetch demographics");
     }

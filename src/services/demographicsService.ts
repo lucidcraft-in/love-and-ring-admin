@@ -19,9 +19,18 @@ export interface DemographicsData {
   educationLevel: DistributionItem[];
 }
 
+export interface DemographicsQueryParams {
+  timeline?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
 export const demographicsService = {
-  getDemographics: async (): Promise<DemographicsData> => {
-    const response = await Axios.get<{ success: boolean; data: DemographicsData }>("/api/demographics");
+  getDemographics: async (params?: DemographicsQueryParams | string): Promise<DemographicsData> => {
+    const queryParams = typeof params === "string" ? { timeline: params } : params;
+    const response = await Axios.get<{ success: boolean; data: DemographicsData }>("/api/demographics", {
+      params: queryParams
+    });
     return response.data.data;
   },
 };

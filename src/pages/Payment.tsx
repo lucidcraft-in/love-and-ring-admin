@@ -290,11 +290,6 @@ const Payment = () => {
 
                     <div className="flex items-baseline gap-1">
                       <span className="text-3xl font-bold text-primary">₹{plan.price.toLocaleString()}</span>
-                      <span className="text-sm text-muted-foreground">
-                        / {typeof plan.duration === 'object'
-                          ? `${plan.duration.value} ${plan.duration.unit}`
-                          : plan.duration}
-                      </span>
                     </div>
                   </CardHeader>
 

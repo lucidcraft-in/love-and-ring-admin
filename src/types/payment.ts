@@ -47,12 +47,6 @@ export interface MembershipPlan {
   price: number;
   currency?: string;
 
-  // duration
-  duration?: {
-    value: number;
-    unit: "days" | "months" | "years";
-  };
-
   // features
   features: PlanFeature[];
 
@@ -82,8 +76,7 @@ export interface MembershipPlan {
   createdAt?: string;
   updatedAt?: string;
 
-  durationInMonths:string;
-  status:string;
+  status?: string;
 }
 
 export interface CreatePlanPayload {

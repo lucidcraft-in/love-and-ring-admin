@@ -27,8 +27,6 @@ export const PlanDialog: React.FC<PlanDialogProps> = ({ open, onOpenChange, plan
     heading: "",
     price: "",
     currency: "INR",
-    durationValue: "1",
-    durationUnit: "months",
     features: [""],
     status: "Active",
     contactViews: "0",
@@ -43,21 +41,11 @@ export const PlanDialog: React.FC<PlanDialogProps> = ({ open, onOpenChange, plan
 
   useEffect(() => {
     if (plan) {
-      let durVal = "1";
-      let durUnit = "months";
-
-      if (typeof plan.duration === "object" && plan.duration) {
-        durVal = plan.duration.value?.toString() || "1";
-        durUnit = plan.duration.unit || "months";
-      }
-
       setFormData({
         title: plan.title || "",
         heading: plan.heading || "",
         price: plan.price?.toString() || "",
         currency: plan.currency || "INR",
-        durationValue: durVal,
-        durationUnit: durUnit,
         features: plan.features?.length
           ? plan.features.map((f: any) => (typeof f === "string" ? f : f.label))
           : [""],
@@ -77,8 +65,6 @@ export const PlanDialog: React.FC<PlanDialogProps> = ({ open, onOpenChange, plan
         heading: "",
         price: "",
         currency: "INR",
-        durationValue: "1",
-        durationUnit: "months",
         features: [""],
         status: "Active",
         contactViews: "0",
@@ -127,10 +113,6 @@ export const PlanDialog: React.FC<PlanDialogProps> = ({ open, onOpenChange, plan
         heading: formData.heading,
         price: formData.price !== "" && formData.price !== null ? Number(formData.price) : 0,
         currency: formData.currency,
-        duration: {
-          value: Number(formData.durationValue) || 1,
-          unit: formData.durationUnit || "months",
-        },
         contactViews: Number(formData.contactViews),
         isPopular: formData.isPopular === "true",
         sortOrder: Number(formData.sortOrder),
@@ -195,38 +177,6 @@ export const PlanDialog: React.FC<PlanDialogProps> = ({ open, onOpenChange, plan
             <div className="space-y-2">
               <Label>Currency</Label>
               <Input name="currency" value={formData.currency} onChange={handleChange} />
-            </div>
-          </div>
-
-          {/* Plan Duration Fields */}
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Duration Value</Label>
-              <Input
-                type="number"
-                name="durationValue"
-                value={formData.durationValue}
-                onChange={handleChange}
-                min="1"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Duration Unit</Label>
-              <Select
-                value={formData.durationUnit}
-                onValueChange={(v) => handleSelectChange("durationUnit", v)}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select unit" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="days">Days</SelectItem>
-                  <SelectItem value="months">Months</SelectItem>
-                  <SelectItem value="years">Years</SelectItem>
-                </SelectContent>
-              </Select>
             </div>
           </div>
 

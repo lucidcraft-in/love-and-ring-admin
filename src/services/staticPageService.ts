@@ -9,6 +9,8 @@ export interface StaticPage {
   title: string;
   slug: string;
   content: string;
+  category?: 'Company' | 'Support' | 'Legal' | 'General';
+  status?: 'DRAFT' | 'PUBLISHED';
   createdAt: string;
   updatedAt: string;
   lastUpdatedBy?: string;
@@ -20,6 +22,8 @@ export interface CreatePagePayload {
   title: string;
   content: string;
   slug: string;
+  category?: 'Company' | 'Support' | 'Legal' | 'General';
+  status?: 'DRAFT' | 'PUBLISHED';
   pageType?: 'DEFAULT' | 'CONTACT';
   sections?: any[];
 }
@@ -28,6 +32,8 @@ export interface UpdatePagePayload {
   title?: string;
   content?: string;
   slug?: string;
+  category?: 'Company' | 'Support' | 'Legal' | 'General';
+  status?: 'DRAFT' | 'PUBLISHED';
   pageType?: 'DEFAULT' | 'CONTACT';
   sections?: any[];
 }
@@ -57,7 +63,7 @@ export const staticPageService = {
    * Get page by slug
    */
   getPageBySlug: async (slug: string): Promise<StaticPage> => {
-    const response = await Axios.get<StaticPage>(`/api/cms/static-pages/${slug}`);
+    const response = await Axios.get<StaticPage>(`/api/cms/static-pages/slug/${slug}`);
     return response.data;
   },
 
@@ -68,4 +74,13 @@ export const staticPageService = {
     const response = await Axios.put<StaticPage>(`/api/cms/static-pages/${id}`, payload);
     return response.data;
   },
+
+  /**
+   * Delete static page
+   */
+  deletePage: async (id: string): Promise<{ message: string }> => {
+    const response = await Axios.delete<{ message: string }>(`/api/cms/static-pages/${id}`);
+    return response.data;
+  },
 };
+

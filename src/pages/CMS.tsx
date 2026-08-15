@@ -22,9 +22,8 @@ import { StoryEditDialog } from "@/components/cms/stories/StoryEditDialog";
 import { StoryDeleteDialog } from "@/components/cms/stories/StoryDeleteDialog";
 import { StaticPageAddDialog } from "@/components/cms/pages/StaticPageAddDialog";
 import { StaticPageEditDialog } from "@/components/cms/pages/StaticPageEditDialog";
+import { StaticPageDeleteDialog } from "@/components/cms/pages/StaticPageDeleteDialog";
 import { useState, useEffect } from "react";
-
-
 
 const CMS = () => {
   const dispatch = useAppDispatch();
@@ -41,8 +40,8 @@ const CMS = () => {
   const [deleteStoryOpen, setDeleteStoryOpen] = useState(false);
 
   const [addPageOpen, setAddPageOpen] = useState(false);
-
   const [editPageOpen, setEditPageOpen] = useState(false);
+  const [deletePageOpen, setDeletePageOpen] = useState(false);
 
   const [activeTab, setActiveTab] = useState("banners");
 
@@ -84,6 +83,11 @@ const CMS = () => {
   const handleEditPage = (page: StaticPage) => {
     dispatch(setCurrentPage(page));
     setEditPageOpen(true);
+  };
+
+  const handleDeletePage = (page: StaticPage) => {
+    dispatch(setCurrentPage(page));
+    setDeletePageOpen(true);
   };
 
   return (
@@ -252,6 +256,8 @@ const CMS = () => {
                   <TableRow className="border-border/50">
                     <TableHead>Page Title</TableHead>
                     <TableHead>Slug</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Status</TableHead>
                     <TableHead>Last Updated</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
                   </TableRow>
@@ -259,7 +265,7 @@ const CMS = () => {
                 <TableBody>
                   {pagesLoading ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="h-24 text-center">
+                      <TableCell colSpan={6} className="h-24 text-center">
                         <div className="flex justify-center">
                           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                         </div>
@@ -267,7 +273,7 @@ const CMS = () => {
                     </TableRow>
                   ) : pages.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
+                      <TableCell colSpan={6} className="h-24 text-center text-muted-foreground">
                         No static pages found.
                       </TableCell>
                     </TableRow>
@@ -276,11 +282,33 @@ const CMS = () => {
                       <TableRow key={page._id} className="border-border/50">
                         <TableCell className="font-medium">{page.title}</TableCell>
                         <TableCell className="text-muted-foreground">{page.slug}</TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="font-normal text-xs">
+                            {page.category || "Support"}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            variant="outline"
+                            className={
+                              page.status !== "DRAFT"
+                                ? "border-chart-green text-chart-green"
+                                : "border-chart-orange text-chart-orange"
+                            }
+                          >
+                            {page.status || "PUBLISHED"}
+                          </Badge>
+                        </TableCell>
                         <TableCell className="text-muted-foreground">{new Date(page.updatedAt).toLocaleDateString()}</TableCell>
                         <TableCell className="text-right">
-                          <Button variant="ghost" size="sm" onClick={() => handleEditPage(page)}>
-                            <Edit className="w-4 h-4 mr-1" /> Edit
-                          </Button>
+                          <div className="flex items-center justify-end gap-1">
+                            <Button variant="ghost" size="sm" onClick={() => handleEditPage(page)}>
+                              <Edit className="w-4 h-4 mr-1" /> Edit
+                            </Button>
+                            <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={() => handleDeletePage(page)}>
+                              <Trash2 className="w-4 h-4 mr-1" /> Delete
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))
@@ -368,6 +396,7 @@ const CMS = () => {
       {/* Static Page Dialogs */}
       <StaticPageAddDialog open={addPageOpen} onOpenChange={setAddPageOpen} />
       <StaticPageEditDialog open={editPageOpen} onOpenChange={setEditPageOpen} page={currentPage} />
+      <StaticPageDeleteDialog open={deletePageOpen} onOpenChange={setDeletePageOpen} page={currentPage} />
     </div>
   );
 };

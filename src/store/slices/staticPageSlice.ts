@@ -18,6 +18,7 @@ interface StaticPageState {
   listLoading: boolean;
   createLoading: boolean;
   updateLoading: boolean;
+  deleteLoading: boolean;
 
   // Error Handling
   error: string | null;
@@ -30,6 +31,7 @@ const initialState: StaticPageState = {
   listLoading: false,
   createLoading: false,
   updateLoading: false,
+  deleteLoading: false,
 
   error: null,
 };
@@ -93,6 +95,26 @@ export const updatePageAsync = createAsyncThunk<
       return response;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to update page.';
+      return rejectWithValue(message);
+    }
+  }
+);
+
+/**
+ * Delete page
+ */
+export const deletePageAsync = createAsyncThunk<
+  string,
+  string,
+  { rejectValue: string }
+>(
+  'staticPage/deletePage',
+  async (id, { rejectWithValue }) => {
+    try {
+      await staticPageService.deletePage(id);
+      return id;
+    } catch (error: any) {
+      const message = error.response?.data?.message || 'Failed to delete page.';
       return rejectWithValue(message);
     }
   }
@@ -164,6 +186,24 @@ const staticPageSlice = createSlice({
       .addCase(updatePageAsync.rejected, (state, action) => {
         state.updateLoading = false;
         state.error = action.payload || 'Failed to update page';
+      })
+
+      // Delete Page
+      .addCase(deletePageAsync.pending, (state) => {
+        state.deleteLoading = true;
+        state.error = null;
+      })
+      .addCase(deletePageAsync.fulfilled, (state, action: PayloadAction<string>) => {
+        state.deleteLoading = false;
+        state.pages = state.pages.filter(p => p._id !== action.payload);
+        if (state.currentPage?._id === action.payload) {
+          state.currentPage = null;
+        }
+        state.error = null;
+      })
+      .addCase(deletePageAsync.rejected, (state, action) => {
+        state.deleteLoading = false;
+        state.error = action.payload || 'Failed to delete page';
       });
   },
 });

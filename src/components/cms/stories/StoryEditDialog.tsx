@@ -7,8 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { updateStoryAsync, clearStoryError } from "@/store/slices/successStorySlice";
 import { SuccessStory, UpdateStoryPayload } from "@/services/successStoryService";
-import { useState, useEffect } from "react";
-import { Loader2, Upload, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Loader2, Upload, X, Crop } from "lucide-react";
+import { ImageCropModal } from "@/components/common/ImageCropModal";
 
 interface StoryEditDialogProps {
   open: boolean;
@@ -26,14 +27,18 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
     date: "",
     status: "Published" as "Published" | "Pending",
     image: null as File | null,
-    isPrimary:false
+    isPrimary: false,
   });
 
-  const formDataForInput = (isoDate:string) =>{
-    return new Date(isoDate).toISOString().split("T")[0];
-  }
-
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [rawImageSrc, setRawImageSrc] = useState<string | null>(null);
+  const [showCropModal, setShowCropModal] = useState(false);
+
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const formDataForInput = (isoDate: string) => {
+    return new Date(isoDate).toISOString().split("T")[0];
+  };
 
   useEffect(() => {
     if (open && story) {
@@ -44,22 +49,31 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
         date: formDataForInput(story.date),
         status: story.status,
         image: null,
-        isPrimary:story.isPrimary
+        isPrimary: story.isPrimary,
       });
       setImagePreview(story.imageUrl);
+      setRawImageSrc(story.imageUrl);
+      setShowCropModal(false);
     }
   }, [open, story, dispatch]);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setFormData((prev) => ({ ...prev, image: file }));
       const reader = new FileReader();
       reader.onloadend = () => {
-        setImagePreview(reader.result as string);
+        const result = reader.result as string;
+        setRawImageSrc(result);
+        setShowCropModal(true);
       };
       reader.readAsDataURL(file);
     }
+    e.target.value = "";
+  };
+
+  const handleCropComplete = (croppedFile: File, croppedPreviewUrl: string) => {
+    setFormData((prev) => ({ ...prev, image: croppedFile }));
+    setImagePreview(croppedPreviewUrl);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -71,7 +85,7 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
       story: formData.story,
       date: formData.date,
       status: formData.status,
-      isPrimary:formData.isPrimary,
+      isPrimary: formData.isPrimary,
     };
 
     if (formData.image) {
@@ -88,131 +102,153 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
   if (!story) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px]">
-        <DialogHeader>
-          <DialogTitle>Edit Success Story</DialogTitle>
-          <DialogDescription>
-            Update the success story details.
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[550px]">
+          <DialogHeader>
+            <DialogTitle>Edit Success Story</DialogTitle>
+            <DialogDescription>
+              Update the success story details.
+            </DialogDescription>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">
-              {error}
-            </div>
-          )}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">
+                {error}
+              </div>
+            )}
 
-          <div className="space-y-2">
-            <Label htmlFor="edit-coupleName">Couple Name</Label>
-            <Input
-              id="edit-coupleName"
-              value={formData.coupleName}
-              onChange={(e) => setFormData((prev) => ({ ...prev, coupleName: e.target.value }))}
-              placeholder="Rahul & Priya"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="edit-story">Story</Label>
-            <Textarea
-              id="edit-story"
-              value={formData.story}
-              onChange={(e) => setFormData((prev) => ({ ...prev, story: e.target.value }))}
-              placeholder="Tell us about their journey..."
-              className="min-h-[100px]"
-              required
-            />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-date">Date</Label>
+              <Label htmlFor="edit-coupleName">Couple Name</Label>
               <Input
-                id="edit-date"
-                type="date"
-                value={formData.date}
-                onChange={(e) => setFormData((prev) => ({ ...prev, date: e.target.value }))}
+                id="edit-coupleName"
+                value={formData.coupleName}
+                onChange={(e) => setFormData((prev) => ({ ...prev, coupleName: e.target.value }))}
+                placeholder="Rahul & Priya"
                 required
               />
             </div>
+
             <div className="space-y-2">
-              <Label htmlFor="edit-status">Status</Label>
+              <Label htmlFor="edit-story">Story</Label>
+              <Textarea
+                id="edit-story"
+                value={formData.story}
+                onChange={(e) => setFormData((prev) => ({ ...prev, story: e.target.value }))}
+                placeholder="Tell us about their journey..."
+                className="min-h-[100px]"
+                required
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-date">Date</Label>
+                <Input
+                  id="edit-date"
+                  type="date"
+                  value={formData.date}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, date: e.target.value }))}
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="edit-status">Status</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value: "Published" | "Pending") => setFormData((prev) => ({ ...prev, status: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Published">Published</SelectItem>
+                    <SelectItem value="Pending">Pending</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="isPrimary">Is Primary</Label>
               <Select
-                value={formData.status}
-                onValueChange={(value: "Published" | "Pending") => setFormData((prev) => ({ ...prev, status: value }))}
+                value={formData.isPrimary ? "true" : "false"}
+                onValueChange={(value) =>
+                  setFormData((prev) => ({ ...prev, isPrimary: value === "true" }))
+                }
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select status" />
+                  <SelectValue placeholder="Select option" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Published">Published</SelectItem>
-                  <SelectItem value="Pending">Pending</SelectItem>
+                  <SelectItem value="false">No</SelectItem>
+                  <SelectItem value="true">Yes</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="isPrimary">Is Primary</Label>
-            <Select
-              value={formData.isPrimary ? "true" : "false"}
-              onValueChange={(value) =>
-                setFormData((prev) => ({ ...prev, isPrimary: value === "true" }))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select option" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="false">No</SelectItem>
-                <SelectItem value="true">Yes</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Couple Image</Label>
-            <div className="flex gap-4 items-start">
-              {imagePreview && (
-                <div className="relative rounded-lg overflow-hidden border border-border w-32 h-20 shrink-0">
-                  <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                </div>
-              )}
-              <div className="flex-1">
-                <input
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  id="edit-story-image"
-                  onChange={handleImageChange}
-                />
-                <label
-                  htmlFor="edit-story-image"
-                  className="flex items-center justify-center w-full h-20 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                >
-                  <div className="flex flex-col items-center">
-                    <Upload className="w-5 h-5 text-muted-foreground mb-1" />
-                    <span className="text-xs text-muted-foreground">Change Image</span>
+            <div className="space-y-2">
+              <Label>Couple Image</Label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                id="edit-story-image"
+                onChange={handleImageChange}
+              />
+              <div className="flex gap-4 items-start">
+                {imagePreview && (
+                  <div className="relative rounded-lg overflow-hidden border border-border w-36 h-24 shrink-0 group">
+                    <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => setShowCropModal(true)}
+                        className="h-7 text-xs px-2 gap-1"
+                      >
+                        <Crop className="w-3 h-3" />
+                        Crop
+                      </Button>
+                    </div>
                   </div>
-                </label>
+                )}
+                <div className="flex-1 flex flex-col gap-2">
+                  <div
+                    onClick={() => fileInputRef.current?.click()}
+                    className="flex items-center justify-center w-full h-24 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="flex flex-col items-center">
+                      <Upload className="w-5 h-5 text-muted-foreground mb-1" />
+                      <span className="text-xs text-muted-foreground">Change Image</span>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-          </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={updateLoading}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={updateLoading}>
-              {updateLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={updateLoading}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updateLoading}>
+                {updateLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <ImageCropModal
+        open={showCropModal}
+        onOpenChange={setShowCropModal}
+        imageSrc={rawImageSrc || imagePreview}
+        onCropComplete={handleCropComplete}
+      />
+    </>
   );
 }

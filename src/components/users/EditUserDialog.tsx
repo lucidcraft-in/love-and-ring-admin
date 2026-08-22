@@ -17,6 +17,7 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import {
   fetchMasterDataAsync,
 } from "@/store/slices/masterDataSlice";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface User {
   photos?: {
@@ -30,6 +31,7 @@ interface User {
   email: string;
   countryCode?: string;
   mobile?: string;
+  alternateMobile?: string;
   gender?: string;
   dateOfBirth?: string;
   preferredLanguage?: string;
@@ -92,6 +94,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [currentTab, setCurrentTab] = useState("basic");
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
 
   const [formData, setFormData] = useState({
     accountFor: "",
@@ -99,6 +102,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
     email: "",
     countryCode: "+91",
     mobile: "",
+    alternateMobile: "",
     gender: "",
     dateOfBirth: "",
     preferredLanguage: "English",
@@ -182,6 +186,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
         email: user.email || "",
         countryCode: user.countryCode || "+91",
         mobile: user.mobile || "",
+        alternateMobile: user.alternateMobile || "",
         gender: user.gender || "",
         dateOfBirth: user.dateOfBirth ? user.dateOfBirth.split("T")[0] : "",
         preferredLanguage: user.preferredLanguage || "English",
@@ -209,6 +214,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
         address: user.address || "",
       });
       setPhotos(user.photos || []);
+      setShowConfirmModal(false);
     }
   }, [user]);
 
@@ -216,7 +222,13 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!user?._id) return;
+    setShowConfirmModal(true);
+  };
+
+  const handleConfirmUpdate = async () => {
     if (!user?._id) return;
 
     try {
@@ -228,6 +240,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
         email: formData.email,
         countryCode: formData.countryCode,
         mobile: formData.mobile,
+        alternateMobile: formData.alternateMobile,
         gender: formData.gender,
         dateOfBirth: formData.dateOfBirth,
         preferredLanguage: formData.preferredLanguage,
@@ -270,6 +283,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
         description: "User updated successfully",
       });
 
+      setShowConfirmModal(false);
       onUserUpdated?.();
       onOpenChange(false);
     } catch (error: any) {
@@ -460,6 +474,16 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
                     onChange={(e) => handleInputChange("mobile", e.target.value)}
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="alternateMobile">Alternative Mobile <span className="text-muted-foreground text-xs font-normal">(Optional)</span></Label>
+                <Input
+                  id="alternateMobile"
+                  placeholder="Alternative Mobile Number"
+                  value={formData.alternateMobile}
+                  onChange={(e) => handleInputChange("alternateMobile", e.target.value)}
+                />
               </div>
 
               <div className="space-y-2">
@@ -851,11 +875,21 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
             Cancel
           </Button>
-          <Button onClick={handleSubmit} disabled={loading}>
+          <Button onClick={() => handleSubmit()} disabled={loading}>
             {loading ? "Updating..." : "Update User"}
           </Button>
         </DialogFooter>
       </DialogContent>
-    </Dialog >
+
+      <ConfirmDialog
+        open={showConfirmModal}
+        onOpenChange={setShowConfirmModal}
+        title="Confirm User Profile Changes"
+        description={`Are you sure you want to save the edited profile details for "${formData.fullName || user.email}"?`}
+        confirmText="Save Changes"
+        loading={loading}
+        onConfirm={handleConfirmUpdate}
+      />
+    </Dialog>
   );
 };

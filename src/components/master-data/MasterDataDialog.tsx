@@ -17,10 +17,9 @@ interface MasterDataDialogProps {
   item: MasterItem | null;
   title: string;
   religions?: MasterItem[];
-  primaryEducations?: MasterItem[]; // ✅ NEW
 }
 
-export function MasterDataDialog({ open, onOpenChange, type, item, title, religions = [], primaryEducations = [] }: MasterDataDialogProps) {
+export function MasterDataDialog({ open, onOpenChange, type, item, title, religions = [] }: MasterDataDialogProps) {
   const dispatch = useAppDispatch();
   const { createLoading, updateLoading, error } = useAppSelector((state) => state.masterData);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -29,7 +28,6 @@ export function MasterDataDialog({ open, onOpenChange, type, item, title, religi
     name: "",
     value: "",
     religion: "",
-    primaryEducation: "", // ✅ NEW
   });
 
   useEffect(() => {
@@ -41,14 +39,12 @@ export function MasterDataDialog({ open, onOpenChange, type, item, title, religi
           name: item.name,
           value: item.value || "",
           religion: typeof item.religion === 'object' ? item.religion?._id : item.religion || "",
-          primaryEducation: typeof item.primaryEducation === 'object' ? item.primaryEducation?._id : item.primaryEducation || "",
         });
       } else {
         setFormData({
           name: "",
           value: "",
           religion: "",
-          primaryEducation: "",
         });
       }
     }
@@ -71,7 +67,6 @@ export function MasterDataDialog({ open, onOpenChange, type, item, title, religi
     const payload: any = { name: formData.name };
     if (formData.value) payload.value = formData.value;
     if (type === 'castes' && formData.religion) payload.religion = formData.religion;
-    if (type === 'higherEducations' && formData.primaryEducation) payload.primaryEducation = formData.primaryEducation;
 
     if (item) {
       const result = await dispatch(updateMasterDataAsync({ type, id: item._id, payload }));
@@ -137,26 +132,6 @@ export function MasterDataDialog({ open, onOpenChange, type, item, title, religi
               </div>
             )}
 
-            {/* ✅ NEW: Higher Education → Primary Education Select */}
-            {type === 'higherEducations' && (
-              <div className="space-y-2">
-                <Label htmlFor="primaryEducation">Primary Education</Label>
-                <Select
-                  value={formData.primaryEducation}
-                  onValueChange={(value) => setFormData((prev) => ({ ...prev, primaryEducation: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Primary Education" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {primaryEducations.map(p => (
-                      <SelectItem key={p._id} value={p._id}>{p.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            )}
-
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
                 Cancel
@@ -182,4 +157,3 @@ export function MasterDataDialog({ open, onOpenChange, type, item, title, religi
     </>
   );
 }
-

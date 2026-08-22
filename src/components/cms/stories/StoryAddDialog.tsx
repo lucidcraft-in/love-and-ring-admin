@@ -95,6 +95,7 @@ export function StoryAddDialog({ open, onOpenChange }: StoryAddDialogProps) {
   const handleCropComplete = (croppedFile: File, croppedPreviewUrl: string) => {
     setFormData((prev) => ({ ...prev, image: croppedFile }));
     setImagePreview(croppedPreviewUrl);
+    setRawImageSrc(croppedPreviewUrl);
   };
 
   const removeImage = () => {

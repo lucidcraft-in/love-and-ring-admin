@@ -8,6 +8,7 @@ import { MasterItem, MasterDataType } from "@/services/masterDataService";
 import { useState, useEffect } from "react";
 import { Loader2 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface MasterDataDialogProps {
   open: boolean;
@@ -22,6 +23,7 @@ interface MasterDataDialogProps {
 export function MasterDataDialog({ open, onOpenChange, type, item, title, religions = [], primaryEducations = [] }: MasterDataDialogProps) {
   const dispatch = useAppDispatch();
   const { createLoading, updateLoading, error } = useAppSelector((state) => state.masterData);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -33,6 +35,7 @@ export function MasterDataDialog({ open, onOpenChange, type, item, title, religi
   useEffect(() => {
     if (open) {
       dispatch(clearMasterDataError());
+      setShowConfirm(false);
       if (item) {
         setFormData({
           name: item.name,
@@ -51,8 +54,18 @@ export function MasterDataDialog({ open, onOpenChange, type, item, title, religi
     }
   }, [open, item, dispatch]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!type) return;
+
+    if (item) {
+      setShowConfirm(true);
+    } else {
+      executeSave();
+    }
+  };
+
+  const executeSave = async () => {
     if (!type) return;
 
     const payload: any = { name: formData.name };
@@ -63,6 +76,7 @@ export function MasterDataDialog({ open, onOpenChange, type, item, title, religi
     if (item) {
       const result = await dispatch(updateMasterDataAsync({ type, id: item._id, payload }));
       if (updateMasterDataAsync.fulfilled.match(result)) {
+        setShowConfirm(false);
         onOpenChange(false);
       }
     } else {
@@ -76,83 +90,96 @@ export function MasterDataDialog({ open, onOpenChange, type, item, title, religi
   const isLoading = createLoading || updateLoading;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>{item ? 'Edit' : 'Add'} {title}</DialogTitle>
-          <DialogDescription>
-            {item ? 'Update the details below.' : 'Enter the details for the new item.'}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{item ? 'Edit' : 'Add'} {title}</DialogTitle>
+            <DialogDescription>
+              {item ? 'Update the details below.' : 'Enter the details for the new item.'}
+            </DialogDescription>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">
-              {error}
-            </div>
-          )}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">
+                {error}
+              </div>
+            )}
 
-          <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-              placeholder="Enter name"
-              required
-            />
-          </div>
-
-          {type === 'castes' && (
             <div className="space-y-2">
-              <Label htmlFor="religion">Religion</Label>
-              <Select
-                value={formData.religion}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, religion: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Religion" />
-                </SelectTrigger>
-                <SelectContent>
-                  {religions.map(r => (
-                    <SelectItem key={r._id} value={r._id}>{r.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label htmlFor="name">Name</Label>
+              <Input
+                id="name"
+                value={formData.name}
+                onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+                placeholder="Enter name"
+                required
+              />
             </div>
-          )}
 
-          {/* ✅ NEW: Higher Education → Primary Education Select */}
-          {type === 'higherEducations' && (
-            <div className="space-y-2">
-              <Label htmlFor="primaryEducation">Primary Education</Label>
-              <Select
-                value={formData.primaryEducation}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, primaryEducation: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Primary Education" />
-                </SelectTrigger>
-                <SelectContent>
-                  {primaryEducations.map(p => (
-                    <SelectItem key={p._id} value={p._id}>{p.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          )}
+            {type === 'castes' && (
+              <div className="space-y-2">
+                <Label htmlFor="religion">Religion</Label>
+                <Select
+                  value={formData.religion}
+                  onValueChange={(value) => setFormData((prev) => ({ ...prev, religion: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Religion" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {religions.map(r => (
+                      <SelectItem key={r._id} value={r._id}>{r.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {item ? 'Save Changes' : 'Create'}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            {/* ✅ NEW: Higher Education → Primary Education Select */}
+            {type === 'higherEducations' && (
+              <div className="space-y-2">
+                <Label htmlFor="primaryEducation">Primary Education</Label>
+                <Select
+                  value={formData.primaryEducation}
+                  onValueChange={(value) => setFormData((prev) => ({ ...prev, primaryEducation: value }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Primary Education" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {primaryEducations.map(p => (
+                      <SelectItem key={p._id} value={p._id}>{p.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                {item ? 'Save Changes' : 'Create'}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog
+        open={showConfirm}
+        onOpenChange={setShowConfirm}
+        title={`Confirm ${title} Edit`}
+        description={`Are you sure you want to save changes to "${formData.name}"?`}
+        confirmText="Save Changes"
+        loading={isLoading}
+        onConfirm={executeSave}
+      />
+    </>
   );
 }
+

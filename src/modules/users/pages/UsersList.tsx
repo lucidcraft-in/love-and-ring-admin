@@ -34,7 +34,14 @@ const Users = () => {
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState<number>(() => {
+    const saved = localStorage.getItem("users_pageSize");
+    return saved ? Number(saved) : 10;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("users_pageSize", pageSize.toString());
+  }, [pageSize]);
 
   // get loged user data
   const authString = localStorage.getItem("auth");

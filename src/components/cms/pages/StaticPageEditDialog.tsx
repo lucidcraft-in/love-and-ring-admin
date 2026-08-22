@@ -9,7 +9,8 @@ import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { updatePageAsync, clearPageError } from "@/store/slices/staticPageSlice";
 import { StaticPage, UpdatePagePayload } from "@/services/staticPageService";
 import { useState, useEffect, useRef } from "react";
-import { Loader2, Bold, Italic, Heading1, Heading2, Heading3, List, ListOrdered, Link as LinkIcon, Quote, Eye, Edit3, Sparkles } from "lucide-react";
+import { Loader2, Eye, Edit3, Sparkles } from "lucide-react";
+import { RichTextEditor } from "@/components/common/RichTextEditor";
 
 interface StaticPageEditDialogProps {
   open: boolean;
@@ -300,116 +301,12 @@ export function StaticPageEditDialog({ open, onOpenChange, page }: StaticPageEdi
               </div>
             ) : (
               <div className="space-y-2">
-                {/* Quick Formatting Helper Toolbar */}
-                <div className="flex flex-wrap items-center gap-1 p-2 bg-muted/40 border rounded-lg text-xs">
-                  <span className="text-muted-foreground mr-1 font-medium text-[11px] uppercase tracking-wider">Format:</span>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-2"
-                    onClick={() => insertFormatting("<b>", "</b>", "Bold text")}
-                    title="Bold"
-                  >
-                    <Bold className="w-3.5 h-3.5 mr-1" /> Bold
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-2"
-                    onClick={() => insertFormatting("<i>", "</i>", "Italic text")}
-                    title="Italic"
-                  >
-                    <Italic className="w-3.5 h-3.5 mr-1" /> Italic
-                  </Button>
-                  <div className="h-4 w-px bg-border mx-1" />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-2"
-                    onClick={() => insertFormatting("<h2>", "</h2>", "Section Title")}
-                    title="Heading 2"
-                  >
-                    <Heading1 className="w-3.5 h-3.5 mr-1" /> H2 Title
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-2"
-                    onClick={() => insertFormatting("<h3>", "</h3>", "Sub Heading")}
-                    title="Heading 3"
-                  >
-                    <Heading2 className="w-3.5 h-3.5 mr-1" /> H3 Subhead
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-2"
-                    onClick={() => insertFormatting("<p>", "</p>", "Paragraph text goes here.")}
-                    title="Paragraph"
-                  >
-                    <Heading3 className="w-3.5 h-3.5 mr-1" /> Paragraph
-                  </Button>
-                  <div className="h-4 w-px bg-border mx-1" />
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-2"
-                    onClick={() => insertFormatting("<ul>\n  <li>", "</li>\n  <li>Second item</li>\n</ul>", "First item")}
-                    title="Bullet List"
-                  >
-                    <List className="w-3.5 h-3.5 mr-1" /> Bullet List
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-2"
-                    onClick={() => insertFormatting("<ol>\n  <li>", "</li>\n  <li>Second item</li>\n</ol>", "First item")}
-                    title="Numbered List"
-                  >
-                    <ListOrdered className="w-3.5 h-3.5 mr-1" /> Numbered List
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-2"
-                    onClick={() => insertFormatting('<a href="https://www.loveandring.com" target="_blank" className="text-primary font-medium hover:underline">', '</a>', 'Link Text')}
-                    title="Insert Link"
-                  >
-                    <LinkIcon className="w-3.5 h-3.5 mr-1" /> Link
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    className="h-8 px-2"
-                    onClick={() => insertFormatting('<blockquote className="p-4 my-4 border-l-4 border-primary bg-primary/5 rounded-r-lg font-medium">\n  ', '\n</blockquote>', 'Important note or highlight text.')}
-                    title="Callout Box"
-                  >
-                    <Quote className="w-3.5 h-3.5 mr-1" /> Callout
-                  </Button>
-                </div>
-
-                <Textarea
-                  ref={textareaRef}
-                  id="edit-content"
+                <RichTextEditor
                   value={formData.content}
-                  onChange={(e) => setFormData((prev) => ({ ...prev, content: e.target.value }))}
-                  placeholder="Enter page content using HTML tags or formatted text..."
-                  className="min-h-[360px] font-mono text-sm leading-relaxed p-4 bg-background border rounded-lg focus-visible:ring-1"
-                  required
+                  onChange={(content) => setFormData((prev) => ({ ...prev, content }))}
+                  placeholder="Enter page content..."
+                  minHeight="360px"
                 />
-                <p className="text-xs text-muted-foreground flex justify-between">
-                  <span>HTML markup and text formatting supported.</span>
-                  <span>{formData.content.length} characters</span>
-                </p>
               </div>
             )
           ) : (
@@ -428,7 +325,7 @@ export function StaticPageEditDialog({ open, onOpenChange, page }: StaticPageEdi
 
               {formData.content ? (
                 <div
-                  className="prose max-w-none dark:prose-invert text-foreground/90 leading-relaxed text-sm space-y-3"
+                  className="prose max-w-none dark:prose-invert text-foreground/90 leading-relaxed text-sm space-y-3 cms-content-render"
                   dangerouslySetInnerHTML={{ __html: formData.content }}
                 />
               ) : (

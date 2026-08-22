@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Save } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface StaffMember {
   id: number;
@@ -29,6 +30,7 @@ interface StaffEditDialogProps {
 }
 
 export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogProps) {
+  const [showConfirm, setShowConfirm] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -48,6 +50,7 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
         branch: staff.branch,
         status: staff.status,
       });
+      setShowConfirm(false);
     }
   }, [staff]);
 
@@ -62,122 +65,138 @@ export function StaffEditDialog({ open, onOpenChange, staff }: StaffEditDialogPr
       });
       return;
     }
+    setShowConfirm(true);
+  };
 
+  const handleConfirmSave = () => {
     toast({
       title: "Staff Updated",
       description: `${formData.name}'s profile has been updated successfully.`,
     });
+    setShowConfirm(false);
     onOpenChange(false);
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
-        <DialogHeader>
-          <DialogTitle>Edit Staff Profile</DialogTitle>
-          <DialogDescription>
-            Update staff member information
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Staff Profile</DialogTitle>
+            <DialogDescription>
+              Update staff member information
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="space-y-4">
-          {/* Avatar Preview */}
-          <div className="flex items-center gap-4">
-            <Avatar className="w-14 h-14">
-              <AvatarImage src={staff.avatar} />
-              <AvatarFallback>{staff.name.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div>
-              <p className="font-medium">{staff.name}</p>
-              <p className="text-sm text-muted-foreground">Staff ID: #{staff.id}</p>
+          <div className="space-y-4">
+            {/* Avatar Preview */}
+            <div className="flex items-center gap-4">
+              <Avatar className="w-14 h-14">
+                <AvatarImage src={staff.avatar} />
+                <AvatarFallback>{staff.name.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <div>
+                <p className="font-medium">{staff.name}</p>
+                <p className="text-sm text-muted-foreground">Staff ID: #{staff.id}</p>
+              </div>
+            </div>
+
+            {/* Form Fields */}
+            <div className="grid gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="edit-name">Full Name *</Label>
+                <Input
+                  id="edit-name"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-email">Email *</Label>
+                <Input
+                  id="edit-email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="edit-phone">Phone</Label>
+                <Input
+                  id="edit-phone"
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Role</Label>
+                <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Branch Admin">Branch Admin</SelectItem>
+                    <SelectItem value="Matchmaker">Matchmaker</SelectItem>
+                    <SelectItem value="Support Staff">Support Staff</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Branch</Label>
+                <Select value={formData.branch} onValueChange={(value) => setFormData({ ...formData, branch: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Mumbai Central">Mumbai Central</SelectItem>
+                    <SelectItem value="Delhi NCR">Delhi NCR</SelectItem>
+                    <SelectItem value="Bangalore Tech Park">Bangalore Tech Park</SelectItem>
+                    <SelectItem value="Hyderabad Hub">Hyderabad Hub</SelectItem>
+                    <SelectItem value="Chennai South">Chennai South</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
-          {/* Form Fields */}
-          <div className="grid gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="edit-name">Full Name *</Label>
-              <Input
-                id="edit-name"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              />
-            </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave} className="bg-primary hover:bg-primary/90">
+              <Save className="w-4 h-4 mr-2" />
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-            <div className="space-y-2">
-              <Label htmlFor="edit-email">Email *</Label>
-              <Input
-                id="edit-email"
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="edit-phone">Phone</Label>
-              <Input
-                id="edit-phone"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Role</Label>
-              <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Branch Admin">Branch Admin</SelectItem>
-                  <SelectItem value="Matchmaker">Matchmaker</SelectItem>
-                  <SelectItem value="Support Staff">Support Staff</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Branch</Label>
-              <Select value={formData.branch} onValueChange={(value) => setFormData({ ...formData, branch: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Mumbai Central">Mumbai Central</SelectItem>
-                  <SelectItem value="Delhi NCR">Delhi NCR</SelectItem>
-                  <SelectItem value="Bangalore Tech Park">Bangalore Tech Park</SelectItem>
-                  <SelectItem value="Hyderabad Hub">Hyderabad Hub</SelectItem>
-                  <SelectItem value="Chennai South">Chennai South</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Status</Label>
-              <Select value={formData.status} onValueChange={(value) => setFormData({ ...formData, status: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Active">Active</SelectItem>
-                  <SelectItem value="Inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        </div>
-
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button onClick={handleSave} className="bg-primary hover:bg-primary/90">
-            <Save className="w-4 h-4 mr-2" />
-            Save Changes
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      <ConfirmDialog
+        open={showConfirm}
+        onOpenChange={setShowConfirm}
+        title="Confirm Staff Edit"
+        description={`Are you sure you want to save changes to staff member "${formData.name}"?`}
+        confirmText="Save Changes"
+        onConfirm={handleConfirmSave}
+      />
+    </>
   );
 }
+

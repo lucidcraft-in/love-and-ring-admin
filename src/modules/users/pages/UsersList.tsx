@@ -12,18 +12,21 @@ import { AddUserDialog } from "@/components/users/AddUserDialog";
 import { EditUserDialog } from "@/components/users/EditUserDialog";
 import { ViewUserDialog } from "@/components/users/ViewUserDialog";
 import { UserFilterDialog, type UserFilters } from "@/components/users/UserFilterDialog";
+import { DeleteUserReasonDialog } from "@/components/users/DeleteUserReasonDialog";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchUsersAsync, deleteUserAsync } from "@/store/slices/usersSlice";
 
 const Users = () => {
   const dispatch = useAppDispatch();
-  const { users, isLoading, error, total } = useAppSelector((state) => state.users);
+  const { users, isLoading, error, total, deleteLoading } = useAppSelector((state) => state.users);
   console.log(users, "user data")
 
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [filterDialogOpen, setFilterDialogOpen] = useState(false);
+  const [deleteReasonDialogOpen, setDeleteReasonDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<any>(null);
   const [selectedUser, setSelectedUser] = useState<any>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [genderFilter, setGenderFilter] = useState("all");
@@ -173,8 +176,18 @@ const Users = () => {
     dispatch(fetchUsersAsync({ take: 1000 }));
   };
 
-  const handleDeleteUser = (userId: string) => {
-    dispatch(deleteUserAsync(userId));
+  const handleInitiateDelete = (user: any) => {
+    setUserToDelete(user);
+    setDeleteReasonDialogOpen(true);
+  };
+
+  const handleConfirmDeleteUser = async (reason: string) => {
+    if (!userToDelete?._id) return;
+    const result = await dispatch(deleteUserAsync({ userId: userToDelete._id, reason }));
+    if (deleteUserAsync.fulfilled.match(result)) {
+      setDeleteReasonDialogOpen(false);
+      setUserToDelete(null);
+    }
   };
 
   const handleApplyFilters = (filters: UserFilters) => {
@@ -583,7 +596,7 @@ const Users = () => {
                                 </DropdownMenuItem> */}
                                     {auth?.permissions?.deleteProfiles &&
                                       <DropdownMenuItem className="text-destructive"
-                                        onClick={() => handleDeleteUser(user._id)}
+                                        onClick={() => handleInitiateDelete(user)}
                                       >
                                         <Trash2 className="w-4 h-4 mr-2" /> Delete
                                       </DropdownMenuItem>
@@ -623,6 +636,13 @@ const Users = () => {
         filters={advancedFilters}
         onApplyFilters={handleApplyFilters}
         onClearFilters={handleClearFilters}
+      />
+      <DeleteUserReasonDialog
+        open={deleteReasonDialogOpen}
+        onOpenChange={setDeleteReasonDialogOpen}
+        user={userToDelete}
+        onConfirmDelete={handleConfirmDeleteUser}
+        loading={deleteLoading}
       />
     </>
   );

@@ -10,6 +10,7 @@ import { SuccessStory, UpdateStoryPayload } from "@/services/successStoryService
 import { useState, useEffect, useRef } from "react";
 import { Loader2, Upload, X, Crop } from "lucide-react";
 import { ImageCropModal } from "@/components/common/ImageCropModal";
+import { RichTextEditor } from "@/components/common/RichTextEditor";
 
 interface StoryEditDialogProps {
   open: boolean;
@@ -20,6 +21,7 @@ interface StoryEditDialogProps {
 export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogProps) {
   const dispatch = useAppDispatch();
   const { updateLoading, error } = useAppSelector((state) => state.successStory);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const [formData, setFormData] = useState({
     coupleName: "",
@@ -36,6 +38,31 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  const insertFormatting = (prefix: string, suffix: string = "", defaultText: string = "Text") => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = formData.story.substring(start, end) || defaultText;
+    const replacement = `${prefix}${selectedText}${suffix}`;
+
+    const newContent =
+      formData.story.substring(0, start) +
+      replacement +
+      formData.story.substring(end);
+
+    setFormData((prev) => ({ ...prev, story: newContent }));
+
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(
+        start + prefix.length,
+        start + prefix.length + selectedText.length
+      );
+    }, 50);
+  };
+
   const formDataForInput = (isoDate: string) => {
     return new Date(isoDate).toISOString().split("T")[0];
   };
@@ -46,7 +73,7 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
       setFormData({
         coupleName: story.coupleName,
         story: story.story,
-        date: formDataForInput(story.date),
+        date: story.date ? formDataForInput(story.date) : "",
         status: story.status,
         image: null,
         isPrimary: story.isPrimary,
@@ -131,14 +158,12 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="edit-story">Story</Label>
-              <Textarea
-                id="edit-story"
+              <Label htmlFor="edit-story">Story Content</Label>
+              <RichTextEditor
                 value={formData.story}
-                onChange={(e) => setFormData((prev) => ({ ...prev, story: e.target.value }))}
+                onChange={(story) => setFormData((prev) => ({ ...prev, story }))}
                 placeholder="Tell us about their journey..."
-                className="min-h-[100px]"
-                required
+                minHeight="160px"
               />
             </div>
 

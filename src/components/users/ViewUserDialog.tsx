@@ -17,6 +17,7 @@ interface User {
   email: string;
   countryCode?: string;
   mobile?: string;
+  alternateMobile?: string;
   gender?: string;
   dateOfBirth?: string;
   preferredLanguage?: string;
@@ -163,6 +164,7 @@ export const ViewUserDialog = ({ open, onOpenChange, user, onEdit }: ViewUserDia
                 value={user.mobile ? `${user.countryCode || ""} ${user.mobile}` : undefined}
                 icon={Phone}
               />
+              <InfoRow label="Alternative Mobile" value={user.alternateMobile} icon={Phone} />
               <InfoRow label="Gender" value={user.gender} icon={User} />
               <InfoRow label="Date of Birth" value={formatDate(user.dateOfBirth)} icon={Calendar} />
               <InfoRow label="Preferred Language" value={user.preferredLanguage} />

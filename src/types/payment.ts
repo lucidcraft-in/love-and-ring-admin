@@ -13,6 +13,7 @@ export interface Transaction {
   paymentMethod: string;
   paymentGateway: string;
   referenceNo?: string;
+  attachment?: string;
   status: 'Success' | 'Pending' | 'Failed';
   addedBy?: {
     _id: string;
@@ -105,9 +106,10 @@ export interface CreatePlanPayload {
 }
 
 export interface AddOfflinePaymentPayload {
-  userEmail:string
+  userEmail:string;
   planId:string;
   amount: number;
   paymentMethod: string;
   referenceNo?: string;
+  attachment?: File | string;
 }

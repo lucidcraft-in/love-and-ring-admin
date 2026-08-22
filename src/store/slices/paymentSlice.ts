@@ -49,7 +49,7 @@ export const fetchPaymentStats = createAsyncThunk(
 
 export const addOfflinePayment = createAsyncThunk(
   "payment/addOffline",
-  async (data: AddOfflinePaymentPayload, { rejectWithValue, dispatch }) => {
+  async (data: AddOfflinePaymentPayload | FormData, { rejectWithValue, dispatch }) => {
     try {
       const result = await paymentService.addOfflinePayment(data);
       dispatch(fetchTransactions()); // Refresh transactions

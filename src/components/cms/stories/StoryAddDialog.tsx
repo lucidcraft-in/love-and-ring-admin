@@ -127,7 +127,7 @@ export function StoryAddDialog({ open, onOpenChange }: StoryAddDialogProps) {
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="sm:max-w-[550px]">
+        <DialogContent className="sm:max-w-[550px] max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add Success Story</DialogTitle>
             <DialogDescription>

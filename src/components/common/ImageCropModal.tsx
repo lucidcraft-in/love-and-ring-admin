@@ -27,6 +27,7 @@ export function ImageCropModal({
   const [zoom, setZoom] = useState([1]);
   const [rotation, setRotation] = useState(0);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [dataUrl, setDataUrl] = useState<string | null>(null);
 
   const imgRef = useRef<HTMLImageElement>(null);
 
@@ -37,6 +38,38 @@ export function ImageCropModal({
       setCrop(undefined);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!open || !imageSrc) {
+      setDataUrl(null);
+      return;
+    }
+    if (imageSrc.startsWith("data:") || imageSrc.startsWith("blob:")) {
+      setDataUrl(imageSrc);
+      return;
+    }
+
+    let isCancelled = false;
+    fetch(imageSrc, { mode: "cors" })
+      .then((res) => res.blob())
+      .then((blob) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (!isCancelled && reader.result) {
+            setDataUrl(reader.result as string);
+          }
+        };
+        reader.readAsDataURL(blob);
+      })
+      .catch((err) => {
+        console.warn("Failed to fetch image blob for cropping, fallback to direct src", err);
+        if (!isCancelled) setDataUrl(imageSrc);
+      });
+
+    return () => {
+      isCancelled = true;
+    };
+  }, [open, imageSrc]);
 
   const onImageLoad = useCallback(
     (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -84,47 +117,60 @@ export function ImageCropModal({
       const image = imgRef.current;
       const canvas = document.createElement("canvas");
 
-      const scaleX = image.naturalWidth / image.width;
-      const scaleY = image.naturalHeight / image.height;
+      const naturalWidth = image.naturalWidth || image.width;
+      const naturalHeight = image.naturalHeight || image.height;
 
-      const cropWidth = (crop.width / 100) * image.width;
-      const cropHeight = (crop.height / 100) * image.height;
+      const pixelX = (crop.x / 100) * naturalWidth;
+      const pixelY = (crop.y / 100) * naturalHeight;
+      const pixelWidth = (crop.width / 100) * naturalWidth;
+      const pixelHeight = (crop.height / 100) * naturalHeight;
 
-      canvas.width = cropWidth * scaleX;
-      canvas.height = cropHeight * scaleY;
+      canvas.width = Math.max(1, Math.round(pixelWidth));
+      canvas.height = Math.max(1, Math.round(pixelHeight));
 
       const ctx = canvas.getContext("2d");
-      if (!ctx) return;
+      if (!ctx) {
+        setIsProcessing(false);
+        return;
+      }
 
       ctx.imageSmoothingQuality = "high";
 
-      const cropX = (crop.x / 100) * image.width * scaleX;
-      const cropY = (crop.y / 100) * image.height * scaleY;
-
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-      ctx.save();
-      ctx.translate(canvas.width / 2, canvas.height / 2);
-      ctx.rotate((rotation * Math.PI) / 180);
-      ctx.scale(zoom[0], zoom[0]);
-
-      ctx.drawImage(
-        image,
-        cropX,
-        cropY,
-        cropWidth * scaleX,
-        cropHeight * scaleY,
-        -canvas.width / 2,
-        -canvas.height / 2,
-        canvas.width,
-        canvas.height
-      );
-
-      ctx.restore();
+      if (rotation !== 0 || zoom[0] !== 1) {
+        ctx.save();
+        ctx.translate(canvas.width / 2, canvas.height / 2);
+        ctx.rotate((rotation * Math.PI) / 180);
+        ctx.scale(zoom[0], zoom[0]);
+        ctx.drawImage(
+          image,
+          pixelX,
+          pixelY,
+          pixelWidth,
+          pixelHeight,
+          -canvas.width / 2,
+          -canvas.height / 2,
+          canvas.width,
+          canvas.height
+        );
+        ctx.restore();
+      } else {
+        ctx.drawImage(
+          image,
+          pixelX,
+          pixelY,
+          pixelWidth,
+          pixelHeight,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+      }
 
       canvas.toBlob(
         (blob) => {
           if (!blob) {
+            console.error("Canvas toBlob returned null");
             setIsProcessing(false);
             return;
           }
@@ -139,13 +185,15 @@ export function ImageCropModal({
           onOpenChange(false);
         },
         "image/jpeg",
-        0.9
+        0.92
       );
     } catch (err) {
       console.error("Error cropping image:", err);
       setIsProcessing(false);
     }
   };
+
+  const activeSrc = dataUrl || imageSrc;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -155,7 +203,7 @@ export function ImageCropModal({
         </DialogHeader>
 
         <div className="space-y-4">
-          {imageSrc && (
+          {activeSrc && (
             <div className="relative max-h-[400px] overflow-hidden flex justify-center bg-muted/30 rounded-lg p-2">
               <ReactCrop
                 crop={crop}
@@ -165,8 +213,9 @@ export function ImageCropModal({
               >
                 <img
                   ref={imgRef}
-                  src={imageSrc}
+                  src={activeSrc}
                   alt="Crop preview"
+                  crossOrigin="anonymous"
                   onLoad={onImageLoad}
                   style={{
                     maxHeight: "380px",

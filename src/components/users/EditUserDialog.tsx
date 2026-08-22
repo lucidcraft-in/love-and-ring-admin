@@ -7,7 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
-import { Upload, Trash2, Star, X } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Upload, Trash2, Star, X, Camera } from "lucide-react";
 import Axios from "../../axios/axios";
 import { masterDataService } from "@/services/masterDataService";
 import { userService } from "@/services/userService";
@@ -39,7 +40,7 @@ interface User {
   physicallyChallenged?: boolean;
   livingWithFamily?: boolean;
   // course?: string;
-  primaryEducation?: any,
+  primaryEducation?: any;
   highestEducation?: any;
   profession?: any;
   income?: {
@@ -56,6 +57,7 @@ interface User {
   approvalStatus?: string;
   // branch?: string;
   referredBy?: string;
+  address?: string;
 }
 
 interface EditUserDialogProps {
@@ -122,6 +124,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
     approvalStatus: "PENDING",
     // branch: "",
     referredBy: "",
+    address: "",
   });
 
   const filteredCastes = formData.religion
@@ -133,7 +136,6 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
 
   const [photos, setPhotos] = useState<any[]>([]);
 
-  // Fetch master data when dialog opens
   // Fetch master data when dialog opens
   useEffect(() => {
     if (open) {
@@ -157,22 +159,6 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
           setPrimaryEducations(pe.data);
           setHigherEducations(he.data);
           setOccupations(o.data);
-          // [r, c, l, lang, e, he, o]
-          // The previous code had: [r, c, l, lang, e, o] = await Promise.all([
-          //   masterDataService.getSimpleList('religions'),
-          //   masterDataService.getSimpleList('castes'),
-          //   masterDataService.getSimpleList('locations'),
-          //   masterDataService.getSimpleList('languages'),
-          //   masterDataService.getSimpleList('primaryEducations'),
-          //   masterDataService.getSimpleList('higherEducations'),
-          //   masterDataService.getSimpleList('occupations'),
-          // ]);
-          // So 'e' is primaryEducations, 'o' is higherEducations. Wait, the array destructuring was wrong in original code or I misread.
-          // Original: [r, c, l, lang, e, o]
-          // API calls: religions, castes, locations, languages, primaryEducations, higherEducations, occupations.
-          // So 'e' was assigned primaryEducations, and 'o' was assigned higherEducations. Occupations was ignored?
-          // Let's fix this properly.
-
         } catch (err) {
           console.error("Failed to fetch dropdown data", err);
         }
@@ -222,6 +208,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
         approvalStatus: user.approvalStatus || "PENDING",
         // branch: extractId(user.branch),
         referredBy: extractId(user.referredBy),
+        address: user.address || "",
       });
       setPhotos(user.photos || []);
     }
@@ -276,6 +263,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
         approvalStatus: formData.approvalStatus,
         // branch: formData.branch || undefined,
         referredBy: formData.referredBy || undefined,
+        address: formData.address || undefined,
       };
 
       await Axios.put(`/api/users/${user._id}`, userData);
@@ -304,43 +292,40 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
     try {
       setUploading(true);
 
-      // If there are existing photos, delete them first to ensure only one photo exists
+      // If there are existing photos with _id, delete them first to replace primary photo
       if (photos.length > 0) {
         for (const photo of photos) {
-          try {
-            await userService.deleteUserPhoto(user._id, photo.url);
-          } catch (err) {
-            console.error("Failed to delete existing photo", err);
-            // Continue with upload even if delete fails, though ideally clean up
+          if (photo._id) {
+            try {
+              await userService.deleteUserPhoto(user._id, photo._id);
+            } catch (err) {
+              console.error("Failed to delete existing photo", err);
+            }
           }
         }
       }
 
       const formData = new FormData();
-      // Only append the first file since we restrict to single photo
       if (e.target.files.length > 0) {
         formData.append("photos", e.target.files[0]);
       }
 
       const newPhotos = await userService.uploadUserPhotos(user._id, formData);
 
-      // setPhotos(newPhotos); // Assuming backend returns updated list or we append. 
-      // usersService.uploadUserPhotos returns User['photos'] which is the array.
       if (newPhotos) {
         setPhotos(newPhotos);
       }
 
       toast({
         title: "Success",
-        description: "Photo updated successfully",
+        description: "Profile photo updated successfully",
       });
 
       onUserUpdated?.();
-      // onOpenChange(false); // Validated: Keep dialog open to show uploaded photos
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.response?.data?.message || "Failed to upload photos",
+        description: error.response?.data?.message || "Failed to upload photo",
         variant: "destructive",
       });
     } finally {
@@ -353,12 +338,13 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
 
     try {
       const updatedPhotos = await userService.deleteUserPhoto(user._id, photoId);
-      setPhotos(updatedPhotos);
+      setPhotos(updatedPhotos || []);
 
       toast({
         title: "Success",
         description: "Photo deleted successfully",
       });
+      onUserUpdated?.();
     } catch (error) {
       toast({
         title: "Error",
@@ -370,12 +356,55 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
 
   if (!user) return null;
 
+  const currentPhotoUrl = photos?.[0]?.url;
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit User - {user.fullName || user.email}</DialogTitle>
         </DialogHeader>
+
+        {/* Profile Photo Quick Banner */}
+        <div className="flex items-center gap-4 p-3 bg-muted/40 rounded-lg border border-border/50">
+          <Avatar className="w-16 h-16 border-2 border-primary/20 shadow-sm">
+            <AvatarImage src={currentPhotoUrl} alt={user.fullName || user.email} />
+            <AvatarFallback className="text-lg font-bold bg-primary/10 text-primary">
+              {(user.fullName || user.email || "?").charAt(0).toUpperCase()}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+            <h4 className="font-semibold text-sm">{formData.fullName || user.fullName || "User Profile"}</h4>
+            <p className="text-xs text-muted-foreground">{formData.email || user.email}</p>
+            <div className="flex items-center gap-2 mt-2">
+              <div className="relative inline-block">
+                <Button size="sm" variant="outline" className="h-8 text-xs relative cursor-pointer" disabled={uploading}>
+                  <Camera className="w-3.5 h-3.5 mr-1.5" />
+                  {uploading ? "Uploading..." : photos.length > 0 ? "Change Profile Photo" : "Upload Profile Photo"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                    onChange={handlePhotoUpload}
+                    disabled={uploading}
+                  />
+                </Button>
+              </div>
+              {photos.length > 0 && photos[0]?._id && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
+                  onClick={() => handleDeletePhoto(photos[0]._id!)}
+                  disabled={uploading}
+                >
+                  <Trash2 className="w-3.5 h-3.5 mr-1" />
+                  Remove Photo
+                </Button>
+              )}
+            </div>
+          </div>
+        </div>
 
         <Tabs value={currentTab} onValueChange={setCurrentTab}>
           <TabsList className="grid w-full grid-cols-4">
@@ -466,6 +495,17 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
                   id="preferredLanguage"
                   value={formData.preferredLanguage}
                   onChange={(e) => handleInputChange("preferredLanguage", e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2 col-span-2">
+                <Label htmlFor="address">Address</Label>
+                <Textarea
+                  id="address"
+                  placeholder="Enter full address"
+                  value={formData.address}
+                  onChange={(e) => handleInputChange("address", e.target.value)}
+                  rows={2}
                 />
               </div>
             </div>

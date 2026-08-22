@@ -14,15 +14,19 @@ import { CreateBranchModal } from "@/components/modals/CreateBranchModal";
 import { ViewBranchModal } from "@/components/modals/ViewBranchModal";
 import { EditBranchModal } from "@/components/modals/EditBranchModal";
 
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+
 const Branches = () => {
   const dispatch = useAppDispatch();
-  const { branches, total, listLoading, error } = useAppSelector((state) => state.branch);
+  const { branches, total, listLoading, error, deleteLoading } = useAppSelector((state) => state.branch);
 
   // Modal states
   const [createModalOpen, setCreateModalOpen] = useState(false);
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
+  const [deactivateBranchId, setDeactivateBranchId] = useState<string | null>(null);
+  const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState("");
@@ -54,12 +58,17 @@ const Branches = () => {
   };
 
   // Handle delete branch
-  const handleDelete = async (id: string) => {
-    if (window.confirm("Are you sure you want to deactivate this branch?")) {
-      await dispatch(deleteBranchAsync(id));
-      // Refresh the list
-      dispatch(fetchBranchesAsync({ skip: currentPage * pageSize, take: pageSize }));
-    }
+  const handleDelete = (id: string) => {
+    setDeactivateBranchId(id);
+    setShowDeactivateConfirm(true);
+  };
+
+  const handleConfirmDeactivate = async () => {
+    if (!deactivateBranchId) return;
+    await dispatch(deleteBranchAsync(deactivateBranchId));
+    setShowDeactivateConfirm(false);
+    setDeactivateBranchId(null);
+    dispatch(fetchBranchesAsync({ skip: currentPage * pageSize, take: pageSize }));
   };
 
   // Filter branches by search query and state (client-side)
@@ -331,6 +340,16 @@ const Branches = () => {
       <CreateBranchModal open={createModalOpen} onClose={() => setCreateModalOpen(false)} />
       <ViewBranchModal open={viewModalOpen} onClose={() => setViewModalOpen(false)} branch={selectedBranch} />
       <EditBranchModal open={editModalOpen} onClose={() => setEditModalOpen(false)} branch={selectedBranch} />
+      <ConfirmDialog
+        open={showDeactivateConfirm}
+        onOpenChange={setShowDeactivateConfirm}
+        title="Confirm Branch Deactivation"
+        description="Are you sure you want to deactivate this branch?"
+        confirmText="Deactivate"
+        variant="destructive"
+        loading={deleteLoading}
+        onConfirm={handleConfirmDeactivate}
+      />
     </div>
   );
 };

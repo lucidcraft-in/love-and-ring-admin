@@ -11,6 +11,7 @@ export interface User {
   email: string;
   countryCode?: string;
   mobile?: string;
+  alternateMobile?: string;
   gender?: string;
   dateOfBirth?: string;
   preferredLanguage?: string;
@@ -72,6 +73,7 @@ export interface VerifyEmailOtpPayload {
   accountFor?: string;
   fullName?: string;
   mobile?: string;
+  alternateMobile?: string;
   countryCode?: string;
   gender?: string;
 }
@@ -146,8 +148,11 @@ export const userService = {
   /**
    * Delete user
    */
-  deleteUser: async (id: string): Promise<{ message: string }> => {
-    const response = await Axios.delete<{ message: string }>(`/api/users/${id}`);
+  deleteUser: async (id: string, reason?: string): Promise<{ message: string }> => {
+    const response = await Axios.delete<{ message: string }>(`/api/users/${id}`, {
+      data: { reason },
+      params: { reason },
+    });
     return response.data;
   },
 

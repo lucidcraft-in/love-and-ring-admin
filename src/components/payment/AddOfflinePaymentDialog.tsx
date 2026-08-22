@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { addOfflinePayment } from "@/store/slices/paymentSlice";
 import { AppDispatch } from "@/store/store";
-import { Loader2 } from "lucide-react";
+import { Loader2, Paperclip, X } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { fetchPlans } from "@/store/slices/paymentSlice";
 import { RootState } from "@/store/store";
@@ -32,23 +32,40 @@ export const AddOfflinePaymentDialog: React.FC<AddOfflinePaymentDialogProps> = (
 
   // ✅ new state for backend
   const [planId, setPlanId] = useState("");
+  const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
+  const [attachmentPreview, setAttachmentPreview] = useState<string | null>(null);
 
-  const { plans } = useSelector((state: RootState) => state.payment)
+  const { plans } = useSelector((state: RootState) => state.payment);
 
   useEffect(() => {
-    dispatch(fetchPlans())
-  }, [dispatch])
+    dispatch(fetchPlans());
+  }, [dispatch]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setAttachmentFile(file);
+      if (file.type.startsWith("image/")) {
+        setAttachmentPreview(URL.createObjectURL(file));
+      } else {
+        setAttachmentPreview(null);
+      }
+    }
+  };
+
+  const handleRemoveFile = () => {
+    setAttachmentFile(null);
+    setAttachmentPreview(null);
+  };
+
   // ✅ updated select handler
   const handleSelectChange = (name: string, value: string) => {
-
     if (name === "planName") {
-
       const selectedPlan = plans.find((p) => p._id === value);
 
       if (selectedPlan) {
@@ -72,7 +89,6 @@ export const AddOfflinePaymentDialog: React.FC<AddOfflinePaymentDialogProps> = (
     setLoading(true);
 
     try {
-
       if (!formData.userId) {
         throw new Error("User email is required");
       }
@@ -81,13 +97,19 @@ export const AddOfflinePaymentDialog: React.FC<AddOfflinePaymentDialogProps> = (
         throw new Error("Please select a membership plan");
       }
 
-      await dispatch(addOfflinePayment({
-        userEmail: formData.userId,
-        planId: planId,
-        amount: Number(formData.amount),
-        paymentMethod: formData.paymentMethod,
-        referenceNo: formData.referenceNo
-      })).unwrap();
+      const form = new FormData();
+      form.append("userEmail", formData.userId);
+      form.append("planId", planId);
+      form.append("amount", String(formData.amount));
+      form.append("paymentMethod", formData.paymentMethod);
+      if (formData.referenceNo) {
+        form.append("referenceNo", formData.referenceNo);
+      }
+      if (attachmentFile) {
+        form.append("attachment", attachmentFile);
+      }
+
+      await dispatch(addOfflinePayment(form)).unwrap();
 
       toast({
         title: "Success",
@@ -106,15 +128,14 @@ export const AddOfflinePaymentDialog: React.FC<AddOfflinePaymentDialogProps> = (
       });
 
       setPlanId("");
-
+      setAttachmentFile(null);
+      setAttachmentPreview(null);
     } catch (error: any) {
-
       toast({
         variant: "destructive",
         title: "Error",
         description: error || "Failed to add payment",
       });
-
     } finally {
       setLoading(false);
     }
@@ -123,13 +144,11 @@ export const AddOfflinePaymentDialog: React.FC<AddOfflinePaymentDialogProps> = (
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
-
         <DialogHeader>
           <DialogTitle>Add Offline Payment</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
-
           <div className="space-y-2">
             <Label htmlFor="userId">User Email</Label>
             <Input
@@ -149,7 +168,6 @@ export const AddOfflinePaymentDialog: React.FC<AddOfflinePaymentDialogProps> = (
               value={planId}
               onValueChange={(value) => handleSelectChange("planName", value)}
             >
-
               <SelectTrigger>
                 <SelectValue placeholder="Select Plan" />
               </SelectTrigger>
@@ -161,7 +179,6 @@ export const AddOfflinePaymentDialog: React.FC<AddOfflinePaymentDialogProps> = (
                   </SelectItem>
                 ))}
               </SelectContent>
-
             </Select>
           </div>
 
@@ -177,7 +194,6 @@ export const AddOfflinePaymentDialog: React.FC<AddOfflinePaymentDialogProps> = (
               onChange={handleChange}
               required
             />
-
           </div>
 
           <div className="space-y-2">
@@ -187,7 +203,6 @@ export const AddOfflinePaymentDialog: React.FC<AddOfflinePaymentDialogProps> = (
               value={formData.paymentMethod}
               onValueChange={(value) => handleSelectChange("paymentMethod", value)}
             >
-
               <SelectTrigger>
                 <SelectValue placeholder="Select Method" />
               </SelectTrigger>
@@ -201,7 +216,6 @@ export const AddOfflinePaymentDialog: React.FC<AddOfflinePaymentDialogProps> = (
                 <SelectItem value="Net Banking">Net Banking</SelectItem>
                 <SelectItem value="Cheque">Cheque</SelectItem>
               </SelectContent>
-
             </Select>
           </div>
 
@@ -215,11 +229,45 @@ export const AddOfflinePaymentDialog: React.FC<AddOfflinePaymentDialogProps> = (
               value={formData.referenceNo}
               onChange={handleChange}
             />
+          </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="attachment">Payment Receipt / Screenshot (Optional)</Label>
+
+            <Input
+              id="attachment"
+              type="file"
+              accept="image/*,.pdf"
+              onChange={handleFileChange}
+              className="cursor-pointer"
+            />
+
+            {attachmentFile && (
+              <div className="mt-2 p-2 border rounded-md flex items-center justify-between bg-muted/30">
+                <div className="flex items-center gap-2 overflow-hidden">
+                  {attachmentPreview ? (
+                    <img src={attachmentPreview} alt="Preview" className="w-10 h-10 object-cover rounded border" />
+                  ) : (
+                    <Paperclip className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                  )}
+                  <span className="text-xs font-medium truncate max-w-[200px]">
+                    {attachmentFile.name}
+                  </span>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRemoveFile}
+                  className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
           </div>
 
           <DialogFooter>
-
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               Cancel
             </Button>
@@ -228,11 +276,8 @@ export const AddOfflinePaymentDialog: React.FC<AddOfflinePaymentDialogProps> = (
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Add Payment
             </Button>
-
           </DialogFooter>
-
         </form>
-
       </DialogContent>
     </Dialog>
   );

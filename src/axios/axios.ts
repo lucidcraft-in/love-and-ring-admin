@@ -10,6 +10,13 @@ const Axios: AxiosInstance = axios.create({
 });
 
 Axios.interceptors.request.use((config) => {
+  if (config.data instanceof FormData) {
+    if (config.headers) {
+      delete config.headers['Content-Type'];
+      delete config.headers['content-type'];
+    }
+  }
+
   const pathname = window.location.pathname;
   let token: string | null = null;
 

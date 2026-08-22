@@ -84,13 +84,15 @@ export const verifyEmailOtpAsync = createAsyncThunk<
 // Async thunk for deleting user
 export const deleteUserAsync = createAsyncThunk<
   string,
-  string,
+  { userId: string; reason?: string } | string,
   { rejectValue: string }
 >(
   'users/deleteUser',
-  async (userId, { rejectWithValue }) => {
+  async (payload, { rejectWithValue }) => {
     try {
-      await userService.deleteUser(userId);
+      const userId = typeof payload === 'string' ? payload : payload.userId;
+      const reason = typeof payload === 'string' ? undefined : payload.reason;
+      await userService.deleteUser(userId, reason);
       return userId;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to delete user. Please try again.';

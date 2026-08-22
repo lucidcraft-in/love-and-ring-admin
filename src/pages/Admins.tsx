@@ -62,7 +62,14 @@ const Admins = () => {
 
   // Admin Pagination & Filters
   const [adminPage, setAdminPage] = useState(1);
-  const [adminPageSize, setAdminPageSize] = useState(10);
+  const [adminPageSize, setAdminPageSize] = useState<number>(() => {
+    const saved = localStorage.getItem("admins_pageSize");
+    return saved ? Number(saved) : 10;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("admins_pageSize", adminPageSize.toString());
+  }, [adminPageSize]);
   const [adminRoleFilter, setAdminRoleFilter] = useState("all-role");
   const [adminSearch, setAdminSearch] = useState("");
   const [adminStatusFilter, setAdminStatusFilter] = useState("all");

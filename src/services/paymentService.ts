@@ -19,8 +19,21 @@ export const paymentService = {
     return response.data;
   },
 
-  addOfflinePayment: async (data: AddOfflinePaymentPayload): Promise<{ message: string; transaction: Transaction }> => {
-    const response = await Axios.post("/api/payment/offline", data);
+  addOfflinePayment: async (data: AddOfflinePaymentPayload | FormData): Promise<{ message: string; transaction: Transaction }> => {
+    let payload: any = data;
+    if (!(data instanceof FormData)) {
+      const formData = new FormData();
+      formData.append("userEmail", data.userEmail);
+      formData.append("planId", data.planId);
+      formData.append("amount", String(data.amount));
+      formData.append("paymentMethod", data.paymentMethod);
+      if (data.referenceNo) formData.append("referenceNo", data.referenceNo);
+      if (data.attachment) {
+        formData.append("attachment", data.attachment);
+      }
+      payload = formData;
+    }
+    const response = await Axios.post("/api/payment/offline", payload);
     return response.data;
   },
 

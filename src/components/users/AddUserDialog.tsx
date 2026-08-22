@@ -28,6 +28,7 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
     accountFor: "Self",
     fullName: "",
     mobile: "",
+    alternateMobile: "",
     countryCode: "+91",
     gender: "",
   });
@@ -43,6 +44,7 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
         accountFor: "Self",
         fullName: "",
         mobile: "",
+        alternateMobile: "",
         countryCode: "+91",
         gender: "",
       });
@@ -111,6 +113,7 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
           accountFor: formData.accountFor,
           fullName: formData.fullName,
           mobile: formData.mobile,
+          alternateMobile: formData.alternateMobile,
           countryCode: formData.countryCode,
           gender: formData.gender,
         })
@@ -279,6 +282,17 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
                     disabled={verificationLoading}
                   />
                 </div>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="alternateMobile">Alternative Mobile <span className="text-muted-foreground text-xs font-normal">(Optional)</span></Label>
+                <Input
+                  id="alternateMobile"
+                  value={formData.alternateMobile}
+                  onChange={(e) => handleInputChange("alternateMobile", e.target.value)}
+                  placeholder="Alternative mobile number"
+                  disabled={verificationLoading}
+                />
               </div>
 
               <div className="space-y-2">

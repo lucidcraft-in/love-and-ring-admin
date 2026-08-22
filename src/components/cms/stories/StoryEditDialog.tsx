@@ -11,6 +11,7 @@ import { useState, useEffect, useRef } from "react";
 import { Loader2, Upload, X, Crop } from "lucide-react";
 import { ImageCropModal } from "@/components/common/ImageCropModal";
 import { RichTextEditor } from "@/components/common/RichTextEditor";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface StoryEditDialogProps {
   open: boolean;
@@ -22,6 +23,7 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
   const dispatch = useAppDispatch();
   const { updateLoading, error } = useAppSelector((state) => state.successStory);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const [formData, setFormData] = useState({
     coupleName: "",
@@ -81,6 +83,7 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
       setImagePreview(story.imageUrl);
       setRawImageSrc(story.imageUrl);
       setShowCropModal(false);
+      setShowConfirm(false);
     }
   }, [open, story, dispatch]);
 
@@ -104,8 +107,13 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
     setRawImageSrc(croppedPreviewUrl);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!story) return;
+    setShowConfirm(true);
+  };
+
+  const handleConfirmSave = async () => {
     if (!story) return;
 
     const payload: UpdateStoryPayload = {
@@ -123,6 +131,7 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
     const result = await dispatch(updateStoryAsync({ id: story._id, payload }));
 
     if (updateStoryAsync.fulfilled.match(result)) {
+      setShowConfirm(false);
       onOpenChange(false);
     }
   };
@@ -228,18 +237,6 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
                 {imagePreview && (
                   <div className="relative rounded-lg overflow-hidden border border-border w-36 h-24 shrink-0 group">
                     <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                    {/* <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setShowCropModal(true)}
-                        className="h-7 text-xs px-2 gap-1"
-                      >
-                        <Crop className="w-3 h-3" />
-                        Crop
-                      </Button>
-                    </div> */}
                   </div>
                 )}
                 <div className="flex-1 flex flex-col gap-2">
@@ -275,6 +272,17 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
         imageSrc={rawImageSrc || imagePreview}
         onCropComplete={handleCropComplete}
       />
+
+      <ConfirmDialog
+        open={showConfirm}
+        onOpenChange={setShowConfirm}
+        title="Confirm Story Edit"
+        description={`Are you sure you want to save changes to the story for "${formData.coupleName}"?`}
+        confirmText="Save Changes"
+        loading={updateLoading}
+        onConfirm={handleConfirmSave}
+      />
     </>
   );
 }
+

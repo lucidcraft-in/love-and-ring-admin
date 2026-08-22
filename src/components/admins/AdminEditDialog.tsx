@@ -9,6 +9,7 @@ import { fetchRolesAsync } from "@/store/slices/roleSlice";
 import { Admin, UpdateAdminPayload } from "@/services/adminService";
 import { useState, useEffect } from "react";
 import { Loader2, Eye, EyeOff } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface AdminEditDialogProps {
   open: boolean;
@@ -22,6 +23,7 @@ function AdminEditDialog({ open, onOpenChange, admin }: AdminEditDialogProps) {
   const { roles } = useAppSelector((state) => state.role);
 
   const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
     email: "",
@@ -48,12 +50,18 @@ function AdminEditDialog({ open, onOpenChange, admin }: AdminEditDialogProps) {
         status: admin.status,
       });
       setShowPassword(false);
+      setShowConfirm(false);
       dispatch(clearAdminError());
     }
   }, [open, admin, dispatch]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!admin) return;
+    setShowConfirm(true);
+  };
+
+  const handleConfirmSave = async () => {
     if (!admin) return;
 
     const payload: UpdateAdminPayload = {
@@ -71,6 +79,7 @@ function AdminEditDialog({ open, onOpenChange, admin }: AdminEditDialogProps) {
     const result = await dispatch(updateAdminAsync({ id: admin._id, payload }));
 
     if (updateAdminAsync.fulfilled.match(result)) {
+      setShowConfirm(false);
       onOpenChange(false);
     }
   };
@@ -78,121 +87,133 @@ function AdminEditDialog({ open, onOpenChange, admin }: AdminEditDialogProps) {
   if (!admin) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Edit Admin</DialogTitle>
-          <DialogDescription>
-            Update admin details and permissions.
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Edit Admin</DialogTitle>
+            <DialogDescription>
+              Update admin details and permissions.
+            </DialogDescription>
+          </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {error && (
-            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">
-              {error}
-            </div>
-          )}
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">
+                {error}
+              </div>
+            )}
 
-          <div className="space-y-2">
-            <Label htmlFor="edit-fullName">Full Name</Label>
-            <Input
-              id="edit-fullName"
-              value={formData.fullName}
-              onChange={(e) => setFormData((prev) => ({ ...prev, fullName: e.target.value }))}
-              placeholder="John Doe"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="edit-email">Email Address</Label>
-            <Input
-              id="edit-email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
-              placeholder="john@example.com"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="edit-role">Role</Label>
-            <Select
-              value={formData.role}
-              onValueChange={(value) => setFormData((prev) => ({ ...prev, role: value }))}
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select a role" />
-              </SelectTrigger>
-              <SelectContent>
-                {roles.map((role) => (
-                  <SelectItem key={role._id} value={role._id}>
-                    {role.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="edit-password">New Password (Optional)</Label>
-            <div className="relative">
+            <div className="space-y-2">
+              <Label htmlFor="edit-fullName">Full Name</Label>
               <Input
-                id="edit-password"
-                type={showPassword ? "text" : "password"}
-                value={formData.password}
-                onChange={(e) => setFormData((prev) => ({ ...prev, password: e.target.value }))}
-                placeholder="Leave empty to keep current"
+                id="edit-fullName"
+                value={formData.fullName}
+                onChange={(e) => setFormData((prev) => ({ ...prev, fullName: e.target.value }))}
+                placeholder="John Doe"
+                required
               />
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                {showPassword ? (
-                  <EyeOff className="h-4 w-4 text-muted-foreground" />
-                ) : (
-                  <Eye className="h-4 w-4 text-muted-foreground" />
-                )}
-              </Button>
             </div>
-            <p className="text-xs text-muted-foreground">Only enter a password if you want to change it</p>
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="edit-status">Status</Label>
-            <Select
-              value={formData.status}
-              onValueChange={(value: "Active" | "Inactive") => setFormData((prev) => ({ ...prev, status: value }))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Active">Active</SelectItem>
-                <SelectItem value="Inactive">Inactive</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+            <div className="space-y-2">
+              <Label htmlFor="edit-email">Email Address</Label>
+              <Input
+                id="edit-email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => setFormData((prev) => ({ ...prev, email: e.target.value }))}
+                placeholder="john@example.com"
+                required
+              />
+            </div>
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={updateLoading}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={updateLoading}>
-              {updateLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            <div className="space-y-2">
+              <Label htmlFor="edit-role">Role</Label>
+              <Select
+                value={formData.role}
+                onValueChange={(value) => setFormData((prev) => ({ ...prev, role: value }))}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a role" />
+                </SelectTrigger>
+                <SelectContent>
+                  {roles.map((role) => (
+                    <SelectItem key={role._id} value={role._id}>
+                      {role.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-password">New Password (Optional)</Label>
+              <div className="relative">
+                <Input
+                  id="edit-password"
+                  type={showPassword ? "text" : "password"}
+                  value={formData.password}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, password: e.target.value }))}
+                  placeholder="Leave empty to keep current"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Only enter a password if you want to change it</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="edit-status">Status</Label>
+              <Select
+                value={formData.status}
+                onValueChange={(value: "Active" | "Inactive") => setFormData((prev) => ({ ...prev, status: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Active">Active</SelectItem>
+                  <SelectItem value="Inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={updateLoading}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updateLoading}>
+                {updateLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog
+        open={showConfirm}
+        onOpenChange={setShowConfirm}
+        title="Confirm Admin Edit"
+        description={`Are you sure you want to save changes to admin user "${formData.fullName}"?`}
+        confirmText="Save Changes"
+        loading={updateLoading}
+        onConfirm={handleConfirmSave}
+      />
+    </>
   );
 }
 
-export default AdminEditDialog
+export default AdminEditDialog;

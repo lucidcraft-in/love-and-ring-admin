@@ -101,6 +101,7 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
   const handleCropComplete = (croppedFile: File, croppedPreviewUrl: string) => {
     setFormData((prev) => ({ ...prev, image: croppedFile }));
     setImagePreview(croppedPreviewUrl);
+    setRawImageSrc(croppedPreviewUrl);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -227,7 +228,7 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
                 {imagePreview && (
                   <div className="relative rounded-lg overflow-hidden border border-border w-36 h-24 shrink-0 group">
                     <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
-                    <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                    {/* <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                       <Button
                         type="button"
                         size="sm"
@@ -238,7 +239,7 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
                         <Crop className="w-3 h-3" />
                         Crop
                       </Button>
-                    </div>
+                    </div> */}
                   </div>
                 )}
                 <div className="flex-1 flex flex-col gap-2">

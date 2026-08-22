@@ -69,7 +69,14 @@ export default function ConsultantList({ initialTab }: ConsultantListProps) {
 
   // Pagination state for consultant list
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
+  const [pageSize, setPageSize] = useState<number>(() => {
+    const saved = localStorage.getItem("consultants_pageSize");
+    return saved ? Number(saved) : 10;
+  });
+
+  useEffect(() => {
+    localStorage.setItem("consultants_pageSize", pageSize.toString());
+  }, [pageSize]);
 
   // Approvals Local State
   const [detailsOpen, setDetailsOpen] = useState(false);

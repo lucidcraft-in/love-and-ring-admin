@@ -91,7 +91,18 @@ export default function StaffRegister() {
               Staff account has been created successfully.
               You can now login with your credentials.
             </p>
-            <Button onClick={() => navigate("/staff/login")} className="mt-4">
+            <Button
+              onClick={() =>
+                navigate("/staff/login", {
+                  state: {
+                    email: formData.email,
+                    password: formData.password,
+                    fromRegistration: true,
+                  },
+                })
+              }
+              className="mt-4"
+            >
               Go to Login
             </Button>
           </CardContent>

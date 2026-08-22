@@ -35,8 +35,7 @@ const MasterData = () => {
     religions: "Religion",
     castes: "Caste",
     primaryEducations: "Qualification Level",
-    higherEducations: "Higher Education",
-    occupations: "Occupation",
+    occupations: "Profession",
     languages: "Language",
     locations: "Location",
   };
@@ -48,10 +47,6 @@ const MasterData = () => {
 
     if (activeTab === 'castes') {
       masterDataService.getSimpleList('religions').then(res => setReligionsList(res.data));
-    }
-
-    if (activeTab === 'higherEducations') {
-      masterDataService.getSimpleList('primaryEducations').then(res => setPrimaryEducationsList(res.data));
     }
   }, [activeTab, dispatch, searchQuery]);
 
@@ -108,14 +103,7 @@ const MasterData = () => {
           </TableCell>
         )}
 
-        {/* ✅ Primary Education Column inside Higher Education */}
-        {activeTab === 'higherEducations' && (
-          <TableCell>
-            {typeof item.primaryEducation === 'object'
-              ? item.primaryEducation?.name
-              : item.primaryEducation || "-"}
-          </TableCell>
-        )}
+
 
         <TableCell>{item.usersCount?.toLocaleString() || 0}</TableCell>
 
@@ -184,30 +172,12 @@ const MasterData = () => {
         <Card className="stat-card-shadow border-0">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
-              <Book className="w-4 h-4 text-chart-green" />
-              <span className="text-xs text-muted-foreground uppercase">Higher Education</span>
-            </div>
-            <p className="text-xl font-semibold">{counts?.higherEducation || 0}</p>
-          </CardContent>
-        </Card>
-        <Card className="stat-card-shadow border-0">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
               <Briefcase className="w-4 h-4 text-info" />
-              <span className="text-xs text-muted-foreground uppercase">Occupations</span>
+              <span className="text-xs text-muted-foreground uppercase">Professions</span>
             </div>
             <p className="text-xl font-semibold">{counts?.occupations || 0}</p>
           </CardContent>
         </Card>
-        {/* <Card className="stat-card-shadow border-0">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 mb-1">
-              <MapPin className="w-4 h-4 text-chart-purple" />
-              <span className="text-xs text-muted-foreground uppercase">Locations</span>
-            </div>
-            <p className="text-xl font-semibold">{counts?.locations || 0}</p>
-          </CardContent>
-        </Card> */}
         <Card className="stat-card-shadow border-0">
           <CardContent className="p-4">
             <div className="flex items-center gap-2 mb-1">
@@ -228,8 +198,7 @@ const MasterData = () => {
           <TabsTrigger value="religions">Religion</TabsTrigger>
           <TabsTrigger value="castes">Caste</TabsTrigger>
           <TabsTrigger value="primaryEducations">Qualification Level</TabsTrigger>
-          <TabsTrigger value="higherEducations">Higher Education</TabsTrigger>
-          <TabsTrigger value="occupations">Occupation</TabsTrigger>
+          <TabsTrigger value="occupations">Profession</TabsTrigger>
           <TabsTrigger value="languages">Language</TabsTrigger>
         </TabsList>
 
@@ -261,11 +230,6 @@ const MasterData = () => {
                     {/* Religion Header */}
                     {activeTab === 'castes' && (
                       <TableHead>Religion</TableHead>
-                    )}
-
-                    {/* ✅ Primary Education Header for Higher Education */}
-                    {activeTab === 'higherEducations' && (
-                      <TableHead>Primary Education</TableHead>
                     )}
 
                     <TableHead>Users Count</TableHead>

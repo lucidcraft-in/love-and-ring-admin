@@ -110,7 +110,6 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
     livingWithFamily: false,
     // course: "",
     primaryEducation: "",
-    highestEducation: "",
     profession: "",
     incomeAmount: "",
     incomeType: "Yearly",
@@ -194,7 +193,6 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
         livingWithFamily: user.livingWithFamily || false,
         // course: user.course || ""
         primaryEducation: extractId(user.primaryEducation),
-        highestEducation: extractId(user.highestEducation),
         profession: extractId(user.profession),
         incomeAmount: user.income?.amount?.toString() || "",
         incomeType: user.income?.type || "Yearly",
@@ -241,7 +239,6 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
         livingWithFamily: formData.livingWithFamily,
         // course: formData.course,
         primaryEducation: formData.primaryEducation || undefined,
-        highestEducation: formData.highestEducation || undefined,
         profession: formData.profession || undefined,
         income: formData.incomeAmount
           ? {
@@ -474,7 +471,8 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
                   <SelectContent>
                     <SelectItem value="Male">Male</SelectItem>
                     <SelectItem value="Female">Female</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
+                    <SelectItem value="Gay">Gay</SelectItem>
+                    <SelectItem value="Lesbian">Lesbian</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -601,11 +599,10 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
                   value={formData.primaryEducation}
                   onValueChange={(val) => {
                     handleInputChange("primaryEducation", val);
-                    handleInputChange("highestEducation", ""); // Reset highest education when primary changes
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select primary education" />
+                    <SelectValue placeholder="Select qualification level" />
                   </SelectTrigger>
                   <SelectContent>
                     {Array.isArray(primaryEducations) &&
@@ -615,36 +612,6 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
                         </SelectItem>
                       ))
                     }
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="highestEducation">Highest Education</Label>
-                <Select
-                  value={formData.highestEducation}
-                  onValueChange={(val) => handleInputChange("highestEducation", val)}
-                  disabled={!formData.primaryEducation}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select highest education" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.isArray(higherEducations) &&
-                      higherEducations
-                        .filter(edu => {
-                          if (!formData.primaryEducation) return true;
-                          // Check if primaryEducation field exists and matches
-                          const pId = typeof edu.primaryEducation === 'object' ? edu.primaryEducation?._id : edu.primaryEducation;
-                          return pId === formData.primaryEducation;
-                        })
-                        .map((education) => (
-                          <SelectItem key={education._id} value={education._id}>
-                            {education.name}
-                          </SelectItem>
-                        ))
-                    }
-
                   </SelectContent>
                 </Select>
               </div>

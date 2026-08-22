@@ -294,7 +294,8 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
                   <SelectContent>
                     <SelectItem value="Male">Male</SelectItem>
                     <SelectItem value="Female">Female</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
+                    <SelectItem value="Gay">Gay</SelectItem>
+                    <SelectItem value="Lesbian">Lesbian</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

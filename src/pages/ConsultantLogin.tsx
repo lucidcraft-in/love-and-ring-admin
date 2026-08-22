@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Heart, Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 
 export default function ConsultantLogin() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -18,6 +19,22 @@ export default function ConsultantLogin() {
     username: "",
     password: "",
   });
+
+  useEffect(() => {
+    if (location.state?.username || location.state?.email) {
+      setFormData((prev) => ({
+        ...prev,
+        username: location.state.username || location.state.email || prev.username,
+        password: location.state.password || prev.password,
+      }));
+      if (location.state?.fromRegistration) {
+        toast({
+          title: "Registration Submitted",
+          description: "Your login credentials have been pre-filled below.",
+        });
+      }
+    }
+  }, [location.state, toast]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

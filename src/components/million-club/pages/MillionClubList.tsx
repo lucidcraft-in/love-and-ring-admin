@@ -178,6 +178,8 @@ const MillionClub = () => {
                   <SelectItem value="all">All Gender</SelectItem>
                   <SelectItem value="Male">Male</SelectItem>
                   <SelectItem value="Female">Female</SelectItem>
+                  <SelectItem value="Gay">Gay</SelectItem>
+                  <SelectItem value="Lesbian">Lesbian</SelectItem>
                 </SelectContent>
               </Select>
 

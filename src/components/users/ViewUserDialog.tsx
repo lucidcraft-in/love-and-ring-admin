@@ -205,9 +205,7 @@ export const ViewUserDialog = ({ open, onOpenChange, user, onEdit }: ViewUserDia
           {/* EDUCATION & WORK */}
           <TabsContent value="education" className="space-y-4 mt-4">
             <div className="grid grid-cols-2 gap-6">
-              {/* <InfoRow label="Course" value={user.course} icon={Award} /> */}
-              <InfoRow label="Primary Education" value={extractName(user.primaryEducation)} icon={Award} />
-              <InfoRow label="Highest Education" value={extractName(user.highestEducation)} icon={Award} />
+              <InfoRow label="Qualification Level" value={extractName(user.primaryEducation)} icon={Award} />
               <InfoRow label="Profession" value={extractName(user.profession)} icon={Briefcase} />
               <InfoRow
                 label="Income"

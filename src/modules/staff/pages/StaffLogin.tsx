@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Briefcase, Eye, EyeOff, AlertCircle, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,6 +12,7 @@ import { loginStaffAsync, clearLoginError } from "@/store/slices/staffSlice";
 
 export default function StaffLogin() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const dispatch = useAppDispatch();
 
@@ -23,6 +24,22 @@ export default function StaffLogin() {
     email: "",
     password: "",
   });
+
+  useEffect(() => {
+    if (location.state?.email) {
+      setFormData((prev) => ({
+        ...prev,
+        email: location.state.email || prev.email,
+        password: location.state.password || prev.password,
+      }));
+      if (location.state?.fromRegistration) {
+        toast({
+          title: "Registration Successful",
+          description: "Your login credentials have been pre-filled below.",
+        });
+      }
+    }
+  }, [location.state, toast]);
 
   // Clear errors on mount and redirect if logged in
   useEffect(() => {

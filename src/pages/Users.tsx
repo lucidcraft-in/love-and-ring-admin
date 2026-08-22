@@ -137,6 +137,8 @@ const Users = () => {
                     <SelectItem value="all-gender">All Gender</SelectItem>
                     <SelectItem value="male">Male</SelectItem>
                     <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="gay">Gay</SelectItem>
+                    <SelectItem value="lesbian">Lesbian</SelectItem>
                   </SelectContent>
                 </Select>
                 <Select defaultValue="all-membership">

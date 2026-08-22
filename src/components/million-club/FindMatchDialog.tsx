@@ -49,7 +49,7 @@ export function FindMatchDialog({ open, onOpenChange, user }: FindMatchDialogPro
   const fetchMasterData = async () => {
     try {
       const relRes = await masterDataService.getItems("religions", { take: 100 });
-      const eduRes = await masterDataService.getItems("higherEducations", { take: 100 });
+      const eduRes = await masterDataService.getItems("primaryEducations", { take: 100 });
       setReligions(relRes.data || []);
       setEducationLevels(eduRes.data || []);
     } catch (error) {
@@ -253,7 +253,7 @@ export function FindMatchDialog({ open, onOpenChange, user }: FindMatchDialogPro
                             </span>
                             <span className="flex items-center gap-1">
                               <Award className="w-3 h-3" />
-                              {item.user?.highestEducation?.name || "N/A"}
+                              {item.user?.primaryEducation?.name || item.user?.highestEducation?.name || "N/A"}
                             </span>
                           </div>
 

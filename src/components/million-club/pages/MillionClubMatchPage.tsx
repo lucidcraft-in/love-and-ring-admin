@@ -77,7 +77,7 @@ export default function MillionClubMatchPage() {
       const [user, rels, edus, prefs] = await Promise.all([
         userService.getUserById(id),
         masterDataService.getItems("religions", { take: 100 }),
-        masterDataService.getItems("higherEducations", { take: 100 }),
+        masterDataService.getItems("primaryEducations", { take: 100 }),
         userService.getUserPreference(id)
       ]);
       
@@ -265,7 +265,7 @@ export default function MillionClubMatchPage() {
               </div>
               <div className="flex items-center gap-1.5">
                 <Award className="w-3 h-3 text-primary/70 shrink-0" />
-                <span className="truncate">{user?.highestEducation?.name || user?.highestEducation || "N/A"}</span>
+                <span className="truncate">{user?.primaryEducation?.name || user?.highestEducation?.name || user?.highestEducation || "N/A"}</span>
               </div>
             </div>
           </div>
@@ -419,8 +419,8 @@ export default function MillionClubMatchPage() {
                       </h4>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         <div className="bg-muted/20 p-3 rounded-lg border border-border/50">
-                          <p className="text-xs text-muted-foreground">Highest Qualification</p>
-                          <p className="text-sm font-bold mt-0.5">{selectedUserForDetail.highestEducation?.name || "N/A"}</p>
+                          <p className="text-xs text-muted-foreground">Qualification Level</p>
+                          <p className="text-sm font-bold mt-0.5">{selectedUserForDetail.primaryEducation?.name || selectedUserForDetail.highestEducation?.name || "N/A"}</p>
                         </div>
                         <div className="bg-muted/20 p-3 rounded-lg border border-border/50">
                           <p className="text-xs text-muted-foreground">Current Profession</p>

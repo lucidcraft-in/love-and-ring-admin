@@ -83,7 +83,19 @@ export default function ConsultantRegister() {
               An admin will review your application and you'll receive an email
               once your account is approved.
             </p>
-            <Button onClick={() => navigate("/consultant/login")} className="mt-4">
+            <Button
+              onClick={() =>
+                navigate("/consultant/login", {
+                  state: {
+                    username: formData.username,
+                    email: formData.email,
+                    password: formData.password,
+                    fromRegistration: true,
+                  },
+                })
+              }
+              className="mt-4"
+            >
               Back to Login
             </Button>
           </CardContent>

@@ -325,7 +325,7 @@ const Demographics = () => {
 
         <Card className="stat-card-shadow border-0">
           <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold">Education Level</CardTitle>
+            <CardTitle className="text-base font-semibold">Qualification Level</CardTitle>
           </CardHeader>
           <CardContent>
             {!hasEducationData ? (

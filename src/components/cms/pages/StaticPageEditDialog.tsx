@@ -11,6 +11,7 @@ import { StaticPage, UpdatePagePayload } from "@/services/staticPageService";
 import { useState, useEffect, useRef } from "react";
 import { Loader2, Eye, Edit3, Sparkles } from "lucide-react";
 import { RichTextEditor } from "@/components/common/RichTextEditor";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface StaticPageEditDialogProps {
   open: boolean;
@@ -24,6 +25,7 @@ export function StaticPageEditDialog({ open, onOpenChange, page }: StaticPageEdi
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   const [activeTab, setActiveTab] = useState<"edit" | "preview">("edit");
+  const [showConfirm, setShowConfirm] = useState(false);
 
   const [formData, setFormData] = useState<{
     title: string;
@@ -53,6 +55,7 @@ export function StaticPageEditDialog({ open, onOpenChange, page }: StaticPageEdi
         content: page.content || "",
         sections: page.sections || [],
       });
+      setShowConfirm(false);
     }
   }, [open, page, dispatch]);
 
@@ -81,8 +84,13 @@ export function StaticPageEditDialog({ open, onOpenChange, page }: StaticPageEdi
     }, 50);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!page) return;
+    setShowConfirm(true);
+  };
+
+  const handleConfirmSave = async () => {
     if (!page) return;
 
     const payload: UpdatePagePayload = {
@@ -98,6 +106,7 @@ export function StaticPageEditDialog({ open, onOpenChange, page }: StaticPageEdi
     const result = await dispatch(updatePageAsync({ id: page._id, payload }));
 
     if (updatePageAsync.fulfilled.match(result)) {
+      setShowConfirm(false);
       onOpenChange(false);
     }
   };
@@ -145,208 +154,221 @@ export function StaticPageEditDialog({ open, onOpenChange, page }: StaticPageEdi
   if (!page) return null;
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="flex items-center gap-2">
-            <div className="p-2 rounded-md bg-primary/10 text-primary">
-              <Sparkles className="w-5 h-5" />
-            </div>
-            <div>
-              <DialogTitle className="text-xl">Edit Static Page</DialogTitle>
-              <DialogDescription>
-                Update page content, category, and metadata settings.
-              </DialogDescription>
-            </div>
-          </div>
-        </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-5">
-          {error && (
-            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">
-              {error}
-            </div>
-          )}
-
-          {/* Metadata Row */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-muted/30 p-4 rounded-xl border border-border/60">
-            <div className="md:col-span-2 space-y-2">
-              <Label htmlFor="edit-title" className="font-semibold">Page Title</Label>
-              <Input
-                id="edit-title"
-                value={formData.title}
-                onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
-                placeholder="Terms of Service"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="edit-slug" className="font-semibold">Slug</Label>
-              <Input
-                id="edit-slug"
-                value={formData.slug}
-                onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value }))}
-                placeholder="terms-of-service"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="font-semibold">Category</Label>
-              <Select
-                value={formData.category}
-                onValueChange={(val: any) => setFormData((prev) => ({ ...prev, category: val }))}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Support">Support</SelectItem>
-                  <SelectItem value="Company">Company</SelectItem>
-                  <SelectItem value="Legal">Legal</SelectItem>
-                  <SelectItem value="General">General</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Status & Tabs Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-b pb-3">
-            <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)}>
-              <TabsList className="bg-muted">
-                <TabsTrigger value="edit" className="gap-2">
-                  <Edit3 className="w-4 h-4" />
-                  Editor
-                </TabsTrigger>
-                <TabsTrigger value="preview" className="gap-2">
-                  <Eye className="w-4 h-4" />
-                  Live Preview
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
             <div className="flex items-center gap-2">
-              <Label className="text-xs text-muted-foreground">Status:</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(val: any) => setFormData((prev) => ({ ...prev, status: val }))}
-              >
-                <SelectTrigger className="h-8 text-xs w-[120px]">
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="PUBLISHED">Published</SelectItem>
-                  <SelectItem value="DRAFT">Draft</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Main Content Area */}
-          {activeTab === "edit" ? (
-            page.pageType === 'CONTACT' ? (
-              <div className="space-y-6 border-t pt-4">
-                <div className="space-y-4">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Hero Section</h3>
-                  <div className="space-y-2">
-                    <Label>Heading</Label>
-                    <Input
-                      value={getSectionValue('hero', 'heading')}
-                      onChange={(e) => updateSection('hero', 'heading', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Description</Label>
-                    <Textarea
-                      value={getSectionValue('hero', 'description')}
-                      onChange={(e) => updateSection('hero', 'description', e.target.value)}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Contact Information</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Email</Label>
-                      <Input
-                        value={getSectionValue('contact-info', 'email')}
-                        onChange={(e) => updateSection('contact-info', 'email', e.target.value)}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Phone</Label>
-                      <Input
-                        value={getSectionValue('contact-info', 'phone')}
-                        onChange={(e) => updateSection('contact-info', 'phone', e.target.value)}
-                      />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Address</Label>
-                    <Textarea
-                      value={getSectionValue('contact-info', 'address')}
-                      onChange={(e) => updateSection('contact-info', 'address', e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Google Maps Embed URL</Label>
-                    <Input
-                      value={getSectionValue('contact-info', 'mapEmbedUrl')}
-                      onChange={(e) => updateSection('contact-info', 'mapEmbedUrl', e.target.value)}
-                      placeholder="https://www.google.com/maps/embed?..."
-                    />
-                    <p className="text-xs text-muted-foreground">Paste the 'src' attribute from Google Maps Embed HTML</p>
-                  </div>
-                </div>
+              <div className="p-2 rounded-md bg-primary/10 text-primary">
+                <Sparkles className="w-5 h-5" />
               </div>
-            ) : (
+              <div>
+                <DialogTitle className="text-xl">Edit Static Page</DialogTitle>
+                <DialogDescription>
+                  Update page content, category, and metadata settings.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {error && (
+              <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-sm text-destructive">
+                {error}
+              </div>
+            )}
+
+            {/* Metadata Row */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4 bg-muted/30 p-4 rounded-xl border border-border/60">
+              <div className="md:col-span-2 space-y-2">
+                <Label htmlFor="edit-title" className="font-semibold">Page Title</Label>
+                <Input
+                  id="edit-title"
+                  value={formData.title}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, title: e.target.value }))}
+                  placeholder="Terms of Service"
+                  required
+                />
+              </div>
               <div className="space-y-2">
-                <RichTextEditor
-                  value={formData.content}
-                  onChange={(content) => setFormData((prev) => ({ ...prev, content }))}
-                  placeholder="Enter page content..."
-                  minHeight="360px"
+                <Label htmlFor="edit-slug" className="font-semibold">Slug</Label>
+                <Input
+                  id="edit-slug"
+                  value={formData.slug}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, slug: e.target.value }))}
+                  placeholder="terms-of-service"
+                  required
                 />
               </div>
-            )
-          ) : (
-            <div className="min-h-[360px] max-h-[500px] overflow-y-auto p-6 border rounded-xl bg-card shadow-sm space-y-4">
-              <div className="border-b pb-4">
-                <span className="text-xs font-semibold text-primary uppercase tracking-wider bg-primary/10 px-2.5 py-1 rounded-full">
-                  {formData.category}
-                </span>
-                <h1 className="text-2xl md:text-3xl font-bold text-foreground mt-3">
-                  {formData.title || "Page Title Preview"}
-                </h1>
-                <p className="text-xs text-muted-foreground mt-1">
-                  URL: /pages/{formData.slug || "page-slug"}
-                </p>
+              <div className="space-y-2">
+                <Label className="font-semibold">Category</Label>
+                <Select
+                  value={formData.category}
+                  onValueChange={(val: any) => setFormData((prev) => ({ ...prev, category: val }))}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Category" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Support">Support</SelectItem>
+                    <SelectItem value="Company">Company</SelectItem>
+                    <SelectItem value="Legal">Legal</SelectItem>
+                    <SelectItem value="General">General</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
-
-              {formData.content ? (
-                <div
-                  className="prose max-w-none dark:prose-invert text-foreground/90 leading-relaxed text-sm space-y-3 cms-content-render"
-                  dangerouslySetInnerHTML={{ __html: formData.content }}
-                />
-              ) : (
-                <div className="text-center py-16 text-muted-foreground italic">
-                  No content entered yet. Switch to the Editor tab to add text.
-                </div>
-              )}
             </div>
-          )}
 
-          <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={updateLoading}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={updateLoading}>
-              {updateLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+            {/* Status & Tabs Bar */}
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-1 border-b pb-3">
+              <Tabs value={activeTab} onValueChange={(val: any) => setActiveTab(val)}>
+                <TabsList className="bg-muted">
+                  <TabsTrigger value="edit" className="gap-2">
+                    <Edit3 className="w-4 h-4" />
+                    Editor
+                  </TabsTrigger>
+                  <TabsTrigger value="preview" className="gap-2">
+                    <Eye className="w-4 h-4" />
+                    Live Preview
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+
+              <div className="flex items-center gap-2">
+                <Label className="text-xs text-muted-foreground">Status:</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(val: any) => setFormData((prev) => ({ ...prev, status: val }))}
+                >
+                  <SelectTrigger className="h-8 text-xs w-[120px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="PUBLISHED">Published</SelectItem>
+                    <SelectItem value="DRAFT">Draft</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Main Content Area */}
+            {activeTab === "edit" ? (
+              page.pageType === 'CONTACT' ? (
+                <div className="space-y-6 border-t pt-4">
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Hero Section</h3>
+                    <div className="space-y-2">
+                      <Label>Heading</Label>
+                      <Input
+                        value={getSectionValue('hero', 'heading')}
+                        onChange={(e) => updateSection('hero', 'heading', e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Description</Label>
+                      <Textarea
+                        value={getSectionValue('hero', 'description')}
+                        onChange={(e) => updateSection('hero', 'description', e.target.value)}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Contact Information</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label>Email</Label>
+                        <Input
+                          value={getSectionValue('contact-info', 'email')}
+                          onChange={(e) => updateSection('contact-info', 'email', e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Phone</Label>
+                        <Input
+                          value={getSectionValue('contact-info', 'phone')}
+                          onChange={(e) => updateSection('contact-info', 'phone', e.target.value)}
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Address</Label>
+                      <Textarea
+                        value={getSectionValue('contact-info', 'address')}
+                        onChange={(e) => updateSection('contact-info', 'address', e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Google Maps Embed URL</Label>
+                      <Input
+                        value={getSectionValue('contact-info', 'mapEmbedUrl')}
+                        onChange={(e) => updateSection('contact-info', 'mapEmbedUrl', e.target.value)}
+                        placeholder="https://www.google.com/maps/embed?..."
+                      />
+                      <p className="text-xs text-muted-foreground">Paste the 'src' attribute from Google Maps Embed HTML</p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <RichTextEditor
+                    value={formData.content}
+                    onChange={(content) => setFormData((prev) => ({ ...prev, content }))}
+                    placeholder="Enter page content..."
+                    minHeight="360px"
+                  />
+                </div>
+              )
+            ) : (
+              <div className="min-h-[360px] max-h-[500px] overflow-y-auto p-6 border rounded-xl bg-card shadow-sm space-y-4">
+                <div className="border-b pb-4">
+                  <span className="text-xs font-semibold text-primary uppercase tracking-wider bg-primary/10 px-2.5 py-1 rounded-full">
+                    {formData.category}
+                  </span>
+                  <h1 className="text-2xl md:text-3xl font-bold text-foreground mt-3">
+                    {formData.title || "Page Title Preview"}
+                  </h1>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    URL: /pages/{formData.slug || "page-slug"}
+                  </p>
+                </div>
+
+                {formData.content ? (
+                  <div
+                    className="prose max-w-none dark:prose-invert text-foreground/90 leading-relaxed text-sm space-y-3 cms-content-render"
+                    dangerouslySetInnerHTML={{ __html: formData.content }}
+                  />
+                ) : (
+                  <div className="text-center py-16 text-muted-foreground italic">
+                    No content entered yet. Switch to the Editor tab to add text.
+                  </div>
+                )}
+              </div>
+            )}
+
+            <DialogFooter className="gap-2 sm:gap-0 pt-2 border-t">
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={updateLoading}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={updateLoading}>
+                {updateLoading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Save Changes
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      <ConfirmDialog
+        open={showConfirm}
+        onOpenChange={setShowConfirm}
+        title="Confirm Page Edit"
+        description={`Are you sure you want to save changes to page "${formData.title}"?`}
+        confirmText="Save Changes"
+        loading={updateLoading}
+        onConfirm={handleConfirmSave}
+      />
+    </>
   );
 }
+

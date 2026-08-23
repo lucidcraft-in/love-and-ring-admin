@@ -27,6 +27,7 @@ export function MasterDataDialog({ open, onOpenChange, type, item, title, religi
   const [formData, setFormData] = useState({
     name: "",
     value: "",
+    icon: "✨",
     religion: "",
   });
 
@@ -38,12 +39,14 @@ export function MasterDataDialog({ open, onOpenChange, type, item, title, religi
         setFormData({
           name: item.name,
           value: item.value || "",
+          icon: item.icon || "✨",
           religion: typeof item.religion === 'object' ? item.religion?._id : item.religion || "",
         });
       } else {
         setFormData({
           name: "",
           value: "",
+          icon: "✨",
           religion: "",
         });
       }
@@ -66,6 +69,7 @@ export function MasterDataDialog({ open, onOpenChange, type, item, title, religi
 
     const payload: any = { name: formData.name };
     if (formData.value) payload.value = formData.value;
+    if (formData.icon) payload.icon = formData.icon;
     if (type === 'castes' && formData.religion) payload.religion = formData.religion;
 
     if (item) {

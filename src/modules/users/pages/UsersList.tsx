@@ -103,11 +103,19 @@ const Users = () => {
       // Status - use advanced filter if set, otherwise use main filter
       const effectiveStatus = advancedFilters.status || statusFilter;
       const normalizedStatus = effectiveStatus.toLowerCase();
+      const userStatus = (
+        user.approvalStatus === "INACTIVE" || user.isActive === false
+          ? "inactive"
+          : user.approvalStatus === "APPROVED"
+          ? "active"
+          : user.approvalStatus === "PENDING"
+          ? "pending"
+          : user.approvalStatus === "REJECTED"
+          ? "blocked"
+          : "active"
+      );
       const matchesStatus =
-        normalizedStatus === "all" ||
-        (normalizedStatus === "active" && user.approvalStatus === "APPROVED") ||
-        (normalizedStatus === "pending" && user.approvalStatus === "PENDING") ||
-        (normalizedStatus === "blocked" && user.approvalStatus === "REJECTED");
+        normalizedStatus === "all" || normalizedStatus === userStatus;
 
       // Advanced filters
       const matchesCity = !advancedFilters.city ||
@@ -218,7 +226,13 @@ const Users = () => {
   }).length;
 
   // Helper function to map approval status to display status
-  const getStatusDisplay = (approvalStatus?: string) => {
+  const getStatusDisplay = (user: any) => {
+    const approvalStatus = typeof user === "string" ? user : user?.approvalStatus;
+    const isActive = typeof user === "object" ? user?.isActive : undefined;
+
+    if (approvalStatus === "INACTIVE" || isActive === false) {
+      return "Inactive";
+    }
     switch (approvalStatus) {
       case "APPROVED":
         return "Active";
@@ -227,7 +241,7 @@ const Users = () => {
       case "REJECTED":
         return "Blocked";
       default:
-        return "Pending";
+        return "Active";
     }
   };
 
@@ -390,6 +404,7 @@ const Users = () => {
                     <SelectContent>
                       <SelectItem value="all">All Status</SelectItem>
                       <SelectItem value="Active">Active</SelectItem>
+                      <SelectItem value="Inactive">Inactive</SelectItem>
                       <SelectItem value="Pending">Pending</SelectItem>
                       <SelectItem value="Blocked">Blocked</SelectItem>
                     </SelectContent>
@@ -517,7 +532,7 @@ const Users = () => {
                     filteredUsers
                       .slice((currentPage - 1) * pageSize, currentPage * pageSize)
                       .map((user) => {
-                        const status = getStatusDisplay(user.approvalStatus);
+                        const status = getStatusDisplay(user);
                         return (
                           <TableRow key={user._id} className="border-border/50">
                             <TableCell>
@@ -558,9 +573,11 @@ const Users = () => {
                                 className={
                                   status === "Active"
                                     ? "border-chart-green text-chart-green"
-                                    : status === "Pending"
-                                      ? "border-chart-orange text-chart-orange"
-                                      : "border-destructive text-destructive"
+                                    : status === "Inactive"
+                                      ? "border-muted-foreground text-muted-foreground bg-muted/20"
+                                      : status === "Pending"
+                                        ? "border-chart-orange text-chart-orange"
+                                        : "border-destructive text-destructive"
                                 }
                               >
                                 {status}

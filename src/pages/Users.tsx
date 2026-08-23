@@ -158,6 +158,7 @@ const Users = () => {
                   <SelectContent>
                     <SelectItem value="all-status">All Status</SelectItem>
                     <SelectItem value="active">Active</SelectItem>
+                    <SelectItem value="inactive">Inactive</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="blocked">Blocked</SelectItem>
                   </SelectContent>
@@ -222,6 +223,8 @@ const Users = () => {
                         className={
                           user.status === "Active"
                             ? "border-chart-green text-chart-green"
+                            : user.status === "Inactive"
+                            ? "border-muted-foreground text-muted-foreground bg-muted/20"
                             : user.status === "Pending"
                             ? "border-chart-orange text-chart-orange"
                             : "border-destructive text-destructive"

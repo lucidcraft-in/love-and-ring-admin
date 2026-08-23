@@ -889,7 +889,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="approvalStatus">Approval Status</Label>
+                <Label htmlFor="approvalStatus">Account / Approval Status</Label>
                 <Select
                   value={formData.approvalStatus}
                   onValueChange={(val) => handleInputChange("approvalStatus", val)}
@@ -898,8 +898,9 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="APPROVED">Active</SelectItem>
+                    <SelectItem value="INACTIVE">Inactive</SelectItem>
                     <SelectItem value="PENDING">Pending</SelectItem>
-                    <SelectItem value="APPROVED">Approved</SelectItem>
                     <SelectItem value="REJECTED">Rejected</SelectItem>
                   </SelectContent>
                 </Select>

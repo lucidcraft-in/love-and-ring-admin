@@ -37,7 +37,8 @@ import { WeddingServiceItem, ServiceEnquiryItem, weddingServiceService, weddingS
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { Briefcase, MapPin, Phone, Mail, Search, Inbox, Calendar, User } from "lucide-react";
+import { Briefcase, MapPin, Phone, Mail, Search, Inbox, Calendar, User, Star } from "lucide-react";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 
 
@@ -77,6 +78,9 @@ const CMS = () => {
   const [currentServiceItem, setCurrentServiceItem] = useState<WeddingServiceItem | null>(null);
   const [serviceCategoryFilter, setServiceCategoryFilter] = useState("ALL");
   const [serviceSearchQuery, setServiceSearchQuery] = useState("");
+  const [statusConfirmOpen, setStatusConfirmOpen] = useState(false);
+  const [pendingStatusItem, setPendingStatusItem] = useState<WeddingServiceItem | null>(null);
+  const [statusToggleLoading, setStatusToggleLoading] = useState(false);
 
   // Service Enquiries State
   const [serviceEnquiries, setServiceEnquiries] = useState<ServiceEnquiryItem[]>([]);
@@ -146,13 +150,24 @@ const CMS = () => {
     }
   };
 
-  const handleToggleServiceStatus = async (id: string) => {
+  const requestServiceStatusToggle = (item: WeddingServiceItem) => {
+    setPendingStatusItem(item);
+    setStatusConfirmOpen(true);
+  };
+
+  const handleConfirmStatusToggle = async () => {
+    if (!pendingStatusItem) return;
     try {
-      await weddingServiceService.toggleWeddingServiceStatus(id);
-      toast({ title: "Status Updated", description: "Wedding service status changed" });
+      setStatusToggleLoading(true);
+      await weddingServiceService.toggleWeddingServiceStatus(pendingStatusItem._id);
+      toast({ title: "Status Updated", description: "Wedding service status changed successfully" });
       fetchWeddingServices();
     } catch (err: any) {
       toast({ title: "Error", description: err.message || "Failed to update status", variant: "destructive" });
+    } finally {
+      setStatusToggleLoading(false);
+      setStatusConfirmOpen(false);
+      setPendingStatusItem(null);
     }
   };
 
@@ -260,21 +275,21 @@ const CMS = () => {
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="explore" className="flex items-center gap-2">
-            <Camera className="w-4 h-4 text-primary" />
+            {/* <Camera className="w-4 h-4 text-primary" /> */}
             Explore Gallery
             <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-xs font-semibold">
               {exploreItems.length}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="services" className="flex items-center gap-2">
-            <Briefcase className="w-4 h-4 text-primary" />
+            {/* <Briefcase className="w-4 h-4 text-primary" /> */}
             Wedding Services
             <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-xs font-semibold">
               {weddingServices.length}
             </Badge>
           </TabsTrigger>
           <TabsTrigger value="service-enquiries" className="flex items-center gap-2">
-            <Inbox className="w-4 h-4 text-primary" />
+            {/* <Inbox className="w-4 h-4 text-primary" /> */}
             Service Enquiries
             <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-xs font-semibold">
               {serviceEnquiries.length}
@@ -726,7 +741,11 @@ const CMS = () => {
                             {item.category}
                           </Badge>
                         </div>
-                        <div className="absolute top-2 right-2">
+                        <div className="absolute top-2 right-2 flex items-center gap-1.5">
+                          <Badge className="bg-black/60 text-amber-300 backdrop-blur-md text-[10px] font-semibold flex items-center gap-0.5 border border-amber-400/30 px-2 py-0.5 shadow-sm">
+                            <Star className="w-2.5 h-2.5 fill-amber-400 text-amber-400" />
+                            <span>{Number(item.rating ?? 5.0).toFixed(1)}</span>
+                          </Badge>
                           <Badge
                             className={`text-[10px] ${
                               item.status === "Active" ? "bg-chart-green text-white" : "bg-muted-foreground text-white"
@@ -748,11 +767,17 @@ const CMS = () => {
                           )}
                         </div>
 
-                        {item.priceRange && (
-                          <div className="text-xs font-semibold text-primary bg-primary/10 px-2 py-1 rounded inline-block">
-                            {item.priceRange}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          {item.priceRange && (
+                            <div className="text-xs font-semibold text-primary bg-primary/10 px-2 py-1 rounded inline-block">
+                              {item.priceRange}
+                            </div>
+                          )}
+                          <div className="flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                            <span>{Number(item.rating ?? 5.0).toFixed(1)} Rating</span>
                           </div>
-                        )}
+                        </div>
 
                         <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
                       </CardContent>
@@ -763,7 +788,7 @@ const CMS = () => {
                         variant="ghost"
                         size="sm"
                         className="h-7 px-2 text-[11px]"
-                        onClick={() => handleToggleServiceStatus(item._id)}
+                        onClick={() => requestServiceStatusToggle(item)}
                       >
                         <Power className={`w-3.5 h-3.5 mr-1 ${item.status === "Active" ? "text-chart-green" : "text-muted-foreground"}`} />
                         {item.status === "Active" ? "Active" : "Disabled"}
@@ -963,6 +988,18 @@ const CMS = () => {
         onOpenChange={setEnquiryDetailOpen}
         enquiry={currentEnquiry}
         onSuccess={fetchServiceEnquiries}
+      />
+
+      {/* Service Status Toggle Confirmation Dialog */}
+      <ConfirmDialog
+        open={statusConfirmOpen}
+        onOpenChange={setStatusConfirmOpen}
+        title="Confirm Service Status Change"
+        description={`Are you sure you want to change the status of "${pendingStatusItem?.title}" to ${pendingStatusItem?.status === "Active" ? "Disabled / Inactive" : "Active"}?`}
+        confirmText={`Mark as ${pendingStatusItem?.status === "Active" ? "Disabled" : "Active"}`}
+        cancelText="Cancel"
+        loading={statusToggleLoading}
+        onConfirm={handleConfirmStatusToggle}
       />
 
     </div>

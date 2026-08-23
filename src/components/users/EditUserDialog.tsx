@@ -82,6 +82,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
   const [primaryEducations, setPrimaryEducations] = useState<any[]>([]);
   const [higherEducations, setHigherEducations] = useState<any[]>([]);
   const [occupations, setOccupations] = useState<any[]>([]);
+  const [masterInterests, setMasterInterests] = useState<any[]>([]);
 
   // We can import masterDataService
   // console.log("educations", educations);
@@ -145,7 +146,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
       // Fetch all needed dropdown data
       const fetchData = async () => {
         try {
-          const [r, c, l, lang, pe, he, o] = await Promise.all([
+          const [r, c, l, lang, pe, he, o, intr] = await Promise.all([
             masterDataService.getSimpleList('religions'),
             masterDataService.getSimpleList('castes'),
             masterDataService.getSimpleList('locations'),
@@ -153,6 +154,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
             masterDataService.getSimpleList('primaryEducations'),
             masterDataService.getSimpleList('higherEducations'),
             masterDataService.getSimpleList('occupations'),
+            masterDataService.getSimpleList('interests'),
           ]);
 
           setReligions(r.data);
@@ -162,6 +164,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
           setPrimaryEducations(pe.data);
           setHigherEducations(he.data);
           setOccupations(o.data);
+          setMasterInterests(intr.data);
         } catch (err) {
           console.error("Failed to fetch dropdown data", err);
         }
@@ -690,13 +693,52 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
           <TabsContent value="additional" className="space-y-4">
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="interests">Interests (comma-separated)</Label>
+                <Label htmlFor="interests">Interests</Label>
+                {masterInterests.length > 0 && (
+                  <div className="flex flex-wrap gap-1.5 mb-2">
+                    {masterInterests.map((item) => {
+                      const currentSelected = formData.interests
+                        ? formData.interests.split(",").map((s) => s.trim().toLowerCase())
+                        : [];
+                      const isSelected = currentSelected.includes(item.name.toLowerCase());
+
+                      const toggleInterest = () => {
+                        let list = formData.interests
+                          ? formData.interests.split(",").map((s) => s.trim()).filter(Boolean)
+                          : [];
+                        if (isSelected) {
+                          list = list.filter((i) => i.toLowerCase() !== item.name.toLowerCase());
+                        } else {
+                          list.push(item.name);
+                        }
+                        handleInputChange("interests", list.join(", "));
+                      };
+
+                      return (
+                        <button
+                          key={item._id}
+                          type="button"
+                          onClick={toggleInterest}
+                          className={`text-xs px-2.5 py-1 rounded-full border transition-all flex items-center gap-1 ${
+                            isSelected
+                              ? "bg-primary text-primary-foreground border-primary shadow-xs font-medium"
+                              : "bg-muted/40 hover:bg-muted text-muted-foreground border-border"
+                          }`}
+                        >
+                          <span>{item.name}</span>
+                          {isSelected && <span className="ml-0.5 text-[10px]">✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
                 <Textarea
                   id="interests"
+                  placeholder="Enter or select interests above (comma-separated)"
                   value={formData.interests}
                   onChange={(e) => handleInputChange("interests", e.target.value)}
+                  rows={2}
                 />
-
               </div>
             </div>
 

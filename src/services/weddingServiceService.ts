@@ -43,6 +43,9 @@ export const weddingServiceCategories = [
   "DJ & Music",
   "Bridal Wear",
   "Transportation",
+  "Event Management",
+  "Cocktail Launch",
+  "Anchors & Hostesses",
   "Other Services",
 ];
 

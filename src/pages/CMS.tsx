@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Image, FileText, Heart, Plus, MoreHorizontal, Eye, Edit, Trash2, Upload } from "lucide-react";
+import { Image as ImageIcon, FileText, Heart, Plus, MoreHorizontal, Eye, Edit, Trash2, Upload, Video, Camera, Youtube, ExternalLink, Power } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchBannersAsync, setCurrentBanner, dataCountAsync } from "@/store/slices/bannerSlice";
@@ -23,10 +23,18 @@ import { StoryDeleteDialog } from "@/components/cms/stories/StoryDeleteDialog";
 import { StaticPageAddDialog } from "@/components/cms/pages/StaticPageAddDialog";
 import { StaticPageEditDialog } from "@/components/cms/pages/StaticPageEditDialog";
 import { StaticPageDeleteDialog } from "@/components/cms/pages/StaticPageDeleteDialog";
+
+import { ExploreAddDialog } from "@/components/cms/explore/ExploreAddDialog";
+import { ExploreEditDialog } from "@/components/cms/explore/ExploreEditDialog";
+import { ExploreDeleteDialog } from "@/components/cms/explore/ExploreDeleteDialog";
+import { ExploreItem, exploreService } from "@/services/exploreService";
+
 import { useState, useEffect } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 const CMS = () => {
   const dispatch = useAppDispatch();
+  const { toast } = useToast();
   const { banners, listLoading: bannersLoading, currentBanner, dataCount } = useAppSelector((state) => state.banner);
   const { stories, listLoading: storiesLoading, currentStory } = useAppSelector((state) => state.successStory);
   const { pages, listLoading: pagesLoading, currentPage } = useAppSelector((state) => state.staticPage);
@@ -43,11 +51,19 @@ const CMS = () => {
   const [editPageOpen, setEditPageOpen] = useState(false);
   const [deletePageOpen, setDeletePageOpen] = useState(false);
 
+  // Explore Gallery State
+  const [exploreItems, setExploreItems] = useState<ExploreItem[]>([]);
+  const [exploreLoading, setExploreLoading] = useState(false);
+  const [addExploreOpen, setAddExploreOpen] = useState(false);
+  const [editExploreOpen, setEditExploreOpen] = useState(false);
+  const [deleteExploreOpen, setDeleteExploreOpen] = useState(false);
+  const [currentExploreItem, setCurrentExploreItem] = useState<ExploreItem | null>(null);
+
   const [activeTab, setActiveTab] = useState("banners");
 
   useEffect(() => {
-    // Fetch counts on mount
     dispatch(dataCountAsync());
+    fetchExploreItems();
   }, [dispatch]);
 
   useEffect(() => {
@@ -57,8 +73,32 @@ const CMS = () => {
       dispatch(fetchStoriesAsync(undefined));
     } else if (activeTab === "pages") {
       dispatch(fetchPagesAsync());
+    } else if (activeTab === "explore") {
+      fetchExploreItems();
     }
   }, [activeTab, dispatch]);
+
+  const fetchExploreItems = async () => {
+    try {
+      setExploreLoading(true);
+      const data = await exploreService.getExploreItems();
+      setExploreItems(data);
+    } catch (err) {
+      console.error("Failed to load explore items", err);
+    } finally {
+      setExploreLoading(false);
+    }
+  };
+
+  const handleToggleExploreStatus = async (id: string) => {
+    try {
+      await exploreService.toggleExploreStatus(id);
+      toast({ title: "Status Updated", description: "Explore item status changed" });
+      fetchExploreItems();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to update status", variant: "destructive" });
+    }
+  };
 
   const handleEditBanner = (banner: Banner) => {
     dispatch(setCurrentBanner(banner));
@@ -90,60 +130,56 @@ const CMS = () => {
     setDeletePageOpen(true);
   };
 
+  const handleEditExplore = (item: ExploreItem) => {
+    setCurrentExploreItem(item);
+    setEditExploreOpen(true);
+  };
+
+  const handleDeleteExplore = (item: ExploreItem) => {
+    setCurrentExploreItem(item);
+    setDeleteExploreOpen(true);
+  };
+
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Content Management</h1>
-          <p className="text-sm text-muted-foreground">Manage banners, pages, and success stories</p>
+          <p className="text-sm text-muted-foreground">Manage banners, static pages, success stories, and explore gallery</p>
         </div>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
-        <Card className="stat-card-shadow border-0">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Image className="w-5 h-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Active Banners</p>
-              <p className="text-xl font-semibold text-foreground">{dataCount?.data?.banners || 0}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="stat-card-shadow border-0">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-chart-orange/10 flex items-center justify-center">
-              <FileText className="w-5 h-5 text-chart-orange" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Static Pages</p>
-              <p className="text-xl font-semibold text-foreground">{dataCount?.data?.staticPages || 0}</p>
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="stat-card-shadow border-0">
-          <CardContent className="p-4 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-chart-green/10 flex items-center justify-center">
-              <Heart className="w-5 h-5 text-chart-green" />
-            </div>
-            <div>
-              <p className="text-xs text-muted-foreground uppercase tracking-wide">Success Stories</p>
-              <p className="text-xl font-semibold text-foreground">{dataCount?.data?.successStories || 0}</p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="bg-muted/50">
-          <TabsTrigger value="banners">Banners</TabsTrigger>
-          <TabsTrigger value="pages">Static Pages</TabsTrigger>
-          <TabsTrigger value="stories">Success Stories</TabsTrigger>
+        <TabsList className="bg-muted/50 p-1 flex-wrap h-auto gap-1">
+          <TabsTrigger value="banners" className="flex items-center gap-2">
+            Banners
+            <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-xs font-semibold">
+              {dataCount?.data?.banners || banners.length || 0}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="pages" className="flex items-center gap-2">
+            Static Pages
+            <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-xs font-semibold">
+              {dataCount?.data?.staticPages || pages.length || 0}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="stories" className="flex items-center gap-2">
+            Success Stories
+            <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-xs font-semibold">
+              {dataCount?.data?.successStories || stories.length || 0}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="explore" className="flex items-center gap-2">
+            <Camera className="w-4 h-4 text-primary" />
+            Explore Gallery
+            <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-xs font-semibold">
+              {exploreItems.length}
+            </Badge>
+          </TabsTrigger>
         </TabsList>
 
+        {/* BANNERS */}
         <TabsContent value="banners" className="space-y-4">
           <div className="flex justify-end">
             <Button className="bg-primary hover:bg-primary/90" onClick={() => setAddBannerOpen(true)}>
@@ -188,7 +224,7 @@ const CMS = () => {
                                 <img src={banner.imageUrl} alt={banner.title} className="w-full h-full object-cover" />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                                  <Image className="w-4 h-4" />
+                                  <ImageIcon className="w-4 h-4" />
                                 </div>
                               )}
                             </div>
@@ -235,13 +271,15 @@ const CMS = () => {
                           </DropdownMenu>
                         </TableCell>
                       </TableRow>
-                    )))}
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* STATIC PAGES */}
         <TabsContent value="pages" className="space-y-4">
           <div className="flex justify-end">
             <Button className="bg-primary hover:bg-primary/90" onClick={() => setAddPageOpen(true)}>
@@ -319,6 +357,7 @@ const CMS = () => {
           </Card>
         </TabsContent>
 
+        {/* SUCCESS STORIES */}
         <TabsContent value="stories" className="space-y-4">
           <div className="flex justify-end">
             <Button className="bg-primary hover:bg-primary/90" onClick={() => setAddStoryOpen(true)}>
@@ -338,13 +377,13 @@ const CMS = () => {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {stories.map((story) => (
-                <Card key={story._id} className="stat-card-shadow border-0 overflow-hidden">
-                  <div className="h-40 overflow-hidden bg-muted flex items-center justify-center">
+                <Card key={story._id} className="stat-card-shadow border-0 overflow-hidden group flex flex-col justify-between">
+                  <div className="h-64 sm:h-72 overflow-hidden bg-muted flex items-center justify-center relative">
                     {story.imageUrl ? (
                       <img
                         src={story.imageUrl}
                         alt={story.coupleName}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover object-top group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
                       <Heart className="w-10 h-10 text-muted-foreground/30" />
@@ -382,7 +421,119 @@ const CMS = () => {
             </div>
           )}
         </TabsContent>
+
+        {/* EXPLORE GALLERY */}
+        <TabsContent value="explore" className="space-y-4">
+          <div className="flex justify-between items-center">
+            <p className="text-sm text-muted-foreground">Manage wedding photos and YouTube Shorts video highlights shown on the user Explore gallery page.</p>
+            <Button className="bg-primary hover:bg-primary/90" onClick={() => setAddExploreOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Photo / Video
+            </Button>
+          </div>
+
+          {exploreLoading ? (
+            <div className="flex items-center justify-center p-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : exploreItems.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed rounded-lg space-y-3">
+              <Camera className="w-10 h-10 text-muted-foreground" />
+              <div>
+                <p className="font-semibold text-foreground">No Explore Items Found</p>
+                <p className="text-xs text-muted-foreground">Upload marriage photos or add YouTube Shorts links to build trust with users.</p>
+              </div>
+              <Button onClick={() => setAddExploreOpen(true)} size="sm" variant="outline">
+                <Plus className="w-4 h-4 mr-2" /> Add First Item
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">
+              {exploreItems.map((item) => (
+                <Card key={item._id} className="stat-card-shadow border-0 overflow-hidden group flex flex-col justify-between">
+                  <div>
+                    <div className="relative h-32 sm:h-36 overflow-hidden bg-black flex items-center justify-center">
+                      {item.thumbnailUrl || item.imageUrl ? (
+                        <img
+                          src={item.thumbnailUrl || item.imageUrl}
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      ) : (
+                        <Camera className="w-8 h-8 text-muted-foreground" />
+                      )}
+
+                      {item.type === "video" && (
+                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
+                          <div className="w-8 h-8 rounded-full bg-red-600/90 flex items-center justify-center text-white shadow-md">
+                            <Youtube className="w-4 h-4 fill-current" />
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="absolute top-1.5 left-1.5 flex gap-1">
+                        <Badge variant="secondary" className="bg-black/70 text-white backdrop-blur-sm text-[9px] uppercase tracking-wider border-0 px-1.5 py-0.5">
+                          {item.type === "video" ? "Shorts" : "Photo"}
+                        </Badge>
+                      </div>
+
+                      <div className="absolute top-1.5 right-1.5">
+                        <Badge
+                          className={`text-[9px] border-0 px-1.5 py-0.5 ${
+                            item.status === "Active" ? "bg-chart-green text-white" : "bg-muted-foreground text-white"
+                          }`}
+                        >
+                          {item.status}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <CardContent className="p-2.5 space-y-1">
+                      <div>
+                        <h4 className="font-semibold text-xs leading-tight line-clamp-1" title={item.title}>
+                          {item.title}
+                        </h4>
+                        {item.coupleName && (
+                          <p className="text-[11px] text-primary font-medium line-clamp-1">{item.coupleName}</p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </div>
+
+                  <div className="px-2.5 pb-2.5 pt-1.5 border-t flex items-center justify-between text-xs">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-1.5 text-[10px]"
+                      onClick={() => handleToggleExploreStatus(item._id)}
+                    >
+                      <Power className={`w-3 h-3 mr-1 ${item.status === "Active" ? "text-chart-green" : "text-muted-foreground"}`} />
+                      {item.status === "Active" ? "Active" : "Off"}
+                    </Button>
+
+                    <div className="flex gap-0.5">
+                      {item.youtubeUrl && (
+                        <a href={item.youtubeUrl} target="_blank" rel="noreferrer" title="Open YouTube Link">
+                          <Button variant="ghost" size="icon" className="h-6 w-6">
+                            <ExternalLink className="w-3 h-3" />
+                          </Button>
+                        </a>
+                      )}
+                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleEditExplore(item)}>
+                        <Edit className="w-3 h-3" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => handleDeleteExplore(item)}>
+                        <Trash2 className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
       </Tabs>
+
       {/* Banner Dialogs */}
       <BannerAddDialog open={addBannerOpen} onOpenChange={setAddBannerOpen} />
       <BannerEditDialog open={editBannerOpen} onOpenChange={setEditBannerOpen} banner={currentBanner} />
@@ -397,6 +548,11 @@ const CMS = () => {
       <StaticPageAddDialog open={addPageOpen} onOpenChange={setAddPageOpen} />
       <StaticPageEditDialog open={editPageOpen} onOpenChange={setEditPageOpen} page={currentPage} />
       <StaticPageDeleteDialog open={deletePageOpen} onOpenChange={setDeletePageOpen} page={currentPage} />
+
+      {/* Explore Dialogs */}
+      <ExploreAddDialog open={addExploreOpen} onOpenChange={setAddExploreOpen} onSuccess={fetchExploreItems} />
+      <ExploreEditDialog open={editExploreOpen} onOpenChange={setEditExploreOpen} item={currentExploreItem} onSuccess={fetchExploreItems} />
+      <ExploreDeleteDialog open={deleteExploreOpen} onOpenChange={setDeleteExploreOpen} item={currentExploreItem} onSuccess={fetchExploreItems} />
     </div>
   );
 };

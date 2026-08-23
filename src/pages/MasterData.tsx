@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Plus, Edit, Trash2, Database, Book, Briefcase, MapPin, Languages, Heart } from "lucide-react";
+import { Search, Plus, Edit, Trash2, Database, Book, Briefcase, MapPin, Languages, Heart, Sparkles } from "lucide-react";
 
 import {
   fetchMasterDataAsync,
@@ -38,6 +38,7 @@ const MasterData = () => {
     occupations: "Profession",
     languages: "Language",
     locations: "Location",
+    interests: "Interest",
   };
 
   useEffect(() => {
@@ -187,6 +188,15 @@ const MasterData = () => {
             <p className="text-xl font-semibold">{counts?.languages || 0}</p>
           </CardContent>
         </Card>
+        <Card className="stat-card-shadow border-0">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Sparkles className="w-4 h-4 text-amber-500" />
+              <span className="text-xs text-muted-foreground uppercase">Interests</span>
+            </div>
+            <p className="text-xl font-semibold">{counts?.interests || 0}</p>
+          </CardContent>
+        </Card>
       </div>
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={(v) => {
@@ -200,6 +210,7 @@ const MasterData = () => {
           <TabsTrigger value="primaryEducations">Qualification Level</TabsTrigger>
           <TabsTrigger value="occupations">Profession</TabsTrigger>
           <TabsTrigger value="languages">Language</TabsTrigger>
+          <TabsTrigger value="interests">Interest</TabsTrigger>
         </TabsList>
 
         <TabsContent value={activeTab} className="space-y-4">

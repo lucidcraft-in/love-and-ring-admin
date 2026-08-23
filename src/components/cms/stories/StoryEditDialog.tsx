@@ -12,6 +12,7 @@ import { Loader2, Upload, X, Crop } from "lucide-react";
 import { ImageCropModal } from "@/components/common/ImageCropModal";
 import { RichTextEditor } from "@/components/common/RichTextEditor";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useToast } from "@/hooks/use-toast";
 
 interface StoryEditDialogProps {
   open: boolean;
@@ -21,6 +22,7 @@ interface StoryEditDialogProps {
 
 export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogProps) {
   const dispatch = useAppDispatch();
+  const { toast } = useToast();
   const { updateLoading, error } = useAppSelector((state) => state.successStory);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -90,6 +92,15 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 100 * 1024 * 1024) {
+        toast({
+          title: "File Too Large",
+          description: "Image size must be up to 100 MB",
+          variant: "destructive",
+        });
+        e.target.value = "";
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
@@ -162,7 +173,7 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
                 id="edit-coupleName"
                 value={formData.coupleName}
                 onChange={(e) => setFormData((prev) => ({ ...prev, coupleName: e.target.value }))}
-                placeholder="Rahul & Priya"
+                placeholder="Rahul &amp; Priya"
                 required
               />
             </div>
@@ -240,15 +251,31 @@ export function StoryEditDialog({ open, onOpenChange, story }: StoryEditDialogPr
                   </div>
                 )}
                 <div className="flex-1 flex flex-col gap-2">
-                  <div
-                    onClick={() => fileInputRef.current?.click()}
-                    className="flex items-center justify-center w-full h-24 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="flex flex-col items-center">
-                      <Upload className="w-5 h-5 text-muted-foreground mb-1" />
-                      <span className="text-xs text-muted-foreground">Change Image</span>
-                    </div>
+                  <div className="flex gap-2">
+                    {/* {imagePreview && (
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setShowCropModal(true)}
+                        className="gap-1 text-xs flex-1"
+                      >
+                        <Crop className="w-3.5 h-3.5" />
+                        Crop &amp; Adjust
+                      </Button>
+                    )} */}
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="gap-1 text-xs flex-1"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      {imagePreview ? "Change Image" : "Upload Image"}
+                    </Button>
                   </div>
+                  <span className="text-xs text-muted-foreground">PNG, JPG, WEBP up to 100MB</span>
                 </div>
               </div>
             </div>

@@ -10,6 +10,7 @@ import { useState, useEffect, useRef } from "react";
 import { Loader2, Upload, X, Crop } from "lucide-react";
 import { ImageCropModal } from "@/components/common/ImageCropModal";
 import { RichTextEditor } from "@/components/common/RichTextEditor";
+import { useToast } from "@/hooks/use-toast";
 
 interface StoryAddDialogProps {
   open: boolean;
@@ -18,6 +19,7 @@ interface StoryAddDialogProps {
 
 export function StoryAddDialog({ open, onOpenChange }: StoryAddDialogProps) {
   const dispatch = useAppDispatch();
+  const { toast } = useToast();
   const { createLoading, error } = useAppSelector((state) => state.successStory);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
 
@@ -81,6 +83,15 @@ export function StoryAddDialog({ open, onOpenChange }: StoryAddDialogProps) {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 100 * 1024 * 1024) {
+        toast({
+          title: "File Too Large",
+          description: "Image size must be up to 100 MB",
+          variant: "destructive",
+        });
+        e.target.value = "";
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         const result = reader.result as string;
@@ -226,7 +237,7 @@ export function StoryAddDialog({ open, onOpenChange }: StoryAddDialogProps) {
                 >
                   <Upload className="w-8 h-8 text-muted-foreground mb-2" />
                   <span className="text-sm font-medium">Click to upload image</span>
-                  <span className="text-xs text-muted-foreground mt-1">PNG, JPG up to 5MB</span>
+                  <span className="text-xs text-muted-foreground mt-1">PNG, JPG, WEBP up to 100MB</span>
                 </div>
               ) : (
                 <div className="relative rounded-lg overflow-hidden border border-border group">

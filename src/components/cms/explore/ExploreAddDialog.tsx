@@ -136,7 +136,7 @@ export const ExploreAddDialog = ({
             <TabsList className="grid grid-cols-2 w-full">
               <TabsTrigger value="image" className="flex items-center gap-2">
                 <ImageIcon className="w-4 h-4" />
-                Marriage Photo (S3 Upload)
+                Marriage Photo
               </TabsTrigger>
               <TabsTrigger value="video" className="flex items-center gap-2">
                 <Video className="w-4 h-4" />

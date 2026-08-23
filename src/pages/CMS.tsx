@@ -29,8 +29,17 @@ import { ExploreEditDialog } from "@/components/cms/explore/ExploreEditDialog";
 import { ExploreDeleteDialog } from "@/components/cms/explore/ExploreDeleteDialog";
 import { ExploreItem, exploreService } from "@/services/exploreService";
 
+import { ServiceAddDialog } from "@/components/cms/services/ServiceAddDialog";
+import { ServiceEditDialog } from "@/components/cms/services/ServiceEditDialog";
+import { ServiceDeleteDialog } from "@/components/cms/services/ServiceDeleteDialog";
+import { ServiceEnquiryDetailDialog } from "@/components/cms/services/ServiceEnquiryDetailDialog";
+import { WeddingServiceItem, ServiceEnquiryItem, weddingServiceService, weddingServiceCategories } from "@/services/weddingServiceService";
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { Briefcase, MapPin, Phone, Mail, Search, Inbox, Calendar, User } from "lucide-react";
+
+
 
 const CMS = () => {
   const dispatch = useAppDispatch();
@@ -59,11 +68,31 @@ const CMS = () => {
   const [deleteExploreOpen, setDeleteExploreOpen] = useState(false);
   const [currentExploreItem, setCurrentExploreItem] = useState<ExploreItem | null>(null);
 
+  // Wedding Services State
+  const [weddingServices, setWeddingServices] = useState<WeddingServiceItem[]>([]);
+  const [servicesLoading, setServicesLoading] = useState(false);
+  const [addServiceOpen, setAddServiceOpen] = useState(false);
+  const [editServiceOpen, setEditServiceOpen] = useState(false);
+  const [deleteServiceOpen, setDeleteServiceOpen] = useState(false);
+  const [currentServiceItem, setCurrentServiceItem] = useState<WeddingServiceItem | null>(null);
+  const [serviceCategoryFilter, setServiceCategoryFilter] = useState("ALL");
+  const [serviceSearchQuery, setServiceSearchQuery] = useState("");
+
+  // Service Enquiries State
+  const [serviceEnquiries, setServiceEnquiries] = useState<ServiceEnquiryItem[]>([]);
+  const [enquiriesLoading, setEnquiriesLoading] = useState(false);
+  const [currentEnquiry, setCurrentEnquiry] = useState<ServiceEnquiryItem | null>(null);
+  const [enquiryDetailOpen, setEnquiryDetailOpen] = useState(false);
+  const [enquiryStatusFilter, setEnquiryStatusFilter] = useState("ALL");
+  const [enquirySearchQuery, setEnquirySearchQuery] = useState("");
+
   const [activeTab, setActiveTab] = useState("banners");
 
   useEffect(() => {
     dispatch(dataCountAsync());
     fetchExploreItems();
+    fetchWeddingServices();
+    fetchServiceEnquiries();
   }, [dispatch]);
 
   useEffect(() => {
@@ -75,8 +104,68 @@ const CMS = () => {
       dispatch(fetchPagesAsync());
     } else if (activeTab === "explore") {
       fetchExploreItems();
+    } else if (activeTab === "services") {
+      fetchWeddingServices();
+    } else if (activeTab === "service-enquiries") {
+      fetchServiceEnquiries();
     }
   }, [activeTab, dispatch]);
+
+  const fetchServiceEnquiries = async () => {
+    try {
+      setEnquiriesLoading(true);
+      const data = await weddingServiceService.getServiceEnquiries();
+      setServiceEnquiries(data);
+    } catch (err) {
+      console.error("Failed to load service enquiries", err);
+    } finally {
+      setEnquiriesLoading(false);
+    }
+  };
+
+  const handleDeleteEnquiry = async (id: string) => {
+    try {
+      await weddingServiceService.deleteServiceEnquiry(id);
+      toast({ title: "Enquiry Deleted", description: "Service enquiry deleted successfully" });
+      fetchServiceEnquiries();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to delete enquiry", variant: "destructive" });
+    }
+  };
+
+
+  const fetchWeddingServices = async () => {
+    try {
+      setServicesLoading(true);
+      const data = await weddingServiceService.getWeddingServices();
+      setWeddingServices(data);
+    } catch (err) {
+      console.error("Failed to load wedding services", err);
+    } finally {
+      setServicesLoading(false);
+    }
+  };
+
+  const handleToggleServiceStatus = async (id: string) => {
+    try {
+      await weddingServiceService.toggleWeddingServiceStatus(id);
+      toast({ title: "Status Updated", description: "Wedding service status changed" });
+      fetchWeddingServices();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message || "Failed to update status", variant: "destructive" });
+    }
+  };
+
+  const handleEditService = (item: WeddingServiceItem) => {
+    setCurrentServiceItem(item);
+    setEditServiceOpen(true);
+  };
+
+  const handleDeleteService = (item: WeddingServiceItem) => {
+    setCurrentServiceItem(item);
+    setDeleteServiceOpen(true);
+  };
+
 
   const fetchExploreItems = async () => {
     try {
@@ -177,7 +266,23 @@ const CMS = () => {
               {exploreItems.length}
             </Badge>
           </TabsTrigger>
+          <TabsTrigger value="services" className="flex items-center gap-2">
+            <Briefcase className="w-4 h-4 text-primary" />
+            Wedding Services
+            <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-xs font-semibold">
+              {weddingServices.length}
+            </Badge>
+          </TabsTrigger>
+          <TabsTrigger value="service-enquiries" className="flex items-center gap-2">
+            <Inbox className="w-4 h-4 text-primary" />
+            Service Enquiries
+            <Badge variant="secondary" className="rounded-full px-2 py-0.5 text-xs font-semibold">
+              {serviceEnquiries.length}
+            </Badge>
+          </TabsTrigger>
         </TabsList>
+
+
 
         {/* BANNERS */}
         <TabsContent value="banners" className="space-y-4">
@@ -532,6 +637,299 @@ const CMS = () => {
             </div>
           )}
         </TabsContent>
+        {/* WEDDING SERVICES */}
+        <TabsContent value="services" className="space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <p className="text-sm text-muted-foreground">Manage wedding vendors &amp; services like photographers, catering, venues, decorators, etc.</p>
+            <Button className="bg-primary hover:bg-primary/90" onClick={() => setAddServiceOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add New Service
+            </Button>
+          </div>
+
+          {/* Filters & Search */}
+          <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-card p-3 rounded-lg border">
+            <div className="relative w-full sm:w-72">
+              <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
+              <Input
+                placeholder="Search services or location..."
+                value={serviceSearchQuery}
+                onChange={(e) => setServiceSearchQuery(e.target.value)}
+                className="pl-9 text-xs"
+              />
+            </div>
+
+            <div className="flex gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+              <Button
+                variant={serviceCategoryFilter === "ALL" ? "default" : "outline"}
+                size="sm"
+                className="text-xs h-8"
+                onClick={() => setServiceCategoryFilter("ALL")}
+              >
+                All ({weddingServices.length})
+              </Button>
+              {weddingServiceCategories.map((cat) => {
+                const count = weddingServices.filter((s) => s.category === cat).length;
+                return (
+                  <Button
+                    key={cat}
+                    variant={serviceCategoryFilter === cat ? "default" : "outline"}
+                    size="sm"
+                    className="text-xs h-8 whitespace-nowrap"
+                    onClick={() => setServiceCategoryFilter(cat)}
+                  >
+                    {cat} ({count})
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+
+          {servicesLoading ? (
+            <div className="flex items-center justify-center p-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : weddingServices.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed rounded-lg space-y-3">
+              <Briefcase className="w-10 h-10 text-muted-foreground" />
+              <div>
+                <p className="font-semibold text-foreground">No Wedding Services Found</p>
+                <p className="text-xs text-muted-foreground">Add photographers, catering teams, banquet halls &amp; other wedding service partners.</p>
+              </div>
+              <Button onClick={() => setAddServiceOpen(true)} size="sm" variant="outline">
+                <Plus className="w-4 h-4 mr-2" /> Add First Service
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {weddingServices
+                .filter((item) => {
+                  const matchesCat = serviceCategoryFilter === "ALL" || item.category === serviceCategoryFilter;
+                  const matchesSearch =
+                    !serviceSearchQuery ||
+                    item.title.toLowerCase().includes(serviceSearchQuery.toLowerCase()) ||
+                    item.description.toLowerCase().includes(serviceSearchQuery.toLowerCase()) ||
+                    (item.location && item.location.toLowerCase().includes(serviceSearchQuery.toLowerCase()));
+                  return matchesCat && matchesSearch;
+                })
+                .map((item) => (
+                  <Card key={item._id} className="stat-card-shadow border-0 overflow-hidden group flex flex-col justify-between">
+                    <div>
+                      <div className="relative h-44 overflow-hidden bg-muted">
+                        <img
+                          src={item.imageUrl}
+                          alt={item.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute top-2 left-2 flex gap-1">
+                          <Badge className="bg-primary/90 text-primary-foreground backdrop-blur-sm text-[10px]">
+                            {item.category}
+                          </Badge>
+                        </div>
+                        <div className="absolute top-2 right-2">
+                          <Badge
+                            className={`text-[10px] ${
+                              item.status === "Active" ? "bg-chart-green text-white" : "bg-muted-foreground text-white"
+                            }`}
+                          >
+                            {item.status}
+                          </Badge>
+                        </div>
+                      </div>
+
+                      <CardContent className="p-4 space-y-2">
+                        <div>
+                          <h3 className="font-semibold text-base leading-tight line-clamp-1">{item.title}</h3>
+                          {item.location && (
+                            <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                              <MapPin className="w-3 h-3 text-primary" />
+                              {item.location}
+                            </p>
+                          )}
+                        </div>
+
+                        {item.priceRange && (
+                          <div className="text-xs font-semibold text-primary bg-primary/10 px-2 py-1 rounded inline-block">
+                            {item.priceRange}
+                          </div>
+                        )}
+
+                        <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
+                      </CardContent>
+                    </div>
+
+                    <div className="px-4 pb-3 pt-2 border-t flex items-center justify-between text-xs">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 px-2 text-[11px]"
+                        onClick={() => handleToggleServiceStatus(item._id)}
+                      >
+                        <Power className={`w-3.5 h-3.5 mr-1 ${item.status === "Active" ? "text-chart-green" : "text-muted-foreground"}`} />
+                        {item.status === "Active" ? "Active" : "Disabled"}
+                      </Button>
+
+                      <div className="flex gap-1">
+                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditService(item)}>
+                          <Edit className="w-3.5 h-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteService(item)}>
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* SERVICE ENQUIRIES */}
+        <TabsContent value="service-enquiries" className="space-y-4">
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <p className="text-sm text-muted-foreground">Review and manage client enquiry requests for wedding vendors &amp; services.</p>
+          </div>
+
+          {/* Filters & Search */}
+          <div className="flex flex-col sm:flex-row gap-3 items-center justify-between bg-card p-3 rounded-lg border">
+            <div className="relative w-full sm:w-80">
+              <Search className="w-4 h-4 absolute left-3 top-3 text-muted-foreground" />
+              <Input
+                placeholder="Search by client name, email, enquiry ID, or service..."
+                value={enquirySearchQuery}
+                onChange={(e) => setEnquirySearchQuery(e.target.value)}
+                className="pl-9 text-xs"
+              />
+            </div>
+
+            <div className="flex gap-1.5 overflow-x-auto w-full sm:w-auto pb-1 sm:pb-0">
+              {["ALL", "Pending", "Contacted", "Resolved", "Cancelled"].map((st) => {
+                const count = st === "ALL" ? serviceEnquiries.length : serviceEnquiries.filter((e) => e.status === st).length;
+                return (
+                  <Button
+                    key={st}
+                    variant={enquiryStatusFilter === st ? "default" : "outline"}
+                    size="sm"
+                    className="text-xs h-8 whitespace-nowrap"
+                    onClick={() => setEnquiryStatusFilter(st)}
+                  >
+                    {st} ({count})
+                  </Button>
+                );
+              })}
+            </div>
+          </div>
+
+          {enquiriesLoading ? (
+            <div className="flex items-center justify-center p-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : serviceEnquiries.length === 0 ? (
+            <div className="flex flex-col items-center justify-center p-12 text-center border-2 border-dashed rounded-lg space-y-3">
+              <Inbox className="w-10 h-10 text-muted-foreground" />
+              <div>
+                <p className="font-semibold text-foreground">No Service Enquiries Yet</p>
+                <p className="text-xs text-muted-foreground">Client service enquiries will appear here when submitted from the website.</p>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-card rounded-lg border overflow-hidden shadow-sm">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Enquiry ID</TableHead>
+                    <TableHead>Client Details</TableHead>
+                    <TableHead>Service Requested</TableHead>
+                    <TableHead>Preferred Date</TableHead>
+                    <TableHead>Submitted On</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {serviceEnquiries
+                    .filter((item) => {
+                      const matchesStatus = enquiryStatusFilter === "ALL" || item.status === enquiryStatusFilter;
+                      const matchesSearch =
+                        !enquirySearchQuery ||
+                        item.enquiryId.toLowerCase().includes(enquirySearchQuery.toLowerCase()) ||
+                        item.name.toLowerCase().includes(enquirySearchQuery.toLowerCase()) ||
+                        item.email.toLowerCase().includes(enquirySearchQuery.toLowerCase()) ||
+                        item.serviceTitle.toLowerCase().includes(enquirySearchQuery.toLowerCase());
+                      return matchesStatus && matchesSearch;
+                    })
+                    .map((item) => (
+                      <TableRow key={item._id} className="hover:bg-muted/50">
+                        <TableCell className="font-mono text-xs font-bold text-primary">
+                          {item.enquiryId}
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-0.5">
+                            <p className="font-semibold text-sm leading-tight text-foreground">{item.name}</p>
+                            <p className="text-xs text-muted-foreground">{item.email}</p>
+                            {item.phone && <p className="text-[11px] text-muted-foreground">{item.phone}</p>}
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="space-y-0.5">
+                            <p className="font-medium text-xs text-foreground leading-tight">{item.serviceTitle}</p>
+                            <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-normal">
+                              {item.serviceCategory}
+                            </Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {item.eventDate || "Not specified"}
+                        </TableCell>
+                        <TableCell className="text-xs text-muted-foreground">
+                          {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "N/A"}
+                        </TableCell>
+                        <TableCell>
+                          <Badge
+                            className={`text-[11px] ${
+                              item.status === "Pending"
+                                ? "bg-amber-500 text-white"
+                                : item.status === "Contacted"
+                                ? "bg-blue-500 text-white"
+                                : item.status === "Resolved"
+                                ? "bg-emerald-600 text-white"
+                                : "bg-slate-500 text-white"
+                            }`}
+                          >
+                            {item.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 text-xs gap-1"
+                              onClick={() => {
+                                setCurrentEnquiry(item);
+                                setEnquiryDetailOpen(true);
+                              }}
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                              View / Edit
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-destructive"
+                              onClick={() => handleDeleteEnquiry(item._id)}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </TabsContent>
       </Tabs>
 
       {/* Banner Dialogs */}
@@ -553,8 +951,23 @@ const CMS = () => {
       <ExploreAddDialog open={addExploreOpen} onOpenChange={setAddExploreOpen} onSuccess={fetchExploreItems} />
       <ExploreEditDialog open={editExploreOpen} onOpenChange={setEditExploreOpen} item={currentExploreItem} onSuccess={fetchExploreItems} />
       <ExploreDeleteDialog open={deleteExploreOpen} onOpenChange={setDeleteExploreOpen} item={currentExploreItem} onSuccess={fetchExploreItems} />
+
+      {/* Wedding Service Dialogs */}
+      <ServiceAddDialog open={addServiceOpen} onOpenChange={setAddServiceOpen} onSuccess={fetchWeddingServices} />
+      <ServiceEditDialog open={editServiceOpen} onOpenChange={setEditServiceOpen} item={currentServiceItem} onSuccess={fetchWeddingServices} />
+      <ServiceDeleteDialog open={deleteServiceOpen} onOpenChange={setDeleteServiceOpen} item={currentServiceItem} onSuccess={fetchWeddingServices} />
+
+      {/* Service Enquiry Detail Dialog */}
+      <ServiceEnquiryDetailDialog
+        open={enquiryDetailOpen}
+        onOpenChange={setEnquiryDetailOpen}
+        enquiry={currentEnquiry}
+        onSuccess={fetchServiceEnquiries}
+      />
+
     </div>
   );
 };
 
 export default CMS;
+

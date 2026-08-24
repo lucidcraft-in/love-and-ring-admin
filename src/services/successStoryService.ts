@@ -4,26 +4,41 @@ import Axios from '@/axios/axios';
 // Type Definitions
 // ============================================================================
 
+export interface ServiceUsedItem {
+  serviceId?: string;
+  title: string;
+  category: string;
+  priceRange?: string;
+  location?: string;
+  imageUrl?: string;
+}
+
 export interface SuccessStory {
   _id: string;
   coupleName: string;
   story: string;
   imageUrl: string;
+  galleryPhotos?: string[];
+  videoUrl?: string;
+  servicesUsed?: ServiceUsedItem[];
   status: 'Published' | 'Pending';
   date: string;
   createdAt?: string;
   updatedAt?: string;
-  isPrimary?:boolean;
+  isPrimary?: boolean;
 }
 
 export interface CreateStoryPayload {
-  coupleName : string;
+  coupleName: string;
   story: string;
   status: 'Published' | 'Pending';
   date: string;
   image: File;
-  isPrimary:boolean;
-
+  galleryPhotos?: string[];
+  galleryFiles?: File[];
+  videoUrl?: string;
+  servicesUsed?: ServiceUsedItem[];
+  isPrimary: boolean;
 }
 
 export interface UpdateStoryPayload {
@@ -32,7 +47,11 @@ export interface UpdateStoryPayload {
   status?: 'Published' | 'Pending';
   date?: string;
   image?: File;
-  isPrimary?:boolean;
+  galleryPhotos?: string[];
+  galleryFiles?: File[];
+  videoUrl?: string;
+  servicesUsed?: ServiceUsedItem[];
+  isPrimary?: boolean;
 }
 
 export interface GetStoriesParams {
@@ -61,7 +80,7 @@ export const successStoryService = {
   },
 
   /**
-   * Create new story with image upload
+   * Create new story with image & video & service attachments
    */
   createStory: async (payload: CreateStoryPayload): Promise<SuccessStory> => {
     const formData = new FormData();
@@ -72,6 +91,24 @@ export const successStoryService = {
     formData.append('image', payload.image);
     formData.append('isPrimary', String(payload.isPrimary));
 
+    if (payload.videoUrl) {
+      formData.append('videoUrl', payload.videoUrl);
+    }
+
+    if (payload.galleryPhotos && payload.galleryPhotos.length > 0) {
+      formData.append('galleryPhotos', JSON.stringify(payload.galleryPhotos));
+    }
+
+    if (payload.galleryFiles && payload.galleryFiles.length > 0) {
+      payload.galleryFiles.forEach((file, index) => {
+        formData.append(`galleryPhoto_${index}`, file);
+      });
+    }
+
+    if (payload.servicesUsed && payload.servicesUsed.length > 0) {
+      formData.append('servicesUsed', JSON.stringify(payload.servicesUsed));
+    }
+
     const response = await Axios.post<SuccessStory>('/api/cms/success-stories', formData, {
       headers: {
         'Content-Type': 'multipart/form-data',
@@ -81,7 +118,7 @@ export const successStoryService = {
   },
 
   /**
-   * Update story with optional image upload
+   * Update story with optional image, video & service attachments
    */
   updateStory: async (id: string, payload: UpdateStoryPayload): Promise<SuccessStory> => {
     const formData = new FormData();
@@ -91,6 +128,24 @@ export const successStoryService = {
     if (payload.date) formData.append('date', payload.date);
     if (payload.image) formData.append('image', payload.image);
     if (payload.isPrimary !== undefined) formData.append('isPrimary', String(payload.isPrimary));
+
+    if (payload.videoUrl !== undefined) {
+      formData.append('videoUrl', payload.videoUrl);
+    }
+
+    if (payload.galleryPhotos !== undefined) {
+      formData.append('galleryPhotos', JSON.stringify(payload.galleryPhotos));
+    }
+
+    if (payload.galleryFiles && payload.galleryFiles.length > 0) {
+      payload.galleryFiles.forEach((file, index) => {
+        formData.append(`galleryPhoto_${index}`, file);
+      });
+    }
+
+    if (payload.servicesUsed !== undefined) {
+      formData.append('servicesUsed', JSON.stringify(payload.servicesUsed));
+    }
 
     const response = await Axios.put<SuccessStory>(`/api/cms/success-stories/${id}`, formData, {
       headers: {

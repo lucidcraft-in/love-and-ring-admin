@@ -96,6 +96,10 @@ export const ExploreAddDialog = ({
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 100 * 1024 * 1024) {
+        toast({ title: "Error", description: "Image size must be up to 100 MB", variant: "destructive" });
+        return;
+      }
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }
@@ -201,7 +205,7 @@ export const ExploreAddDialog = ({
                     <label className="cursor-pointer space-y-2 block">
                       <Upload className="w-8 h-8 mx-auto text-muted-foreground" />
                       <span className="text-sm font-medium text-foreground block">Click to select photo file</span>
-                      <span className="text-xs text-muted-foreground block">PNG, JPG, WEBP up to 10MB (Uploaded to S3)</span>
+                      <span className="text-xs text-muted-foreground block">PNG, JPG, WEBP up to 100MB (Uploaded to S3)</span>
                       <input type="file" accept="image/*" onChange={handleImageChange} className="hidden" />
                     </label>
                   )}

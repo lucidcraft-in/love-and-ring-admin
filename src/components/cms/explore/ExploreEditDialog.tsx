@@ -10,10 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { ExploreItem, exploreService } from "@/services/exploreService";
+import { successStoryService, SuccessStory } from "@/services/successStoryService";
 import { extractYoutubeId } from "./ExploreAddDialog";
-import { Edit, Loader2, Youtube, Upload } from "lucide-react";
+import { Edit, Loader2, Youtube, Upload, Heart, Link as LinkIcon } from "lucide-react";
 
 interface ExploreEditDialogProps {
   open: boolean;
@@ -34,21 +36,69 @@ export const ExploreEditDialog = ({
   const [coupleName, setCoupleName] = useState("");
   const [weddingDate, setWeddingDate] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [successStoryId, setSuccessStoryId] = useState<string>("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [loading, setLoading] = useState(false);
 
+  // Success Stories for Dropdown
+  const [stories, setStories] = useState<SuccessStory[]>([]);
+  const [storiesLoading, setStoriesLoading] = useState(false);
+
   useEffect(() => {
-    if (item) {
+    if (open) {
+      fetchSuccessStories();
+    }
+  }, [open]);
+
+  useEffect(() => {
+    if (item && open) {
       setTitle(item.title || "");
       setDescription(item.description || "");
       setCoupleName(item.coupleName || "");
       setWeddingDate(item.weddingDate ? new Date(item.weddingDate).toISOString().split("T")[0] : "");
       setYoutubeUrl(item.youtubeUrl || "");
+      
+      const sId = typeof item.successStoryId === "object" && item.successStoryId
+        ? item.successStoryId._id
+        : (item.successStoryId as string) || "";
+      setSuccessStoryId(sId);
+
       setImagePreview(item.thumbnailUrl || item.imageUrl || "");
       setImageFile(null);
     }
   }, [item, open]);
+
+  const fetchSuccessStories = async () => {
+    try {
+      setStoriesLoading(true);
+      const data = await successStoryService.getStories();
+      setStories(data || []);
+    } catch (err) {
+      console.error("Failed to load success stories for dropdown:", err);
+    } finally {
+      setStoriesLoading(false);
+    }
+  };
+
+  const handleSelectStory = (storyId: string) => {
+    if (storyId === "none") {
+      setSuccessStoryId("");
+      return;
+    }
+
+    setSuccessStoryId(storyId);
+    const selected = stories.find((s) => s._id === storyId);
+    if (selected) {
+      if (!coupleName.trim()) setCoupleName(selected.coupleName);
+      if (!title.trim()) setTitle(`${selected.coupleName}'s Wedding Highlight`);
+      if (!weddingDate && selected.date) {
+        try {
+          setWeddingDate(new Date(selected.date).toISOString().split("T")[0]);
+        } catch (e) {}
+      }
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -73,6 +123,7 @@ export const ExploreEditDialog = ({
       formData.append("title", title);
       formData.append("description", description);
       formData.append("coupleName", coupleName);
+      formData.append("successStoryId", successStoryId);
       if (weddingDate) formData.append("weddingDate", weddingDate);
 
       if (item.type === "video" && youtubeUrl) {
@@ -119,6 +170,30 @@ export const ExploreEditDialog = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Linked Success Story Dropdown */}
+          <div className="space-y-2 bg-muted/30 p-3 rounded-lg border">
+            <Label htmlFor="edit-successStoryId" className="flex items-center gap-1.5 font-semibold text-xs">
+              <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
+              Link Reference to Success Story (Optional)
+            </Label>
+            <Select value={successStoryId || "none"} onValueChange={handleSelectStory}>
+              <SelectTrigger id="edit-successStoryId" className="w-full bg-background">
+                <SelectValue placeholder="-- Select a Success Story Reference --" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">-- No Linked Success Story --</SelectItem>
+                {stories.map((story) => (
+                  <SelectItem key={story._id} value={story._id}>
+                    {story.coupleName} ({new Date(story.date).toLocaleDateString()})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-[11px] text-muted-foreground">
+              Select a couple's success story to link this explore photo/video directly to their story page.
+            </p>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="edit-title">Title / Headline *</Label>

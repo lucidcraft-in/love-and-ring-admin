@@ -45,6 +45,10 @@ export function BannerAddDialog({ open, onOpenChange }: BannerAddDialogProps) {
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 100 * 1024 * 1024) {
+        alert("Image size must be up to 100MB");
+        return;
+      }
       setFormData((prev) => ({ ...prev, image: file }));
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -111,7 +115,7 @@ export function BannerAddDialog({ open, onOpenChange }: BannerAddDialogProps) {
                 <label htmlFor="banner-image" className="cursor-pointer flex flex-col items-center">
                   <Upload className="w-8 h-8 text-primary mb-2" />
                   <span className="text-sm font-medium">Click to upload image</span>
-                  <span className="text-xs text-muted-foreground mt-1">PNG, JPG, WEBP up to 5MB</span>
+                  <span className="text-xs text-muted-foreground mt-1">PNG, JPG, WEBP up to 100MB</span>
                 </label>
               </div>
             ) : (

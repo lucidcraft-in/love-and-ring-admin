@@ -6,6 +6,7 @@ export interface ExploreItem {
   description?: string;
   coupleName?: string;
   weddingDate?: string;
+  successStoryId?: string | { _id: string; coupleName?: string; date?: string; imageUrl?: string };
   type: "image" | "video";
   imageUrl?: string;
   youtubeUrl?: string;

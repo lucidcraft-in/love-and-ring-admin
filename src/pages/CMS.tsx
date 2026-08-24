@@ -508,6 +508,19 @@ const CMS = () => {
                     ) : (
                       <Heart className="w-10 h-10 text-muted-foreground/30" />
                     )}
+
+                    <div className="absolute top-2 left-2 flex flex-col gap-1">
+                      {story.videoUrl && (
+                        <Badge className="bg-red-600/90 text-white text-[10px] border-0 flex items-center gap-1">
+                          <Video className="w-3 h-3" /> Video Attached
+                        </Badge>
+                      )}
+                      {story.servicesUsed && story.servicesUsed.length > 0 && (
+                        <Badge className="bg-primary/90 text-primary-foreground text-[10px] border-0 flex items-center gap-1">
+                          <Briefcase className="w-3 h-3" /> {story.servicesUsed.length} Services Mentioned
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-2">

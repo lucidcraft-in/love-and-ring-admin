@@ -103,6 +103,10 @@ export const ExploreEditDialog = ({
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 100 * 1024 * 1024) {
+        toast({ title: "Error", description: "Image size must be up to 100 MB", variant: "destructive" });
+        return;
+      }
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
     }

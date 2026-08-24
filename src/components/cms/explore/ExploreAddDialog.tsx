@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,10 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { exploreService } from "@/services/exploreService";
-import { Upload, Video, Image as ImageIcon, Loader2, Youtube } from "lucide-react";
+import { successStoryService, SuccessStory } from "@/services/successStoryService";
+import { Upload, Video, Image as ImageIcon, Loader2, Youtube, Heart } from "lucide-react";
 
 interface ExploreAddDialogProps {
   open: boolean;
@@ -40,9 +42,56 @@ export const ExploreAddDialog = ({
   const [coupleName, setCoupleName] = useState("");
   const [weddingDate, setWeddingDate] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [successStoryId, setSuccessStoryId] = useState<string>("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>("");
   const [loading, setLoading] = useState(false);
+
+  // Success Stories list for reference
+  const [stories, setStories] = useState<SuccessStory[]>([]);
+
+  useEffect(() => {
+    if (open) {
+      fetchSuccessStories();
+    } else {
+      setTitle("");
+      setDescription("");
+      setCoupleName("");
+      setWeddingDate("");
+      setYoutubeUrl("");
+      setSuccessStoryId("");
+      setImageFile(null);
+      setImagePreview("");
+    }
+  }, [open]);
+
+  const fetchSuccessStories = async () => {
+    try {
+      const data = await successStoryService.getStories();
+      setStories(data || []);
+    } catch (err) {
+      console.error("Failed to load success stories for dropdown:", err);
+    }
+  };
+
+  const handleSelectStory = (storyId: string) => {
+    if (storyId === "none") {
+      setSuccessStoryId("");
+      return;
+    }
+
+    setSuccessStoryId(storyId);
+    const selected = stories.find((s) => s._id === storyId);
+    if (selected) {
+      if (!coupleName.trim()) setCoupleName(selected.coupleName);
+      if (!title.trim()) setTitle(`${selected.coupleName}'s Wedding Highlight`);
+      if (!weddingDate && selected.date) {
+        try {
+          setWeddingDate(new Date(selected.date).toISOString().split("T")[0]);
+        } catch (e) {}
+      }
+    }
+  };
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -79,6 +128,7 @@ export const ExploreAddDialog = ({
       formData.append("title", title);
       formData.append("description", description);
       formData.append("coupleName", coupleName);
+      formData.append("successStoryId", successStoryId);
       if (weddingDate) formData.append("weddingDate", weddingDate);
       formData.append("type", mediaType);
 
@@ -100,14 +150,6 @@ export const ExploreAddDialog = ({
         description: `Explore ${mediaType === "image" ? "Photo" : "Video"} added successfully`,
       });
 
-      // Reset form
-      setTitle("");
-      setDescription("");
-      setCoupleName("");
-      setWeddingDate("");
-      setYoutubeUrl("");
-      setImageFile(null);
-      setImagePreview("");
       onSuccess();
       onOpenChange(false);
     } catch (err: any) {
@@ -203,6 +245,30 @@ export const ExploreAddDialog = ({
               )}
             </TabsContent>
           </Tabs>
+
+          {/* Linked Success Story Reference */}
+          <div className="space-y-2 bg-muted/30 p-3 rounded-lg border">
+            <Label htmlFor="add-successStoryId" className="flex items-center gap-1.5 font-semibold text-xs">
+              <Heart className="w-4 h-4 text-rose-500 fill-rose-500" />
+              Link Reference to Success Story (Optional)
+            </Label>
+            <Select value={successStoryId || "none"} onValueChange={handleSelectStory}>
+              <SelectTrigger id="add-successStoryId" className="w-full bg-background">
+                <SelectValue placeholder="-- Select a Success Story Reference --" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">-- No Linked Success Story --</SelectItem>
+                {stories.map((story) => (
+                  <SelectItem key={story._id} value={story._id}>
+                    {story.coupleName} ({new Date(story.date).toLocaleDateString()})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-[11px] text-muted-foreground">
+              Select a couple's success story to link this explore photo/video directly to their story page.
+            </p>
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">

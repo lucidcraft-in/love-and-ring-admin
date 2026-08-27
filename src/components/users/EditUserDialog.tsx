@@ -270,6 +270,47 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
   const handleSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!user?._id) return;
+
+    if (!formData.accountFor || !formData.fullName || !formData.email || !formData.mobile || !formData.gender || !formData.dateOfBirth) {
+      setCurrentTab("basic");
+      toast({
+        title: "Validation Error",
+        description: "Please complete all required fields in the Basic tab (*).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.maritalStatus || !formData.heightCm || !formData.weightKg) {
+      setCurrentTab("personal");
+      toast({
+        title: "Validation Error",
+        description: "Marital Status, Height, and Weight are required in the Personal tab (*).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.primaryEducation || !formData.profession) {
+      setCurrentTab("education");
+      toast({
+        title: "Validation Error",
+        description: "Qualification Level and Profession are required in the Education tab (*).",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!formData.city || !formData.religion || !formData.caste || !formData.motherTongue) {
+      setCurrentTab("additional");
+      toast({
+        title: "Validation Error",
+        description: "City, Religion, Caste, and Mother Tongue are required in the Additional tab (*).",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setShowConfirmModal(true);
   };
 
@@ -475,7 +516,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
           <TabsContent value="basic" className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="accountFor">Account For</Label>
+                <Label htmlFor="accountFor">Account For <span className="text-red-500">*</span></Label>
                 <Select value={formData.accountFor} onValueChange={(val) => handleInputChange("accountFor", val)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select" />
@@ -493,7 +534,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="fullName">Full Name</Label>
+                <Label htmlFor="fullName">Full Name <span className="text-red-500">*</span></Label>
                 <Input
                   id="fullName"
                   value={formData.fullName}
@@ -502,12 +543,12 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Email <span className="text-red-500">*</span></Label>
                 <Input id="email" type="email" value={formData.email} onChange={(e) => handleInputChange("email", e.target.value)} />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="mobile">Mobile</Label>
+                <Label htmlFor="mobile">Mobile <span className="text-red-500">*</span></Label>
                 <div className="flex gap-2">
                   <Input
                     className="w-20"
@@ -533,7 +574,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="gender">Gender</Label>
+                <Label htmlFor="gender">Gender <span className="text-red-500">*</span></Label>
                 <Select value={formData.gender} onValueChange={(val) => handleInputChange("gender", val)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select gender" />
@@ -548,7 +589,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="dateOfBirth">Date of Birth</Label>
+                <Label htmlFor="dateOfBirth">Date of Birth <span className="text-red-500">*</span></Label>
                 <Input
                   id="dateOfBirth"
                   type="date"
@@ -583,7 +624,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
           <TabsContent value="personal" className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="heightCm">Height (cm)</Label>
+                <Label htmlFor="heightCm">Height (cm) <span className="text-red-500">*</span></Label>
                 <Input
                   id="heightCm"
                   type="number"
@@ -593,7 +634,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="weightKg">Weight (kg)</Label>
+                <Label htmlFor="weightKg">Weight (kg) <span className="text-red-500">*</span></Label>
                 <Input
                   id="weightKg"
                   type="number"
@@ -603,7 +644,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="maritalStatus">Marital Status</Label>
+                <Label htmlFor="maritalStatus">Marital Status <span className="text-red-500">*</span></Label>
                 <Select value={formData.maritalStatus} onValueChange={(val) => handleInputChange("maritalStatus", val)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select status" />
@@ -664,7 +705,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
               </div> */}
 
               <div className="space-y-2">
-                <Label htmlFor="primaryEducation">Qualification Level</Label>
+                <Label htmlFor="primaryEducation">Qualification Level <span className="text-red-500">*</span></Label>
                 <Select
                   value={formData.primaryEducation}
                   onValueChange={(val) => {
@@ -687,7 +728,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="profession">Profession</Label>
+                <Label htmlFor="profession">Profession <span className="text-red-500">*</span></Label>
                 <Select
                   value={formData.profession}
                   onValueChange={(val) => handleInputChange("profession", val)}
@@ -946,7 +987,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="city">City</Label>
+                <Label htmlFor="city">City <span className="text-red-500">*</span></Label>
                 <Input
                   id="city"
                   placeholder="Enter city name..."
@@ -956,7 +997,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="religion">Religion</Label>
+                <Label htmlFor="religion">Religion <span className="text-red-500">*</span></Label>
                 <Select value={formData.religion} onValueChange={(val) => handleInputChange("religion", val)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select religion" />
@@ -974,7 +1015,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="caste">Caste</Label>
+                <Label htmlFor="caste">Caste <span className="text-red-500">*</span></Label>
                 <Select value={formData.caste} onValueChange={(val) => handleInputChange("caste", val)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select caste" />
@@ -992,7 +1033,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="motherTongue">Mother Tongue</Label>
+                <Label htmlFor="motherTongue">Mother Tongue <span className="text-red-500">*</span></Label>
                 <Select value={formData.motherTongue} onValueChange={(val) => handleInputChange("motherTongue", val)}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select language" />

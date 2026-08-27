@@ -63,17 +63,36 @@ const Users = () => {
     dispatch(fetchUsersAsync({ take: 1000 }));
   }, [dispatch]);
 
+  // Helper function to extract membership plan title
+  const getMembershipPlanTitle = (user: any): string => {
+    if (!user) return "Free Plan";
+    const plan = user.membership?.plan;
+    if (plan) {
+      if (typeof plan === "object") {
+        const title = plan.title || plan.name;
+        if (title) return title;
+      } else if (typeof plan === "string" && plan.trim()) {
+        return plan;
+      }
+    }
+    if (user.profileStatus && typeof user.profileStatus === "string" && user.profileStatus.toLowerCase().includes("million")) {
+      return "Million Club";
+    }
+    return "Free Plan";
+  };
+
   // Helper function to calculate age from date of birth
-  const calculateAge = (dateOfBirth?: string) => {
+  const calculateAge = (dateOfBirth?: string | Date) => {
     if (!dateOfBirth) return "N/A";
     const today = new Date();
     const birthDate = new Date(dateOfBirth);
+    if (isNaN(birthDate.getTime())) return "N/A";
     let age = today.getFullYear() - birthDate.getFullYear();
     const monthDiff = today.getMonth() - birthDate.getMonth();
     if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
       age--;
     }
-    return age;
+    return age >= 0 ? age : "N/A";
   };
 
   const filteredUsers = useMemo(() => {
@@ -95,10 +114,12 @@ const Users = () => {
 
       // Membership - use advanced filter if set, otherwise use main filter
       const effectiveMembership = advancedFilters.membership || membershipFilter;
+      const userPlanTitle = getMembershipPlanTitle(user);
+      const isUserPremium = userPlanTitle !== "Free Plan";
       const matchesMembership =
         effectiveMembership === "all" ||
-        (effectiveMembership === "premium" && user.profileStatus === "COMPLETE") ||
-        (effectiveMembership === "free" && user.profileStatus !== "COMPLETE");
+        (effectiveMembership === "premium" && isUserPremium) ||
+        (effectiveMembership === "free" && !isUserPremium);
 
       // Status - use advanced filter if set, otherwise use main filter
       const effectiveStatus = advancedFilters.status || statusFilter;
@@ -285,7 +306,7 @@ const Users = () => {
     ).length;
 
     const premiumUsers = users.filter(
-      (u) => u.profileStatus !== "BASIC"
+      (u) => getMembershipPlanTitle(u) !== "Free Plan"
     ).length;
 
     return {
@@ -563,9 +584,22 @@ const Users = () => {
                             <TableCell>{calculateAge(user.dateOfBirth)}</TableCell>
                             {/* <TableCell>{user?.city?.city}</TableCell> */}
                             <TableCell>
-                              <Badge variant={user.profileStatus === "COMPLETE" ? "default" : "secondary"}>
-                                {user.profileStatus || "Basic"}
-                              </Badge>
+                              {(() => {
+                                const planTitle = getMembershipPlanTitle(user);
+                                const isFree = planTitle === "Free Plan";
+                                return (
+                                  <Badge
+                                    variant={isFree ? "secondary" : "default"}
+                                    className={
+                                      !isFree
+                                        ? "bg-gradient-to-r from-primary to-secondary text-white font-semibold shadow-xs"
+                                        : "bg-muted text-muted-foreground"
+                                    }
+                                  >
+                                    {planTitle}
+                                  </Badge>
+                                );
+                              })()}
                             </TableCell>
                             <TableCell>
                               <Badge

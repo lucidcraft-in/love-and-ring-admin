@@ -18,6 +18,7 @@ import {
   fetchMasterDataAsync,
 } from "@/store/slices/masterDataSlice";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { getFriendlyActionName, getFriendlyDetails, getStepInfo } from "@/utils/activityLogUtils";
 
 interface User {
   photos?: {
@@ -194,6 +195,32 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
     return "";
   };
 
+  const [userActivityLogs, setUserActivityLogs] = useState<any[]>([]);
+  const [loadingActivityLogs, setLoadingActivityLogs] = useState(false);
+
+  useEffect(() => {
+    if (user?.email && open) {
+      const fetchUserLogs = async () => {
+        setLoadingActivityLogs(true);
+        try {
+          const token = localStorage.getItem("token");
+          const res = await Axios.get("/api/admin/activity-logs", {
+            headers: { Authorization: `Bearer ${token}` },
+            params: { userEmail: user.email, limit: 50 },
+          });
+          if (res.data?.logs) {
+            setUserActivityLogs(res.data.logs);
+          }
+        } catch (err) {
+          console.error("Failed to load user activity logs:", err);
+        } finally {
+          setLoadingActivityLogs(false);
+        }
+      };
+      fetchUserLogs();
+    }
+  }, [user?.email, open]);
+
   useEffect(() => {
     if (user) {
       setFormData({
@@ -203,8 +230,9 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
         countryCode: user.countryCode || "+91",
         mobile: user.mobile || "",
         alternateMobile: user.alternateMobile || "",
-        gender: user.gender || "",
-        dateOfBirth: user.dateOfBirth ? user.dateOfBirth.split("T")[0] : "",
+        dateOfBirth: user.dateOfBirth
+          ? (typeof user.dateOfBirth === "string" ? user.dateOfBirth.split("T")[0] : new Date(user.dateOfBirth).toISOString().split("T")[0])
+          : "",
         preferredLanguage: user.preferredLanguage || "English",
         heightCm: user.heightCm?.toString() || "",
         weightKg: user.weightKg?.toString() || "",
@@ -434,11 +462,12 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
         </div>
 
         <Tabs value={currentTab} onValueChange={setCurrentTab}>
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="basic">Basic</TabsTrigger>
             <TabsTrigger value="personal">Personal</TabsTrigger>
             <TabsTrigger value="education">Education</TabsTrigger>
             <TabsTrigger value="additional">Additional</TabsTrigger>
+            <TabsTrigger value="activity">Activity History</TabsTrigger>
           </TabsList>
 
           {/* STEP 1: BASIC DETAILS */}
@@ -915,6 +944,75 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
                   <Label htmlFor="branch">Branch (ID)</Label>
                   <Input id="branch" value={formData.branch} onChange={(e) => handleInputChange("branch", e.target.value)} />
                 </div> */}
+            </div>
+          </TabsContent>
+
+          {/* STEP 5: ACTIVITY HISTORY */}
+          <TabsContent value="activity" className="space-y-4">
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold text-foreground">User Registration & Event Log History</h4>
+              {loadingActivityLogs ? (
+                <div className="text-center py-6 text-xs text-muted-foreground">Loading activity history...</div>
+              ) : userActivityLogs.length === 0 ? (
+                <div className="text-center py-6 text-xs text-muted-foreground border rounded-lg p-4 bg-muted/20">
+                  No activity logs recorded for this user yet.
+                </div>
+              ) : (
+                <div className="max-h-[320px] overflow-y-auto space-y-2 pr-1">
+                  {userActivityLogs.map((log: any) => {
+                    const stepInfo = getStepInfo(log.step);
+                    const friendlyAction = getFriendlyActionName(log.action, log.step);
+                    const friendlyDetails = getFriendlyDetails(log);
+
+                    return (
+                      <div
+                        key={log._id}
+                        className={`p-3 rounded-lg border text-xs space-y-1.5 ${
+                          log.status === "ERROR"
+                            ? "bg-rose-500/5 border-rose-500/30"
+                            : log.status === "SUCCESS"
+                            ? "bg-emerald-500/5 border-emerald-500/30"
+                            : "bg-muted/30 border-border/50"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between font-medium">
+                          <span className="font-semibold text-foreground">{friendlyAction}</span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {new Date(log.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          {log.step && (
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${stepInfo.color}`}>
+                              {stepInfo.shortName}
+                            </span>
+                          )}
+                          <span
+                            className={`font-semibold text-[10px] ${
+                              log.status === "ERROR"
+                                ? "text-rose-500"
+                                : log.status === "SUCCESS"
+                                ? "text-emerald-500"
+                                : "text-muted-foreground"
+                            }`}
+                          >
+                            [{log.status}]
+                          </span>
+                        </div>
+                        {log.errorMessage ? (
+                          <div className="text-rose-600 dark:text-rose-400 font-medium bg-rose-500/10 p-1.5 rounded border border-rose-500/20">
+                            {log.errorMessage}
+                          </div>
+                        ) : (
+                          <div className="text-[11px] text-muted-foreground leading-relaxed">
+                            {friendlyDetails}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </TabsContent>
         </Tabs>

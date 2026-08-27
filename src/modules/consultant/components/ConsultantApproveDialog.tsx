@@ -1,6 +1,6 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CheckCircle } from "lucide-react";
+import { CheckCircle, Loader2 } from "lucide-react";
 import type { Consultant } from "../types";
 
 interface ConsultantApproveDialogProps {
@@ -8,9 +8,10 @@ interface ConsultantApproveDialogProps {
   onOpenChange: (open: boolean) => void;
   consultant: Consultant | null;
   onApprove: () => void;
+  loading?: boolean;
 }
 
-export function ConsultantApproveDialog({ open, onOpenChange, consultant, onApprove }: ConsultantApproveDialogProps) {
+export function ConsultantApproveDialog({ open, onOpenChange, consultant, onApprove, loading }: ConsultantApproveDialogProps) {
   if (!consultant) return null;
 
   return (
@@ -26,14 +27,21 @@ export function ConsultantApproveDialog({ open, onOpenChange, consultant, onAppr
           </DialogDescription>
         </DialogHeader>
         <p className="text-sm text-muted-foreground">
-          A password setup email will be sent to {consultant.email}.
+          An approval email with login credentials will be sent to {consultant.email}.
         </p>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
             Cancel
           </Button>
-          <Button onClick={onApprove} className="bg-chart-green hover:bg-chart-green/90 text-white">
-            Approve
+          <Button onClick={onApprove} disabled={loading} className="bg-chart-green hover:bg-chart-green/90 text-white">
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Approving...
+              </>
+            ) : (
+              "Approve"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

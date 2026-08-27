@@ -842,21 +842,106 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="personalityTraits">Personality Traits (comma-separated)</Label>
-              <Textarea
-                id="personalityTraits"
-                value={formData.personalityTraits}
-                onChange={(e) => handleInputChange("personalityTraits", e.target.value)}
-              />
+              <Label>Personality Traits</Label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { id: "friendly", name: "Friendly", icon: "😊" },
+                  { id: "ambitious", name: "Ambitious", icon: "🎯" },
+                  { id: "creative", name: "Creative", icon: "💡" },
+                  { id: "honest", name: "Honest", icon: "✨" },
+                  { id: "caring", name: "Caring", icon: "❤️" },
+                  { id: "funny", name: "Funny", icon: "😄" },
+                  { id: "intelligent", name: "Intelligent", icon: "🧠" },
+                  { id: "patient", name: "Patient", icon: "🕊️" },
+                ].map((trait) => {
+                  const currentSelected = formData.personalityTraits
+                    ? formData.personalityTraits.split(",").map((s) => s.trim().toLowerCase())
+                    : [];
+                  const isSelected = currentSelected.includes(trait.name.toLowerCase()) || currentSelected.includes(trait.id.toLowerCase());
+
+                  const toggleTrait = () => {
+                    let list = formData.personalityTraits
+                      ? formData.personalityTraits.split(",").map((s) => s.trim()).filter(Boolean)
+                      : [];
+                    const foundIndex = list.findIndex(
+                      (item) => item.toLowerCase() === trait.name.toLowerCase() || item.toLowerCase() === trait.id.toLowerCase()
+                    );
+                    if (foundIndex !== -1) {
+                      list.splice(foundIndex, 1);
+                    } else {
+                      list.push(trait.name);
+                    }
+                    handleInputChange("personalityTraits", list.join(", "));
+                  };
+
+                  return (
+                    <button
+                      key={trait.id}
+                      type="button"
+                      onClick={toggleTrait}
+                      className={`text-xs px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 cursor-pointer ${
+                        isSelected
+                          ? "bg-primary text-primary-foreground border-primary font-medium shadow-xs"
+                          : "bg-muted/40 hover:bg-muted text-muted-foreground border-border"
+                      }`}
+                    >
+                      <span>{trait.icon}</span>
+                      <span>{trait.name}</span>
+                      {isSelected && <span className="ml-0.5 text-[10px]">✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="dietPreference">Diet Preference (comma-separated)</Label>
-              <Input
-                id="dietPreference"
-                value={formData.dietPreference}
-                onChange={(e) => handleInputChange("dietPreference", e.target.value)}
-              />
+              <Label>Diet Preference</Label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { id: "veg", name: "Vegetarian", icon: "🥗" },
+                  { id: "non-veg", name: "Non-Veg", icon: "🍗" },
+                  { id: "vegan", name: "Vegan", icon: "🌱" },
+                  { id: "eggetarian", name: "Eggetarian", icon: "🥚" },
+                  { id: "jain", name: "Jain", icon: "🙏" },
+                ].map((diet) => {
+                  const currentSelected = formData.dietPreference
+                    ? formData.dietPreference.split(",").map((s) => s.trim().toLowerCase())
+                    : [];
+                  const isSelected = currentSelected.includes(diet.name.toLowerCase()) || currentSelected.includes(diet.id.toLowerCase());
+
+                  const toggleDiet = () => {
+                    let list = formData.dietPreference
+                      ? formData.dietPreference.split(",").map((s) => s.trim()).filter(Boolean)
+                      : [];
+                    const foundIndex = list.findIndex(
+                      (item) => item.toLowerCase() === diet.name.toLowerCase() || item.toLowerCase() === diet.id.toLowerCase()
+                    );
+                    if (foundIndex !== -1) {
+                      list.splice(foundIndex, 1);
+                    } else {
+                      list.push(diet.name);
+                    }
+                    handleInputChange("dietPreference", list.join(", "));
+                  };
+
+                  return (
+                    <button
+                      key={diet.id}
+                      type="button"
+                      onClick={toggleDiet}
+                      className={`text-xs px-3 py-1.5 rounded-full border transition-all flex items-center gap-1.5 cursor-pointer ${
+                        isSelected
+                          ? "bg-primary text-primary-foreground border-primary font-medium shadow-xs"
+                          : "bg-muted/40 hover:bg-muted text-muted-foreground border-border"
+                      }`}
+                    >
+                      <span>{diet.icon}</span>
+                      <span>{diet.name}</span>
+                      {isSelected && <span className="ml-0.5 text-[10px]">✓</span>}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="grid grid-cols-2 gap-4">

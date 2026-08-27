@@ -86,6 +86,15 @@ export const ViewUserDialog = ({ open, onOpenChange, user, onEdit }: ViewUserDia
     return undefined;
   };
 
+  const isProfileComplete = (u: any): boolean => {
+    if (!u) return false;
+    if (u.profileStatus === "COMPLETED" || u.profileStatus === "Completed") return true;
+    const hasBasic = Boolean(u.fullName && u.email && u.mobile && u.gender && u.dateOfBirth);
+    const hasPersonal = Boolean(u.heightCm || u.maritalStatus);
+    const hasEduWork = Boolean(u.primaryEducation || u.profession || u.highestEducation);
+    return hasBasic && hasPersonal && hasEduWork;
+  };
+
   const getApprovalStatusBadge = (status?: string) => {
     switch (status) {
       case "APPROVED":
@@ -140,7 +149,20 @@ export const ViewUserDialog = ({ open, onOpenChange, user, onEdit }: ViewUserDia
                 <Mail className="w-3 h-3 text-muted-foreground" />
                 <p className="text-sm text-muted-foreground">{user.email}</p>
               </div>
-              <div className="mt-2">{getApprovalStatusBadge(user.approvalStatus)}</div>
+              <div className="mt-2 flex items-center gap-2">
+                {getApprovalStatusBadge(user.approvalStatus)}
+                {isProfileComplete(user) ? (
+                  <Badge className="bg-emerald-600 text-white border-0">
+                    <CheckCircle className="w-3 h-3 mr-1" />
+                    Completed
+                  </Badge>
+                ) : (
+                  <Badge variant="outline" className="border-amber-500 text-amber-600 bg-amber-50">
+                    <XCircle className="w-3 h-3 mr-1" />
+                    Not Completed
+                  </Badge>
+                )}
+              </div>
             </div>
           </div>
         </DialogHeader>

@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Ban } from "lucide-react";
+import { Ban, Loader2 } from "lucide-react";
 import type { Consultant } from "../types";
 
 interface ConsultantRejectDialogProps {
@@ -11,9 +11,10 @@ interface ConsultantRejectDialogProps {
   onOpenChange: (open: boolean) => void;
   consultant: Consultant | null;
   onReject: (reason: string) => void;
+  loading?: boolean;
 }
 
-export function ConsultantRejectDialog({ open, onOpenChange, consultant, onReject }: ConsultantRejectDialogProps) {
+export function ConsultantRejectDialog({ open, onOpenChange, consultant, onReject, loading }: ConsultantRejectDialogProps) {
   const [rejectReason, setRejectReason] = useState("");
 
   if (!consultant) return null;
@@ -39,14 +40,22 @@ export function ConsultantRejectDialog({ open, onOpenChange, consultant, onRejec
             onChange={(e) => setRejectReason(e.target.value)}
             placeholder="Enter reason..."
             rows={3}
+            disabled={loading}
           />
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
             Cancel
           </Button>
-          <Button variant="destructive" onClick={handleReject}>
-            Reject
+          <Button variant="destructive" onClick={handleReject} disabled={loading}>
+            {loading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Rejecting...
+              </>
+            ) : (
+              "Reject"
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

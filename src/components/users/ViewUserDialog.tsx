@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Mail, Phone, Calendar, MapPin, User, Briefcase, Heart, Award, CheckCircle, XCircle, Clock } from "lucide-react";
+import { Mail, Phone, Calendar, MapPin, User, Briefcase, Heart, Award, CheckCircle, CheckCircle2, XCircle, Clock, AlertCircle } from "lucide-react";
 
 interface User {
   photos?: {
@@ -152,15 +152,15 @@ export const ViewUserDialog = ({ open, onOpenChange, user, onEdit }: ViewUserDia
               <div className="mt-2 flex items-center gap-2">
                 {getApprovalStatusBadge(user.approvalStatus)}
                 {isProfileComplete(user) ? (
-                  <Badge className="bg-emerald-600 text-white border-0">
-                    <CheckCircle className="w-3 h-3 mr-1" />
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 shadow-2xs">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400 shrink-0" />
                     Completed
-                  </Badge>
+                  </span>
                 ) : (
-                  <Badge variant="outline" className="border-amber-500 text-amber-600 bg-amber-50">
-                    <XCircle className="w-3 h-3 mr-1" />
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 shadow-2xs">
+                    <AlertCircle className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 shrink-0" />
                     Not Completed
-                  </Badge>
+                  </span>
                 )}
               </div>
             </div>

@@ -22,6 +22,8 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
 
   const [step, setStep] = useState<"email" | "verify">("email");
   const [email, setEmail] = useState("");
+  const [mobile, setMobile] = useState("");
+  const [countryCode, setCountryCode] = useState("+91");
   const [otp, setOtp] = useState("");
   const [formData, setFormData] = useState({
     password: "",
@@ -38,6 +40,8 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
     if (open) {
       setStep("email");
       setEmail("");
+      setMobile("");
+      setCountryCode("+91");
       setOtp("");
       setFormData({
         password: "",
@@ -80,10 +84,35 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
     }
 
     try {
-      await dispatch(sendEmailOtpAsync({ email })).unwrap();
+      const res = await dispatch(
+        sendEmailOtpAsync({
+          email,
+          mobile,
+          countryCode,
+        })
+      ).unwrap();
+
+      // Sync mobile & countryCode to formData for creation step
+      setFormData((prev) => ({
+        ...prev,
+        mobile: mobile || prev.mobile,
+        countryCode: countryCode || prev.countryCode,
+      }));
+
+      const cleanMobile = mobile.replace(/[^0-9]/g, "");
+      const isIndia =
+        countryCode === "+91" ||
+        countryCode === "91" ||
+        cleanMobile.startsWith("91") ||
+        cleanMobile.length === 10;
+
+      const isSmsSent = mobile && isIndia;
+
       toast({
         title: "Success",
-        description: "OTP sent to your email address",
+        description: isSmsSent
+          ? "OTP sent to your email and Indian mobile number via SMS"
+          : res?.message || "OTP sent to your email address",
       });
     } catch (err: any) {
       toast({
@@ -155,7 +184,7 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
             >
               {otpSent ? <CheckCircle2 className="w-4 h-4" /> : <Mail className="w-4 h-4" />}
             </div>
-            <span className={step === "email" ? "font-medium" : "text-muted-foreground"}>Email</span>
+            <span className={step === "email" ? "font-medium" : "text-muted-foreground"}>Email & Mobile</span>
           </div>
           <div className="w-12 h-0.5 bg-border"></div>
           <div className="flex items-center gap-2">
@@ -169,7 +198,7 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
           </div>
         </div>
 
-        {/* Step 1: Email Entry */}
+        {/* Step 1: Email & Mobile Entry */}
         {step === "email" && (
           <div className="space-y-4">
             <div className="space-y-2">
@@ -182,7 +211,30 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
                 placeholder="user@example.com"
                 disabled={otpLoading}
               />
-              <p className="text-sm text-muted-foreground">We'll send a verification code to this email</p>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="mobile">Mobile Number</Label>
+              <div className="flex gap-2">
+                <Input
+                  className="w-20"
+                  value={countryCode}
+                  onChange={(e) => setCountryCode(e.target.value)}
+                  placeholder="+91"
+                  disabled={otpLoading}
+                />
+                <Input
+                  id="mobile"
+                  type="tel"
+                  value={mobile}
+                  onChange={(e) => setMobile(e.target.value)}
+                  placeholder="Enter mobile number"
+                  disabled={otpLoading}
+                />
+              </div>
+              <p className="text-xs text-muted-foreground">
+                We'll send an OTP to your email. If an Indian mobile number (+91) is provided, an SMS OTP will also be sent to that number.
+              </p>
             </div>
           </div>
         )}
@@ -193,6 +245,9 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
             <div className="bg-muted/50 p-4 rounded-lg mb-4">
               <p className="text-sm">
                 OTP sent to <span className="font-medium">{email}</span>
+                {mobile && (countryCode === "+91" || countryCode === "91" || mobile.length === 10) && (
+                  <span> and SMS OTP sent to <span className="font-medium">{countryCode} {mobile}</span></span>
+                )}
               </p>
               <Button
                 variant="link"
@@ -203,7 +258,7 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
                   dispatch(resetOtpState());
                 }}
               >
-                Change email
+                Change details
               </Button>
             </div>
 

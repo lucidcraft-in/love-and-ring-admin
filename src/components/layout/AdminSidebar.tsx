@@ -1,4 +1,4 @@
-import { Heart, LayoutDashboard, Users, UserCog, X, Ticket, Globe, CheckCircle, CreditCard, MessageSquare, Building2, Shield, BarChart3, FileText, Database, Settings, Crown } from "lucide-react";
+import { Heart, LayoutDashboard, Users, UserCog, X, Ticket, Globe, CheckCircle, CreditCard, MessageSquare, Building2, Shield, BarChart3, FileText, Database, Settings, Crown, Activity } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -11,16 +11,17 @@ import { useEffect, useState } from "react";
 const menuItems = [
   { icon: LayoutDashboard, label: "DASHBOARD", path: "/" },
   { icon: Users, label: "USERS", path: "/users" },
-  { icon :Crown, label: "MILLION CLUB", path:"/million"},
+  // { icon: Activity, label: "ACTIVITY LOGS", path: "/activity-logs" },
+  { icon: Crown, label: "MILLION CLUB", path: "/million" },
   { icon: UserCog, label: "CONSULTANTS", path: "/consultants" },
   { icon: Ticket, label: "SUPPORT TICKETS", path: "/support" },
   { icon: Globe, label: "DEMOGRAPHICS", path: "/demographics" },
-  { icon: CreditCard, label: "PAYMENT", path: "/payment" , permission:"managePayments"},
+  { icon: CreditCard, label: "PAYMENT", path: "/payment", permission: "managePayments" },
   // { icon: MessageSquare, label: "CONTACT", path: "/contact" },
   // { icon: Building2, label: "BRANCHES", path: "/branches" },
-  { icon: UserCog, label: "STAFF", path: "/admin/staff", permission:"manageStaff" },
-  { icon: Shield, label: "ADMINS & ROLES", path: "/admins", permission:"manageAdmins" },
-  { icon: BarChart3, label: "REPORTS", path: "/reports", permission:"viewReports" },
+  { icon: UserCog, label: "STAFF", path: "/admin/staff", permission: "manageStaff" },
+  { icon: Shield, label: "ADMINS & ROLES", path: "/admins", permission: "manageAdmins" },
+  { icon: BarChart3, label: "REPORTS", path: "/reports", permission: "viewReports" },
   { icon: FileText, label: "CMS", path: "/cms" },
   { icon: Database, label: "MASTER DATA", path: "/master-data" },
   { icon: Settings, label: "SETTINGS", path: "/settings", permission:"manageSettings" },

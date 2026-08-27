@@ -189,8 +189,10 @@ export const consultantService = {
   /**
    * Delete consultant
    */
-  deleteConsultant: async (id: string): Promise<{ message: string }> => {
-    const response = await Axios.delete<{ message: string }>(`/api/consultants/${id}`);
+  deleteConsultant: async (id: string, reason?: string): Promise<{ message: string }> => {
+    const response = await Axios.delete<{ message: string }>(`/api/consultants/${id}`, {
+      data: { reason }
+    });
     return response.data;
   },
 

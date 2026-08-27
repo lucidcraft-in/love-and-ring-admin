@@ -64,6 +64,8 @@ export interface User {
 
 export interface SendEmailOtpPayload {
   email: string;
+  mobile?: string;
+  countryCode?: string;
 }
 
 export interface VerifyEmailOtpPayload {

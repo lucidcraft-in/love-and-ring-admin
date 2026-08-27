@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
+import { consultantService } from "@/services/consultantService";
 
 export default function ConsultantRegister() {
   const navigate = useNavigate();
@@ -54,16 +55,15 @@ export default function ConsultantRegister() {
     setIsLoading(true);
 
     try {
-      // Mock API call - Replace with actual POST /api/consultants/register
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      await consultantService.createConsultant(formData);
 
       setIsSuccess(true);
       toast({
         title: "Registration Submitted",
-        description: "Your application is pending admin approval.",
+        description: "Your application is pending admin approval. A confirmation email has been sent.",
       });
-    } catch (err) {
-      setError("Registration failed. Please try again.");
+    } catch (err: any) {
+      setError(err?.response?.data?.message || err?.message || "Registration failed. Please try again.");
     } finally {
       setIsLoading(false);
     }

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Plus, UserCheck, Clock, XCircle, Users, MoreHorizontal, Eye, CheckCircle, Ban, Shield, MapPin, Loader2, ChevronLeft, ChevronRight, CheckCircle2 } from "lucide-react";
+import { Search, Filter, Plus, UserCheck, Clock, XCircle, Users, MoreHorizontal, Eye, CheckCircle, Ban, Shield, MapPin, Loader2, ChevronLeft, ChevronRight, CheckCircle2, Trash2 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -25,6 +25,7 @@ import { PendingProfile } from "@/services/approvalService";
 import { ConsultantViewDialog } from "../components/ConsultantViewDialog";
 import { ConsultantApproveDialog } from "../components/ConsultantApproveDialog";
 import { ConsultantRejectDialog } from "../components/ConsultantRejectDialog";
+import { ConsultantDeleteDialog } from "../components/ConsultantDeleteDialog";
 import { ConsultantPermissionsDialog } from "../components/ConsultantPermissionsDialog";
 import { ConsultantCreateDialog } from "../components/ConsultantCreateDialog";
 import { ConsultantFilterDialog, type ConsultantFilters } from "../components/ConsultantFilterDialog";
@@ -60,7 +61,9 @@ export default function ConsultantList({ initialTab }: ConsultantListProps) {
   const [viewOpen, setViewOpen] = useState(false);
   const [approveOpen, setApproveOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [permissionsOpen, setPermissionsOpen] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [filterOpen, setFilterOpen] = useState(false);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -149,17 +152,21 @@ export default function ConsultantList({ initialTab }: ConsultantListProps) {
 
   const handleApprove = async () => {
     if (!selectedConsultant) return;
+    setActionLoading(true);
     try {
-      await dispatch(updateConsultantAsync({
-        id: selectedConsultant._id,
-        payload: { status: "ACTIVE" }
-      })).unwrap();
+      await dispatch(approveProfileAsync(selectedConsultant._id)).unwrap();
 
       toast({
         title: "Consultant Approved",
-        description: `${selectedConsultant.fullName} has been approved.`
+        description: `${selectedConsultant.fullName} has been approved. An email with user credentials has been sent.`
       });
       setApproveOpen(false);
+      const skip = (currentPage - 1) * pageSize;
+      dispatch(fetchConsultantsAsync({
+        skip,
+        take: pageSize,
+        status: statusFilter === "all" ? undefined : statusFilter as any,
+      }));
       dispatch(getConsultantStatsAsync());
     } catch (error) {
       toast({
@@ -167,22 +174,28 @@ export default function ConsultantList({ initialTab }: ConsultantListProps) {
         description: "Failed to approve consultant.",
         variant: "destructive"
       });
+    } finally {
+      setActionLoading(false);
     }
   };
 
   const handleReject = async (reason: string) => {
     if (!selectedConsultant) return;
+    setActionLoading(true);
     try {
-      await dispatch(updateConsultantAsync({
-        id: selectedConsultant._id,
-        payload: { status: "REJECTED" }
-      })).unwrap();
+      await dispatch(rejectProfileAsync({ id: selectedConsultant._id, reason })).unwrap();
 
       toast({
         title: "Consultant Rejected",
-        description: `${selectedConsultant.fullName} has been rejected.`
+        description: `${selectedConsultant.fullName} has been rejected. Rejection notice email sent.`
       });
       setRejectOpen(false);
+      const skip = (currentPage - 1) * pageSize;
+      dispatch(fetchConsultantsAsync({
+        skip,
+        take: pageSize,
+        status: statusFilter === "all" ? undefined : statusFilter as any,
+      }));
       dispatch(getConsultantStatsAsync());
     } catch (error) {
       toast({
@@ -190,6 +203,37 @@ export default function ConsultantList({ initialTab }: ConsultantListProps) {
         description: "Failed to reject consultant.",
         variant: "destructive"
       });
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleDelete = async (reason: string) => {
+    if (!selectedConsultant) return;
+    setActionLoading(true);
+    try {
+      await dispatch(deleteConsultantAsync({ id: selectedConsultant._id, reason })).unwrap();
+
+      toast({
+        title: "Consultant Deleted",
+        description: `${selectedConsultant.fullName} has been deleted. Notification email sent.`
+      });
+      setDeleteOpen(false);
+      const skip = (currentPage - 1) * pageSize;
+      dispatch(fetchConsultantsAsync({
+        skip,
+        take: pageSize,
+        status: statusFilter === "all" ? undefined : statusFilter as any,
+      }));
+      dispatch(getConsultantStatsAsync());
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete consultant.",
+        variant: "destructive"
+      });
+    } finally {
+      setActionLoading(false);
     }
   };
 
@@ -553,6 +597,9 @@ export default function ConsultantList({ initialTab }: ConsultantListProps) {
                                       <Shield className="w-4 h-4 mr-2" />Edit Permissions
                                     </DropdownMenuItem>
                                   )}
+                                  <DropdownMenuItem onClick={() => { setSelectedConsultant(c); setDeleteOpen(true); }} className="text-destructive">
+                                    <Trash2 className="w-4 h-4 mr-2" />Delete Consultant
+                                  </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </TableCell>
@@ -728,12 +775,21 @@ export default function ConsultantList({ initialTab }: ConsultantListProps) {
         onOpenChange={setApproveOpen}
         consultant={selectedConsultant}
         onApprove={handleApprove}
+        loading={actionLoading}
       />
       <ConsultantRejectDialog
         open={rejectOpen}
         onOpenChange={setRejectOpen}
         consultant={selectedConsultant}
         onReject={handleReject}
+        loading={actionLoading}
+      />
+      <ConsultantDeleteDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        consultant={selectedConsultant}
+        onDelete={handleDelete}
+        loading={actionLoading}
       />
       <ConsultantPermissionsDialog
         open={permissionsOpen}

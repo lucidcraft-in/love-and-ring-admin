@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Filter, Download, UserPlus, MoreHorizontal, Eye, Edit, Ban, CheckCircle, Trash2, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
+import { Search, Filter, Download, UserPlus, MoreHorizontal, Eye, Edit, Ban, CheckCircle, CheckCircle2, Clock, AlertCircle, Trash2, ChevronLeft, ChevronRight, RotateCcw } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { AddUserDialog } from "@/components/users/AddUserDialog";
 import { EditUserDialog } from "@/components/users/EditUserDialog";
@@ -245,6 +245,15 @@ const Users = () => {
     const value = advancedFilters[key as keyof UserFilters];
     return value !== undefined && value !== "" && (Array.isArray(value) ? value.length > 0 : true);
   }).length;
+
+  const isProfileComplete = (u: any): boolean => {
+    if (!u) return false;
+    if (u.profileStatus === "COMPLETED" || u.profileStatus === "Completed") return true;
+    const hasBasic = Boolean(u.fullName && u.email && u.mobile && u.gender && u.dateOfBirth);
+    const hasPersonal = Boolean(u.heightCm || u.maritalStatus);
+    const hasEduWork = Boolean(u.primaryEducation || u.profession || u.highestEducation);
+    return hasBasic && hasPersonal && hasEduWork;
+  };
 
   // Helper function to map approval status to display status
   const getStatusDisplay = (user: any) => {
@@ -601,21 +610,44 @@ const Users = () => {
                                 );
                               })()}
                             </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant="outline"
-                                className={
-                                  status === "Active"
-                                    ? "border-chart-green text-chart-green"
-                                    : status === "Inactive"
-                                      ? "border-muted-foreground text-muted-foreground bg-muted/20"
-                                      : status === "Pending"
-                                        ? "border-chart-orange text-chart-orange"
-                                        : "border-destructive text-destructive"
-                                }
-                              >
-                                {status}
-                              </Badge>
+                             <TableCell>
+                              <div className="flex flex-col gap-1.5 items-start whitespace-nowrap">
+                                {/* Account Status Badge */}
+                                {status === "Active" ? (
+                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 shadow-2xs">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                                    Active
+                                  </span>
+                                ) : status === "Inactive" ? (
+                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                                    Inactive
+                                  </span>
+                                ) : status === "Pending" ? (
+                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                                    Pending
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20">
+                                    <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                                    Blocked
+                                  </span>
+                                )}
+
+                                {/* Profile Completion Badge */}
+                                {isProfileComplete(user) ? (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300 border border-emerald-200/80 dark:border-emerald-800/60 shadow-2xs">
+                                    <CheckCircle2 className="w-3 h-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
+                                    Completed
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-200/80 dark:border-amber-800/60 shadow-2xs">
+                                    <AlertCircle className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
+                                    Not Completed
+                                  </span>
+                                )}
+                              </div>
                             </TableCell>
                             <TableCell>{user?.createdByModel || "User"}</TableCell>
                             <TableCell>{user?.createdBy?.fullName || user?.fullName}</TableCell>

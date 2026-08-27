@@ -134,15 +134,15 @@ export default function ConsultantLogin() {
             </Button>
 
             <div className="text-center space-y-2">
-              <Button
+              {/* <Button
                 type="button"
                 variant="link"
                 className="text-sm text-muted-foreground"
                 onClick={() => navigate("/consultant/register")}
               >
                 Don't have an account? Register here
-              </Button>
-              <div>
+              </Button> */}
+              {/* <div>
                 <Button
                   type="button"
                   variant="link"
@@ -151,19 +151,11 @@ export default function ConsultantLogin() {
                 >
                   Admin Login
                 </Button>
-              </div>
+              </div> */}
             </div>
           </form>
-
-          <div className="mt-6 p-4 bg-muted/50 rounded-lg">
-            <p className="text-xs text-muted-foreground text-center">
-              <strong>Demo:</strong> Use any username/password to login.
-              <br />
-              Try "pending_consultant" to see pending account message.
-            </p>
-          </div>
         </CardContent>
       </Card>
-    </div>
+    </div>  
   );
 }

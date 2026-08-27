@@ -215,13 +215,15 @@ export const updatePermissionsAsync = createAsyncThunk<
  */
 export const deleteConsultantAsync = createAsyncThunk<
   string,
-  string,
+  { id: string; reason?: string } | string,
   { rejectValue: string }
 >(
   'consultant/deleteConsultant',
-  async (id, { rejectWithValue }) => {
+  async (param, { rejectWithValue }) => {
     try {
-      await consultantService.deleteConsultant(id);
+      const id = typeof param === 'string' ? param : param.id;
+      const reason = typeof param === 'string' ? undefined : param.reason;
+      await consultantService.deleteConsultant(id, reason);
       return id;
     } catch (error: any) {
       const message = error.response?.data?.message || 'Failed to delete consultant.';

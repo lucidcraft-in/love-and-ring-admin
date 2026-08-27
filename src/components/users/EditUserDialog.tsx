@@ -181,6 +181,19 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
     return "";
   };
 
+  // Helper function to extract city text from object or string
+  const extractCityText = (field: any): string => {
+    if (!field) return "";
+    if (typeof field === "string") return field;
+    if (typeof field === "object") {
+      if (field.city) {
+        return [field.city, field.state, field.country].filter(Boolean).join(", ");
+      }
+      if (field.name) return field.name;
+    }
+    return "";
+  };
+
   useEffect(() => {
     if (user) {
       setFormData({
@@ -207,7 +220,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
         interests: user.interests?.join(", ") || "",
         personalityTraits: user.personalityTraits?.join(", ") || "",
         dietPreference: user.dietPreference?.join(", ") || "",
-        city: extractId(user.city),
+        city: extractCityText(user.city),
         religion: extractId(user.religion),
         caste: extractId(user.caste),
         motherTongue: extractId(user.motherTongue),
@@ -819,20 +832,12 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="city">City</Label>
-                <Select value={formData.city} onValueChange={(val) => handleInputChange("city", val)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select city" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.isArray(locations) &&
-                      locations.map((location) => (
-                        <SelectItem key={location._id} value={location._id}>
-                          {location.city}, {location.state}, {location.country}
-                        </SelectItem>
-                      ))
-                    }
-                  </SelectContent>
-                </Select>
+                <Input
+                  id="city"
+                  placeholder="Enter city name..."
+                  value={formData.city}
+                  onChange={(e) => handleInputChange("city", e.target.value)}
+                />
               </div>
 
               <div className="space-y-2">

@@ -168,6 +168,21 @@ export const ViewUserDialog = ({ open, onOpenChange, user, onEdit }: ViewUserDia
               <InfoRow label="Gender" value={user.gender} icon={User} />
               <InfoRow label="Date of Birth" value={formatDate(user.dateOfBirth)} icon={Calendar} />
               <InfoRow label="Preferred Language" value={user.preferredLanguage} />
+              <InfoRow
+                label="Membership Plan"
+                value={(() => {
+                  const plan = (user as any)?.membership?.plan;
+                  if (plan) {
+                    if (typeof plan === "object") return plan.title || plan.name || "Free Plan";
+                    if (typeof plan === "string" && plan.trim()) return plan;
+                  }
+                  if (user?.approvalStatus && (user as any)?.profileStatus?.toLowerCase().includes("million")) {
+                    return "Million Club";
+                  }
+                  return "Free Plan";
+                })()}
+                icon={Award}
+              />
               <InfoRow label="Member Since" value={formatDate(user.createdAt)} icon={Calendar} />
             </div>
           </TabsContent>

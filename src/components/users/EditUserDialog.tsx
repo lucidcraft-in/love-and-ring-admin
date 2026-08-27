@@ -230,6 +230,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
         countryCode: user.countryCode || "+91",
         mobile: user.mobile || "",
         alternateMobile: user.alternateMobile || "",
+        gender: user.gender || "",
         dateOfBirth: user.dateOfBirth
           ? (typeof user.dateOfBirth === "string" ? user.dateOfBirth.split("T")[0] : new Date(user.dateOfBirth).toISOString().split("T")[0])
           : "",
@@ -462,12 +463,12 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
         </div>
 
         <Tabs value={currentTab} onValueChange={setCurrentTab}>
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="basic">Basic</TabsTrigger>
             <TabsTrigger value="personal">Personal</TabsTrigger>
             <TabsTrigger value="education">Education</TabsTrigger>
             <TabsTrigger value="additional">Additional</TabsTrigger>
-            <TabsTrigger value="activity">Activity History</TabsTrigger>
+            {/* <TabsTrigger value="activity">Activity History</TabsTrigger> */}
           </TabsList>
 
           {/* STEP 1: BASIC DETAILS */}
@@ -948,7 +949,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
           </TabsContent>
 
           {/* STEP 5: ACTIVITY HISTORY */}
-          <TabsContent value="activity" className="space-y-4">
+          {/* <TabsContent value="activity" className="space-y-4">
             <div className="space-y-3">
               <h4 className="text-sm font-semibold text-foreground">User Registration & Event Log History</h4>
               {loadingActivityLogs ? (
@@ -1014,7 +1015,7 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
                 </div>
               )}
             </div>
-          </TabsContent>
+          </TabsContent> */}
         </Tabs>
 
         <DialogFooter>

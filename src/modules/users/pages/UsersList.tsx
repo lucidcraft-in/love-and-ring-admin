@@ -461,19 +461,22 @@ const Users = () => {
                     }}
                   />
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  <Select defaultValue={genderFilter} onValueChange={setGenderFilter}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="Gender" />
+                <div className="flex flex-wrap gap-2 items-center">
+                  {/* Gender Filter */}
+                  <Select value={genderFilter} onValueChange={(val) => { setGenderFilter(val); setCurrentPage(1); }}>
+                    <SelectTrigger className="w-36">
+                      <SelectValue placeholder="Gender: All" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Gender</SelectItem>
-                      <SelectItem value="Male">Male</SelectItem>
-                      <SelectItem value="Female">Female</SelectItem>
-                      <SelectItem value="Gay">Gay</SelectItem>
-                      <SelectItem value="Lesbian">Lesbian</SelectItem>
+                      <SelectItem value="all">Gender: All</SelectItem>
+                      <SelectItem value="Male">Gender: Male</SelectItem>
+                      <SelectItem value="Female">Gender: Female</SelectItem>
+                      <SelectItem value="Gay">Gender: Gay</SelectItem>
+                      <SelectItem value="Lesbian">Gender: Lesbian</SelectItem>
                     </SelectContent>
                   </Select>
+
+                  {/* Created By Filter */}
                   <Select
                     value={createdByFilter}
                     onValueChange={(value) => {
@@ -484,18 +487,19 @@ const Users = () => {
                       setCurrentPage(1);
                     }}
                   >
-                    <SelectTrigger className="w-36">
-                      <SelectValue placeholder="Created By" />
+                    <SelectTrigger className="w-44">
+                      <SelectValue placeholder="Created By: All" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Creators</SelectItem>
-                      <SelectItem value="Admin">Admin</SelectItem>
-                      <SelectItem value="User">User</SelectItem>
-                      <SelectItem value="Staff">Staff</SelectItem>
-                      <SelectItem value="Consultant">Consultant</SelectItem>
+                      <SelectItem value="all">Created By: All</SelectItem>
+                      <SelectItem value="Admin">Created By: Admin</SelectItem>
+                      <SelectItem value="User">Created By: User</SelectItem>
+                      <SelectItem value="Staff">Created By: Staff</SelectItem>
+                      <SelectItem value="Consultant">Created By: Consultant</SelectItem>
                     </SelectContent>
                   </Select>
 
+                  {/* Specific Consultant Filter */}
                   {createdByFilter === "Consultant" && (
                     <Select
                       value={selectedConsultantFilter}
@@ -504,39 +508,43 @@ const Users = () => {
                         setCurrentPage(1);
                       }}
                     >
-                      <SelectTrigger className="w-44 border-primary/50 text-primary font-medium">
-                        <SelectValue placeholder="All Consultants" />
+                      <SelectTrigger className="w-52 border-primary/50 text-primary font-medium">
+                        <SelectValue placeholder="Consultant: All" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="all">All Consultants</SelectItem>
+                        <SelectItem value="all">Consultant: All</SelectItem>
                         {consultantOptions.map((c) => (
                           <SelectItem key={c.id} value={c.id}>
-                            {c.name}
+                            Consultant: {c.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   )}
-                  <Select defaultValue={membershipFilter} onValueChange={setMembershipFilter}>
-                    <SelectTrigger className="w-36">
-                      <SelectValue placeholder="Membership" />
+
+                  {/* Membership Plan Filter */}
+                  <Select value={membershipFilter} onValueChange={(val) => { setMembershipFilter(val); setCurrentPage(1); }}>
+                    <SelectTrigger className="w-40">
+                      <SelectValue placeholder="Plan: All" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Membership</SelectItem>
-                      <SelectItem value="premium">Premium</SelectItem>
-                      <SelectItem value="free">Free</SelectItem>
+                      <SelectItem value="all">Plan: All</SelectItem>
+                      <SelectItem value="premium">Plan: Premium</SelectItem>
+                      <SelectItem value="free">Plan: Free</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Select defaultValue={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="Status" />
+
+                  {/* Status Filter */}
+                  <Select value={statusFilter} onValueChange={(val) => { setStatusFilter(val); setCurrentPage(1); }}>
+                    <SelectTrigger className="w-36">
+                      <SelectValue placeholder="Status: All" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Status</SelectItem>
-                      <SelectItem value="Active">Active</SelectItem>
-                      <SelectItem value="Inactive">Inactive</SelectItem>
-                      <SelectItem value="Pending">Pending</SelectItem>
-                      <SelectItem value="Blocked">Blocked</SelectItem>
+                      <SelectItem value="all">Status: All</SelectItem>
+                      <SelectItem value="Active">Status: Active</SelectItem>
+                      <SelectItem value="Inactive">Status: Inactive</SelectItem>
+                      {/* <SelectItem value="Pending">Status: Pending</SelectItem> */}
+                      {/* <SelectItem value="Blocked">Status: Blocked</SelectItem> */}
                     </SelectContent>
                   </Select>
                   <Button

@@ -25,7 +25,7 @@ import { fetchUsersAsync, deleteUserAsync, User } from "@/store/slices/usersSlic
 import { AddUserDialog } from "@/components/users/AddUserDialog";
 import { ViewUserDialog } from "@/components/users/ViewUserDialog";
 import { EditUserDialog } from "@/components/users/EditUserDialog";
-import { DeleteUserDialog } from "@/components/users/DeleteUserDialog";
+import { DeleteUserReasonDialog } from "@/components/users/DeleteUserReasonDialog";
 import { formatDistanceToNow } from "date-fns";
 
 interface ActivityItem {
@@ -161,13 +161,13 @@ export default function ConsultantDashboard() {
     setDeleteDialogOpen(true);
   };
 
-  const handleConfirmDelete = async () => {
+  const handleConfirmDelete = async (reason: string) => {
     if (!selectedUser) return;
 
     try {
       const userName = selectedUser.fullName || selectedUser.email;
-      await dispatch(deleteUserAsync(selectedUser._id)).unwrap();
-      logActivity("Deleted Profile", `Deleted profile for ${userName}`, "delete");
+      await dispatch(deleteUserAsync({ userId: selectedUser._id, reason })).unwrap();
+      logActivity("Deleted Profile", `Deleted profile for ${userName} (Reason: ${reason})`, "delete");
       toast({
         title: "Success",
         description: "User deleted successfully",
@@ -177,7 +177,7 @@ export default function ConsultantDashboard() {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error || "Failed to delete user",
+        description: typeof error === 'string' ? error : (error?.message || "Failed to delete user"),
         variant: "destructive",
       });
     }
@@ -563,11 +563,11 @@ export default function ConsultantDashboard() {
         onUserUpdated={handleUserUpdated}
       />
 
-      <DeleteUserDialog
+      <DeleteUserReasonDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
         user={selectedUser}
-        onConfirm={handleConfirmDelete}
+        onConfirmDelete={handleConfirmDelete}
         loading={deleteLoading}
       />
     </div>

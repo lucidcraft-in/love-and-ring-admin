@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 const menuItems = [
   { icon: LayoutDashboard, label: "DASHBOARD", path: "/" },
   { icon: Users, label: "USERS", path: "/users" },
-  // { icon: Activity, label: "ACTIVITY LOGS", path: "/activity-logs" },
+  { icon: Activity, label: "ACTIVITY LOGS", path: "/activity-logs" },
   { icon: Crown, label: "MILLION CLUB", path: "/million" },
   { icon: UserCog, label: "CONSULTANTS", path: "/consultants" },
   { icon: Ticket, label: "SUPPORT TICKETS", path: "/support" },

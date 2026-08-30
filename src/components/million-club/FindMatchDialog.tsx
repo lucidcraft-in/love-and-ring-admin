@@ -148,6 +148,15 @@ export function FindMatchDialog({ open, onOpenChange, user }: FindMatchDialogPro
     }));
   };
 
+  // Helper to format gender display: Gay -> Male, Lesbian -> Female
+  const getDisplayGender = (gender?: string) => {
+    if (!gender) return "";
+    const g = gender.trim().toLowerCase();
+    if (g === "gay") return "Male";
+    if (g === "lesbian") return "Female";
+    return gender;
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col p-0 gap-0">
@@ -245,7 +254,7 @@ export function FindMatchDialog({ open, onOpenChange, user }: FindMatchDialogPro
                           <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
                             <span className="flex items-center gap-1">
                               <User className="w-3 h-3" />
-                              {calculateAge(item.user?.dateOfBirth)}, {item.user?.heightCm}cm
+                              {calculateAge(item.user?.dateOfBirth)} yrs{getDisplayGender(item.user?.gender) ? ` • ${getDisplayGender(item.user?.gender)}` : ""}, {item.user?.heightCm}cm
                             </span>
                             <span className="flex items-center gap-1">
                               <MapPin className="w-3 h-3" />

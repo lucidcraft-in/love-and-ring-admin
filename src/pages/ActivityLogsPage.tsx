@@ -640,15 +640,33 @@ export default function ActivityLogsPage() {
                 </div>
               )}
 
-              {/* Error Details if present */}
-              {selectedLog.errorMessage && (
-                <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-lg space-y-1">
+              {/* Error Details & Network/Console Inspector if present */}
+              {(selectedLog.errorMessage || selectedLog.details?.errorResponse || selectedLog.details?.errorCode) && (
+                <div className="p-4 bg-rose-500/10 border border-rose-500/30 rounded-lg space-y-2">
                   <p className="text-xs font-bold text-rose-600 uppercase flex items-center gap-1.5">
-                    <AlertCircle className="w-4 h-4" /> Validation Error
+                    <AlertCircle className="w-4 h-4" /> Error & Network Failure Report
                   </p>
-                  <p className="text-xs text-rose-700 dark:text-rose-300 font-mono leading-relaxed pt-1">
-                    {selectedLog.errorMessage}
-                  </p>
+                  {selectedLog.errorMessage && (
+                    <p className="text-xs text-rose-700 dark:text-rose-300 font-mono leading-relaxed">
+                      {selectedLog.errorMessage}
+                    </p>
+                  )}
+                  {(selectedLog.details?.errorCode || selectedLog.details?.errorStatus) && (
+                    <div className="text-xs text-rose-800 dark:text-rose-200 font-mono">
+                      <span className="font-semibold">Code / Status: </span>
+                      {selectedLog.details?.errorCode || selectedLog.details?.errorStatus}
+                    </div>
+                  )}
+                  {selectedLog.details?.errorResponse && (
+                    <div className="text-xs text-rose-800 dark:text-rose-200 font-mono bg-rose-500/5 p-2 rounded border border-rose-500/20 overflow-x-auto max-h-32">
+                      <span className="font-semibold block mb-1">Server Response:</span>
+                      <pre className="text-[11px] whitespace-pre-wrap">
+                        {typeof selectedLog.details.errorResponse === "object"
+                          ? JSON.stringify(selectedLog.details.errorResponse, null, 2)
+                          : String(selectedLog.details.errorResponse)}
+                      </pre>
+                    </div>
+                  )}
                 </div>
               )}
 

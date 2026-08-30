@@ -879,6 +879,7 @@ const CMS = () => {
                     <TableHead>Client Details</TableHead>
                     <TableHead>Service Requested</TableHead>
                     <TableHead>Preferred Date</TableHead>
+                    <TableHead>Approx. Members</TableHead>
                     <TableHead>Submitted On</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -918,6 +919,9 @@ const CMS = () => {
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
                           {item.eventDate || "Not specified"}
+                        </TableCell>
+                        <TableCell className="text-xs font-medium text-primary">
+                          {item.approximateMemberCount || "-"}
                         </TableCell>
                         <TableCell className="text-xs text-muted-foreground">
                           {item.createdAt ? new Date(item.createdAt).toLocaleDateString() : "N/A"}

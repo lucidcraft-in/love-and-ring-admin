@@ -11,7 +11,7 @@ import { useEffect, useState } from "react";
 const menuItems = [
   { icon: LayoutDashboard, label: "DASHBOARD", path: "/" },
   { icon: Users, label: "USERS", path: "/users" },
-  { icon: Activity, label: "ACTIVITY LOGS", path: "/activity-logs" },
+  { icon: Activity, label: "ACTIVITY LOGS", path: "/activity-logs", permission: "viewActivityLogs" },
   { icon: Crown, label: "MILLION CLUB", path: "/million" },
   { icon: UserCog, label: "CONSULTANTS", path: "/consultants" },
   { icon: Ticket, label: "SUPPORT TICKETS", path: "/support" },
@@ -24,7 +24,7 @@ const menuItems = [
   { icon: BarChart3, label: "REPORTS", path: "/reports", permission: "viewReports" },
   { icon: FileText, label: "CMS", path: "/cms" },
   { icon: Database, label: "MASTER DATA", path: "/master-data" },
-  { icon: Settings, label: "SETTINGS", path: "/settings", permission:"manageSettings" },
+  { icon: Settings, label: "SETTINGS", path: "/settings", permission: "manageSettings" },
 ];
 
 interface AdminSidebarProps {
@@ -43,7 +43,9 @@ export function AdminSidebar({ onClose }: AdminSidebarProps) {
   }, []);
 
   const hasPermission = (key: string) => {
-    return Boolean(auth?.permissions?.[key]);
+    if (!auth) return false;
+    if (auth.isSuperAdmin || auth.role?.name === "Super Admin" || auth.user?.isSuperAdmin) return true;
+    return Boolean(auth.permissions?.[key] || auth.role?.permissions?.[key]);
   };
 
   return (

@@ -15,6 +15,7 @@ import { UserFilterDialog, type UserFilters } from "@/components/users/UserFilte
 import { DeleteUserReasonDialog } from "@/components/users/DeleteUserReasonDialog";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { fetchUsersAsync, deleteUserAsync } from "@/store/slices/usersSlice";
+import { consultantService } from "@/services/consultantService";
 
 const Users = () => {
   const dispatch = useAppDispatch();
@@ -33,7 +34,9 @@ const Users = () => {
   const [membershipFilter, setMembershipFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
   const [advancedFilters, setAdvancedFilters] = useState<UserFilters>({});
-  const [createdByFilter, setCreatedByFilter] = useState('all')
+  const [createdByFilter, setCreatedByFilter] = useState('all');
+  const [selectedConsultantFilter, setSelectedConsultantFilter] = useState('all');
+  const [consultantsList, setConsultantsList] = useState<any[]>([]);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -46,6 +49,51 @@ const Users = () => {
     localStorage.setItem("users_pageSize", pageSize.toString());
   }, [pageSize]);
 
+  // Fetch consultants list for filter dropdown
+  useEffect(() => {
+    const fetchConsultants = async () => {
+      try {
+        const res = await consultantService.getConsultants({ take: 1000 });
+        if (res && res.data) {
+          setConsultantsList(res.data);
+        }
+      } catch (err) {
+        console.error("Failed to fetch consultants", err);
+      }
+    };
+    fetchConsultants();
+  }, []);
+
+  // Compute consultant options from both consultant API and users list
+  const consultantOptions = useMemo(() => {
+    const map = new Map<string, { id: string; name: string }>();
+
+    consultantsList.forEach((c: any) => {
+      const id = String(c._id || c.id);
+      const name = c.fullName || c.name || c.username || c.email;
+      if (id && name) map.set(id, { id, name });
+    });
+
+    users.forEach((u: any) => {
+      if (u.createdByModel === "Consultant" && u.createdBy) {
+        if (typeof u.createdBy === "object") {
+          const creator = u.createdBy as any;
+          const id = String(creator._id || creator.id);
+          const name = creator.fullName || creator.name || creator.email;
+          if (id && name && !map.has(id)) {
+            map.set(id, { id, name });
+          }
+        } else if (typeof u.createdBy === "string") {
+          if (!map.has(u.createdBy)) {
+            map.set(u.createdBy, { id: u.createdBy, name: `Consultant (${u.createdBy.slice(-6)})` });
+          }
+        }
+      }
+    });
+
+    return Array.from(map.values());
+  }, [consultantsList, users]);
+
   // get loged user data
   const authString = localStorage.getItem("auth");
   const auth = authString ? JSON.parse(authString) : null;
@@ -55,8 +103,6 @@ const Users = () => {
     auth?.permissions?.viewProfiles ||
     auth?.permissions?.editProfiles ||
     auth?.permissions?.deleteProfiles;
-
-
 
   useEffect(() => {
     // Fetch all users for client-side pagination
@@ -111,6 +157,27 @@ const Users = () => {
       // Creatd by
       const created = advancedFilters.createdByModel || createdByFilter;
       const matchCreated = created === "all" || user.createdByModel === created;
+
+      // Specific Consultant filter
+      let matchesSpecificConsultant = true;
+      if (createdByFilter === "Consultant" && selectedConsultantFilter !== "all") {
+        if (user.createdByModel !== "Consultant") {
+          matchesSpecificConsultant = false;
+        } else if (user.createdBy) {
+          if (typeof user.createdBy === "object") {
+            const creator = user.createdBy as any;
+            const creatorId = String(creator._id || creator.id || "");
+            const creatorName = String(creator.fullName || creator.name || creator.email || "").toLowerCase();
+            matchesSpecificConsultant =
+              creatorId === selectedConsultantFilter ||
+              creatorName.includes(selectedConsultantFilter.toLowerCase());
+          } else if (typeof user.createdBy === "string") {
+            matchesSpecificConsultant = String(user.createdBy) === selectedConsultantFilter;
+          }
+        } else {
+          matchesSpecificConsultant = false;
+        }
+      }
 
       // Membership - use advanced filter if set, otherwise use main filter
       const effectiveMembership = advancedFilters.membership || membershipFilter;
@@ -169,6 +236,7 @@ const Users = () => {
         matchesSearch &&
         matchesGender &&
         matchCreated &&
+        matchesSpecificConsultant &&
         matchesMembership &&
         matchesStatus &&
         matchesCity &&
@@ -180,7 +248,7 @@ const Users = () => {
         matchesCreatedBefore
       );
     })
-  }, [users, searchTerm, genderFilter, membershipFilter, statusFilter, advancedFilters, createdByFilter])
+  }, [users, searchTerm, genderFilter, membershipFilter, statusFilter, advancedFilters, createdByFilter, selectedConsultantFilter])
 
   const handleViewUser = (user: any) => {
     setSelectedUser(user);
@@ -230,7 +298,8 @@ const Users = () => {
   const handleClearFilters = () => {
     setAdvancedFilters({});
     setGenderFilter("all");
-    setCreatedByFilter("all")
+    setCreatedByFilter("all");
+    setSelectedConsultantFilter("all");
     setMembershipFilter("all");
     setStatusFilter("all");
     setSearchTerm("");
@@ -405,18 +474,49 @@ const Users = () => {
                       <SelectItem value="Lesbian">Lesbian</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Select defaultValue={createdByFilter} onValueChange={setCreatedByFilter}>
-                    <SelectTrigger className="w-32">
-                      <SelectValue placeholder="Gender" />
+                  <Select
+                    value={createdByFilter}
+                    onValueChange={(value) => {
+                      setCreatedByFilter(value);
+                      if (value !== "Consultant") {
+                        setSelectedConsultantFilter("all");
+                      }
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <SelectTrigger className="w-36">
+                      <SelectValue placeholder="Created By" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">All Users</SelectItem>
+                      <SelectItem value="all">All Creators</SelectItem>
                       <SelectItem value="Admin">Admin</SelectItem>
                       <SelectItem value="User">User</SelectItem>
                       <SelectItem value="Staff">Staff</SelectItem>
                       <SelectItem value="Consultant">Consultant</SelectItem>
                     </SelectContent>
                   </Select>
+
+                  {createdByFilter === "Consultant" && (
+                    <Select
+                      value={selectedConsultantFilter}
+                      onValueChange={(value) => {
+                        setSelectedConsultantFilter(value);
+                        setCurrentPage(1);
+                      }}
+                    >
+                      <SelectTrigger className="w-44 border-primary/50 text-primary font-medium">
+                        <SelectValue placeholder="All Consultants" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Consultants</SelectItem>
+                        {consultantOptions.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                   <Select defaultValue={membershipFilter} onValueChange={setMembershipFilter}>
                     <SelectTrigger className="w-36">
                       <SelectValue placeholder="Membership" />

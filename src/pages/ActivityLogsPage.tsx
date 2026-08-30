@@ -74,6 +74,7 @@ export default function ActivityLogsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(15);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
 
@@ -102,7 +103,7 @@ export default function ActivityLogsPage() {
       const token = localStorage.getItem("token");
       const params: Record<string, any> = {
         page,
-        limit: 15,
+        limit,
       };
 
       if (searchTerm.trim()) params.search = searchTerm.trim();
@@ -126,7 +127,7 @@ export default function ActivityLogsPage() {
     } finally {
       setLoading(false);
     }
-  }, [page, searchTerm, stepFilter, statusFilter, categoryFilter]);
+  }, [page, limit, searchTerm, stepFilter, statusFilter, categoryFilter]);
 
   useEffect(() => {
     fetchStats();
@@ -491,11 +492,35 @@ export default function ActivityLogsPage() {
           </Table>
 
           {/* Pagination Controls */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between px-4 py-3 border-t border-border/50">
-              <span className="text-xs text-muted-foreground">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 py-3 border-t border-border/50">
+            <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground">
+              <span>
                 Showing {logs.length} of {totalCount} activity logs
               </span>
+              <div className="flex items-center gap-2">
+                <span>Rows per page:</span>
+                <Select
+                  value={String(limit)}
+                  onValueChange={(val) => {
+                    setLimit(Number(val));
+                    setPage(1);
+                  }}
+                >
+                  <SelectTrigger className="h-8 w-20 text-xs">
+                    <SelectValue placeholder="15" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="15">15</SelectItem>
+                    <SelectItem value="25">25</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {totalPages > 1 && (
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
@@ -519,8 +544,8 @@ export default function ActivityLogsPage() {
                   Next <ChevronRight className="w-3.5 h-3.5" />
                 </Button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </CardContent>
       </Card>
 
@@ -573,6 +598,47 @@ export default function ActivityLogsPage() {
                   {getFriendlyDetails(selectedLog)}
                 </div>
               </div>
+
+              {/* User Typed Registration Form Payload Card */}
+              {(selectedLog.details?.payload || selectedLog.userFullName || selectedLog.userEmail || selectedLog.userPhone) && (
+                <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg space-y-2">
+                  <p className="text-xs font-bold text-primary uppercase tracking-wide flex items-center gap-1.5">
+                    <User className="w-4 h-4" /> Registration Form Payload Typed By User
+                  </p>
+                  <div className="grid grid-cols-2 gap-2 text-xs pt-1">
+                    {selectedLog.userFullName && (
+                      <div>
+                        <span className="text-muted-foreground">Full Name: </span>
+                        <span className="font-medium text-foreground">{selectedLog.userFullName}</span>
+                      </div>
+                    )}
+                    {selectedLog.userEmail && (
+                      <div>
+                        <span className="text-muted-foreground">Email: </span>
+                        <span className="font-medium text-foreground">{selectedLog.userEmail}</span>
+                      </div>
+                    )}
+                    {selectedLog.userPhone && (
+                      <div>
+                        <span className="text-muted-foreground">Phone: </span>
+                        <span className="font-medium text-foreground">{selectedLog.userPhone}</span>
+                      </div>
+                    )}
+                    {selectedLog.details?.payload &&
+                      Object.entries(selectedLog.details.payload).map(([k, v]) => {
+                        if (v === undefined || v === null || v === "" || (Array.isArray(v) && v.length === 0)) return null;
+                        const formattedKey = k.replace(/([A-Z])/g, " $1").replace(/^./, (str) => str.toUpperCase());
+                        const formattedVal = typeof v === "object" ? JSON.stringify(v) : String(v);
+                        return (
+                          <div key={k}>
+                            <span className="text-muted-foreground">{formattedKey}: </span>
+                            <span className="font-medium text-foreground">{formattedVal}</span>
+                          </div>
+                        );
+                      })}
+                  </div>
+                </div>
+              )}
 
               {/* Error Details if present */}
               {selectedLog.errorMessage && (

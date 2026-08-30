@@ -24,7 +24,7 @@ import {
   ServiceEnquiryItem,
   weddingServiceService,
 } from "@/services/weddingServiceService";
-import { Mail, Phone, Calendar, User, Briefcase, FileText, Loader2, Save, Send, AlertTriangle } from "lucide-react";
+import { Mail, Phone, Calendar, User, Briefcase, FileText, Loader2, Save, Send, AlertTriangle, Users } from "lucide-react";
 
 interface ServiceEnquiryDetailDialogProps {
   open: boolean;
@@ -173,6 +173,14 @@ export const ServiceEnquiryDetailDialog = ({
                 <div>
                   <span className="text-muted-foreground block">Preferred Date</span>
                   <strong className="text-foreground">{enquiry.eventDate || "Flexible / Not specified"}</strong>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2 col-span-1 md:col-span-2 pt-1 border-t">
+                <Users className="w-4 h-4 text-muted-foreground" />
+                <div>
+                  <span className="text-muted-foreground block">Approx. Member / Guest Count</span>
+                  <strong className="text-primary font-semibold">{enquiry.approximateMemberCount || "Not specified"}</strong>
                 </div>
               </div>
             </div>

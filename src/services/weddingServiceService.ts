@@ -27,6 +27,7 @@ export interface ServiceEnquiryItem {
   email: string;
   phone?: string;
   eventDate?: string;
+  approximateMemberCount?: string;
   message?: string;
   status: "Pending" | "Contacted" | "Resolved" | "Cancelled";
   notes?: string;

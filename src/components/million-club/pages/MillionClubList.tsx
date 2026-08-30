@@ -88,6 +88,27 @@ const MillionClub = () => {
     }
   };
 
+  // Helper to format gender display: Gay -> Male, Lesbian -> Female
+  const getDisplayGender = (gender?: string) => {
+    if (!gender) return "N/A";
+    const g = gender.trim().toLowerCase();
+    if (g === "gay") return "Male";
+    if (g === "lesbian") return "Female";
+    return gender;
+  };
+
+  const checkGenderMatch = (userGender?: string, filterValue?: string) => {
+    if (!filterValue || filterValue === "all") return true;
+    if (!userGender) return false;
+    const ug = userGender.trim().toLowerCase();
+    const f = filterValue.trim().toLowerCase();
+    if (f === "male") return ug === "male" || ug === "gay";
+    if (f === "female") return ug === "female" || ug === "lesbian";
+    if (f === "gay") return ug === "gay" || ug === "male";
+    if (f === "lesbian") return ug === "lesbian" || ug === "female";
+    return ug === f;
+  };
+
   // Reset Filters Function
   const handleResetFilters = () => {
     setSearchTerm("");
@@ -105,8 +126,7 @@ const MillionClub = () => {
         user.email?.toLowerCase().includes(search) ||
         user.mobile?.includes(search);
 
-      const matchesGender =
-        genderFilter === "all" || user.gender === genderFilter;
+      const matchesGender = checkGenderMatch(user.gender, genderFilter);
 
       return matchesSearch && matchesGender;
     });
@@ -122,8 +142,7 @@ const MillionClub = () => {
         req.user?.email?.toLowerCase().includes(search) ||
         req.user?.mobile?.includes(search);
 
-      const matchesGender =
-        genderFilter === "all" || req.user?.gender === genderFilter;
+      const matchesGender = checkGenderMatch(req.user?.gender, genderFilter);
 
       const matchesStatus =
         requestStatusFilter === "all" || req.status === requestStatusFilter;
@@ -269,7 +288,7 @@ const MillionClub = () => {
                           <div>{user.email}</div>
                           <div className="text-xs text-muted-foreground">{user.mobile}</div>
                         </TableCell>
-                        <TableCell>{user.gender || "N/A"}</TableCell>
+                        <TableCell>{getDisplayGender(user.gender)}</TableCell>
                         <TableCell>
                           <Badge className="bg-yellow-500/10 text-yellow-600 border-yellow-500/20">
                             Million Club

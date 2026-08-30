@@ -48,7 +48,9 @@ export default function MillionClubMatchPage() {
     educationLevels: [],
     interests: [],
     diets: [],
-    personalityTraits: []
+    personalityTraits: [],
+    maritalStatuses: [],
+    locations: []
   });
   
   const [suggestedMatches, setSuggestedMatches] = useState<any[]>([]);
@@ -62,6 +64,7 @@ export default function MillionClubMatchPage() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   const [interestInput, setInterestInput] = useState("");
+  const [locationInput, setLocationInput] = useState("");
   const [dataLoading, setDataLoading] = useState({
     user: true,
     suggested: false,
@@ -98,6 +101,30 @@ export default function MillionClubMatchPage() {
     { id: "Patient", name: "Patient", icon: "🕊️" },
   ];
 
+  const staticMaritalStatusOptions = [
+    "Single",
+    "Widowed",
+    "Divorced",
+    "Awaiting Divorce",
+    "Married",
+    "Annulled",
+  ];
+
+  const staticLocationSuggestions = [
+    "Kochi",
+    "Trivandrum",
+    "Kozhikode",
+    "Thrissur",
+    "Kottayam",
+    "Palakkad",
+    "Kannur",
+    "Bangalore",
+    "Chennai",
+    "Mumbai",
+    "Delhi",
+    "Dubai",
+  ];
+
   useEffect(() => {
     if (id) {
       fetchInitialData();
@@ -131,7 +158,9 @@ export default function MillionClubMatchPage() {
           educationLevels: prefs.educationLevels || [],
           interests: prefs.interests || [],
           diets: prefs.diets || prefs.dietPreferences || [],
-          personalityTraits: prefs.personalityTraits || prefs.traits || []
+          personalityTraits: prefs.personalityTraits || prefs.traits || [],
+          maritalStatuses: prefs.maritalStatuses || prefs.maritalStatus || [],
+          locations: prefs.locations || prefs.places || []
         });
       }
       
@@ -838,6 +867,33 @@ export default function MillionClubMatchPage() {
                         )}
                       </div>
 
+                      {/* Marital Status Preference */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-bold">Marital Status Preference</Label>
+                          <span className="text-xs text-muted-foreground">
+                            {preferences.maritalStatuses?.length || 0} Selected
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 p-4 bg-muted/20 rounded-2xl border border-dashed">
+                          {staticMaritalStatusOptions.map((status) => {
+                            const isChecked = preferences.maritalStatuses?.includes(status);
+                            return (
+                              <div key={status} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`marital-${status}`}
+                                  checked={isChecked}
+                                  onCheckedChange={() => toggleArrayItem("maritalStatuses", status)}
+                                />
+                                <label htmlFor={`marital-${status}`} className="text-xs font-medium cursor-pointer">
+                                  {status}
+                                </label>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+
                       {/* Qualification Level / Education */}
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
@@ -859,6 +915,120 @@ export default function MillionClubMatchPage() {
                               </label>
                             </div>
                           ))}
+                        </div>
+                      </div>
+
+                      {/* Preferred Places / Locations */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-bold">Preferred Places / Locations</Label>
+                          <span className="text-xs text-muted-foreground">
+                            {preferences.locations?.length || 0} Selected
+                          </span>
+                        </div>
+
+                        {/* Quick Suggestions */}
+                        <div className="flex flex-wrap gap-1.5 pb-1">
+                          {staticLocationSuggestions.map((loc) => {
+                            const isSelected = preferences.locations?.some(
+                              (l: string) => l.toLowerCase() === loc.toLowerCase()
+                            );
+                            return (
+                              <Badge
+                                key={loc}
+                                variant={isSelected ? "default" : "outline"}
+                                className="cursor-pointer text-xs py-1 px-3 transition-all"
+                                onClick={() => {
+                                  if (isSelected) {
+                                    setPreferences((p: any) => ({
+                                      ...p,
+                                      locations: (p.locations || []).filter(
+                                        (l: string) => l.toLowerCase() !== loc.toLowerCase()
+                                      ),
+                                    }));
+                                  } else {
+                                    setPreferences((p: any) => ({
+                                      ...p,
+                                      locations: [...(p.locations || []), loc],
+                                    }));
+                                  }
+                                }}
+                              >
+                                <MapPin className="w-3 h-3 mr-1" />
+                                {loc}
+                              </Badge>
+                            );
+                          })}
+                        </div>
+
+                        {/* Custom Location Input */}
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Add custom place or district (e.g. Kozhikode, Wayanad)"
+                            value={locationInput}
+                            onChange={(e) => setLocationInput(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                if (locationInput.trim()) {
+                                  const formatted = locationInput.trim();
+                                  if (!preferences.locations?.some((l: string) => l.toLowerCase() === formatted.toLowerCase())) {
+                                    setPreferences((p: any) => ({
+                                      ...p,
+                                      locations: [...(p.locations || []), formatted],
+                                    }));
+                                  }
+                                  setLocationInput("");
+                                }
+                              }
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            size="icon"
+                            onClick={() => {
+                              if (locationInput.trim()) {
+                                const formatted = locationInput.trim();
+                                if (!preferences.locations?.some((l: string) => l.toLowerCase() === formatted.toLowerCase())) {
+                                  setPreferences((p: any) => ({
+                                    ...p,
+                                    locations: [...(p.locations || []), formatted],
+                                  }));
+                                }
+                                setLocationInput("");
+                              }
+                            }}
+                          >
+                            <PlusCircle className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        {/* Selected Location Badges */}
+                        <div className="flex flex-wrap gap-2 p-3 bg-muted/10 border-2 border-dotted rounded-2xl min-h-[50px]">
+                          {preferences.locations?.length === 0 ? (
+                            <span className="text-xs text-muted-foreground italic">No preferred places added</span>
+                          ) : (
+                            preferences.locations?.map((loc: string) => (
+                              <Badge key={loc} variant="secondary" className="flex items-center gap-2 pr-1 text-xs">
+                                <MapPin className="w-3 h-3 text-primary" />
+                                {loc}
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-4 w-4 rounded-full p-0 hover:bg-destructive hover:text-white"
+                                  onClick={() =>
+                                    setPreferences((p: any) => ({
+                                      ...p,
+                                      locations: (p.locations || []).filter((l: string) => l !== loc),
+                                    }))
+                                  }
+                                >
+                                  <Trash2 className="w-2.5 h-2.5" />
+                                </Button>
+                              </Badge>
+                            ))
+                          )}
                         </div>
                       </div>
 

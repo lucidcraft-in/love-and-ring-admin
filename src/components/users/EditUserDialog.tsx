@@ -651,8 +651,11 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Single">Single</SelectItem>
-                    <SelectItem value="Divorced">Divorced</SelectItem>
                     <SelectItem value="Widowed">Widowed</SelectItem>
+                    <SelectItem value="Divorced">Divorced</SelectItem>
+                    <SelectItem value="Awaiting Divorce">Awaiting Divorce</SelectItem>
+                    <SelectItem value="Married">Married</SelectItem>
+                    <SelectItem value="Annulled">Annulled</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

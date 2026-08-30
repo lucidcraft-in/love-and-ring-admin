@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Users, TrendingUp, Clock, Heart, Activity, Eye, Edit, Trash2, Plus, LogOut,
-  Bell, Settings, Search, UserPlus
+  Bell, Settings, Search, UserPlus, Copy, Check, Link as LinkIcon, ExternalLink
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,15 +45,30 @@ export default function ConsultantDashboard() {
   const { currentConsultant, isAuthenticated } = useAppSelector((state) => state.consultant);
   const { users, isLoading: usersLoading, deleteLoading } = useAppSelector((state) => state.users);
 
-  // Dialog state
+  // Dialog & state
   const [searchTerm, setSearchTerm] = useState("");
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [copiedLink, setCopiedLink] = useState(false);
 
   const consultantUser = currentConsultant || JSON.parse(localStorage.getItem("currentConsultant") || "{}");
+  const consultantId = consultantUser?._id || consultantUser?.id || "";
+  const clientDomain = "https://loveandring.com";
+  const referralLink = `${clientDomain}/register?ref=${consultantId}`;
+
+  const handleCopyLink = () => {
+    if (!referralLink) return;
+    navigator.clipboard.writeText(referralLink);
+    setCopiedLink(true);
+    toast({
+      title: "Referral Link Copied!",
+      description: "Client registration URL has been copied to your clipboard.",
+    });
+    setTimeout(() => setCopiedLink(false), 2500);
+  };
   const permissions = consultantUser?.permissions || {
     createProfile: true,
     editProfile: true,
@@ -173,6 +188,18 @@ export default function ConsultantDashboard() {
     logActivity("Updated Profile", `Updated profile details for ${selectedUser?.fullName || selectedUser?.email || "member"}`, "edit");
   };
 
+  const formatLocation = (location: any): string => {
+    if (!location) return "N/A";
+    if (typeof location === "string") return location;
+    if (typeof location === "object") {
+      if (location.name) return location.name;
+      if (location.city) return location.city;
+      const parts = [location.city, location.state, location.country].filter(Boolean);
+      if (parts.length > 0) return parts.join(", ");
+    }
+    return "N/A";
+  };
+
   const filteredUsers = users.filter(
     (user) => {
       const creatorId = typeof user.createdBy === 'object' && user.createdBy !== null
@@ -181,10 +208,12 @@ export default function ConsultantDashboard() {
 
       if (creatorId && consultantUser?._id && creatorId !== consultantUser._id) return false;
 
+      const locStr = formatLocation(user.city || (user as any).location);
+
       return (
         user.fullName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.city?.city?.toLowerCase().includes(searchTerm.toLowerCase())
+        locStr.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
   );
@@ -314,6 +343,59 @@ export default function ConsultantDashboard() {
           )}
         </div>
 
+        {/* Referral Link Card */}
+        <Card className="border-primary/30 bg-gradient-to-r from-primary/10 via-primary/5 to-background shadow-xs">
+          <CardHeader className="pb-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-primary text-primary-foreground shadow-xs">
+                  <LinkIcon className="h-5 w-5" />
+                </div>
+                <div>
+                  <CardTitle className="text-lg font-bold">Your Client Referral Link</CardTitle>
+                  <CardDescription className="text-xs">
+                    Share this link with potential members. Users who register using this link will automatically be assigned under your consultant account.
+                  </CardDescription>
+                </div>
+              </div>
+              <Badge variant="outline" className="w-fit text-xs font-mono bg-background/80 border-primary/40 text-primary">
+                Consultant ID: {consultantId || "N/A"}
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+              <div className="relative flex-1">
+                <Input
+                  readOnly
+                  value={referralLink}
+                  className="font-mono text-sm bg-background pr-10 border-primary/30 focus-visible:ring-primary"
+                />
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 hover:bg-muted"
+                  onClick={handleCopyLink}
+                  title="Copy Referral Link"
+                >
+                  {copiedLink ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4 text-muted-foreground" />}
+                </Button>
+              </div>
+              <Button onClick={handleCopyLink} className="shrink-0 gap-2 font-medium">
+                {copiedLink ? (
+                  <>
+                    <Check className="h-4 w-4" /> Copied!
+                  </>
+                ) : (
+                  <>
+                    <Copy className="h-4 w-4" /> Copy Link
+                  </>
+                )}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {stats.map((stat) => (
@@ -378,12 +460,12 @@ export default function ConsultantDashboard() {
                           <div>
                             {user.fullName || user.email}
                             <p className="text-xs text-muted-foreground md:hidden">
-                              {calculateAge(user.dateOfBirth)}y • {user.city?.city || "N/A"}
+                              {calculateAge(user.dateOfBirth)}y • {formatLocation(user.city || (user as any).location)}
                             </p>
                           </div>
                         </TableCell>
                         <TableCell className="hidden md:table-cell">{calculateAge(user.dateOfBirth)}</TableCell>
-                        <TableCell className="hidden md:table-cell">{user.city?.city || "N/A"}</TableCell>
+                        <TableCell className="hidden md:table-cell">{formatLocation(user.city || (user as any).location)}</TableCell>
                         <TableCell>
                           <Badge variant="secondary" className={getStatusBadge(user.approvalStatus)}>
                             {user.approvalStatus || "PENDING"}

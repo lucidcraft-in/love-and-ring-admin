@@ -233,7 +233,7 @@ export const ServiceEditDialog = ({
                 <div className="relative rounded-lg overflow-hidden border border-border group">
                   <img src={imagePreview} alt="Preview" className="max-h-52 w-full object-cover" />
                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                    <Button
+                    {/* <Button
                       type="button"
                       size="sm"
                       variant="secondary"
@@ -242,7 +242,7 @@ export const ServiceEditDialog = ({
                     >
                       <Crop className="w-3.5 h-3.5" />
                       Crop &amp; Adjust
-                    </Button>
+                    </Button> */}
                     <Button
                       type="button"
                       size="sm"

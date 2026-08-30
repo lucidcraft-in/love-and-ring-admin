@@ -37,12 +37,18 @@ export default function MillionClubMatchPage() {
   // Data states
   const [religions, setReligions] = useState<MasterItem[]>([]);
   const [educationLevels, setEducationLevels] = useState<MasterItem[]>([]);
+  const [castes, setCastes] = useState<MasterItem[]>([]);
+  const [loadingCastes, setLoadingCastes] = useState<boolean>(false);
+
   const [preferences, setPreferences] = useState<any>({
     ageRange: { min: 18, max: 50 },
     heightRangeCm: { min: 140, max: 210 },
     religions: [],
+    castes: [],
     educationLevels: [],
-    interests: []
+    interests: [],
+    diets: [],
+    personalityTraits: []
   });
   
   const [suggestedMatches, setSuggestedMatches] = useState<any[]>([]);
@@ -64,6 +70,34 @@ export default function MillionClubMatchPage() {
     preferences: false
   });
 
+  // Helper to format gender display: Gay -> Male, Lesbian -> Female
+  const getDisplayGender = (gender?: string) => {
+    if (!gender) return "N/A";
+    const g = gender.trim().toLowerCase();
+    if (g === "gay") return "Male";
+    if (g === "lesbian") return "Female";
+    return gender;
+  };
+
+  const staticDietOptions = [
+    { id: "Vegetarian", name: "Vegetarian", icon: "🥗" },
+    { id: "Non-Veg", name: "Non-Veg", icon: "🍗" },
+    { id: "Vegan", name: "Vegan", icon: "🌱" },
+    { id: "Eggetarian", name: "Eggetarian", icon: "🥚" },
+    { id: "Jain", name: "Jain", icon: "🙏" },
+  ];
+
+  const staticTraitsOptions = [
+    { id: "Friendly", name: "Friendly", icon: "😊" },
+    { id: "Ambitious", name: "Ambitious", icon: "🎯" },
+    { id: "Creative", name: "Creative", icon: "💡" },
+    { id: "Honest", name: "Honest", icon: "✨" },
+    { id: "Caring", name: "Caring", icon: "❤️" },
+    { id: "Funny", name: "Funny", icon: "😄" },
+    { id: "Intelligent", name: "Intelligent", icon: "🧠" },
+    { id: "Patient", name: "Patient", icon: "🕊️" },
+  ];
+
   useEffect(() => {
     if (id) {
       fetchInitialData();
@@ -74,24 +108,30 @@ export default function MillionClubMatchPage() {
     if (!id) return;
     setDataLoading(prev => ({ ...prev, user: true }));
     try {
-      const [user, rels, edus, prefs] = await Promise.all([
+      setLoadingCastes(true);
+      const [user, rels, edus, castesRes, prefs] = await Promise.all([
         userService.getUserById(id),
         masterDataService.getItems("religions", { take: 100 }),
         masterDataService.getItems("primaryEducations", { take: 100 }),
+        masterDataService.getItems("castes", { take: 300 }),
         userService.getUserPreference(id)
       ]);
       
       setCurrentUser(user);
       setReligions(rels.data || []);
       setEducationLevels(edus.data || []);
+      setCastes(castesRes.data || []);
       
       if (prefs) {
         setPreferences({
           ageRange: prefs.ageRange || { min: 18, max: 50 },
           heightRangeCm: prefs.heightRangeCm || { min: 140, max: 210 },
           religions: prefs.religions || [],
+          castes: prefs.castes || [],
           educationLevels: prefs.educationLevels || [],
-          interests: prefs.interests || []
+          interests: prefs.interests || [],
+          diets: prefs.diets || prefs.dietPreferences || [],
+          personalityTraits: prefs.personalityTraits || prefs.traits || []
         });
       }
       
@@ -102,6 +142,7 @@ export default function MillionClubMatchPage() {
       console.error("Error fetching data:", error);
       toast.error("Failed to load matching workspace");
     } finally {
+      setLoadingCastes(false);
       setDataLoading(prev => ({ ...prev, user: false }));
     }
   };
@@ -208,6 +249,23 @@ export default function MillionClubMatchPage() {
     return age;
   };
 
+  /* Filter castes based on selected religions */
+  const filteredCastes = castes.filter((caste: any) => {
+    if (!preferences.religions || preferences.religions.length === 0) return false;
+    const relId = typeof caste.religion === "object" ? caste.religion?._id : caste.religion;
+    return preferences.religions.includes(relId || "");
+  });
+
+  const toggleArrayItem = (key: string, value: string) => {
+    setPreferences((prev: any) => {
+      const list = prev[key] || [];
+      return {
+        ...prev,
+        [key]: list.includes(value) ? list.filter((i: string) => i !== value) : [...list, value]
+      };
+    });
+  };
+
   const UserCard = ({ user, score, status, interestId, isReceived, isAccepted }: any) => {
     const age = calculateAge(user?.dateOfBirth);
     const isSelectedFiltered = selectedUserForDetail?._id === user?._id;
@@ -257,7 +315,7 @@ export default function MillionClubMatchPage() {
             <div className="grid grid-cols-1 gap-1 text-[11px] text-muted-foreground">
               <div className="flex items-center gap-1.5">
                 <User className="w-3 h-3 text-primary/70 shrink-0" />
-                <span className="truncate">{age} yrs • {user?.gender} • {user?.heightCm ? `${user.heightCm}cm` : 'N/A'}</span>
+                <span className="truncate">{age} yrs • {getDisplayGender(user?.gender)} • {user?.heightCm ? `${user.heightCm}cm` : 'N/A'}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <MapPin className="w-3 h-3 text-primary/70 shrink-0" />
@@ -397,7 +455,7 @@ export default function MillionClubMatchPage() {
                       <div className="mt-2 text-sm font-semibold space-y-1">
                         <p className="flex justify-between"><span>Age:</span> <span className="text-primary">{calculateAge(selectedUserForDetail.dateOfBirth)} Years</span></p>
                         <p className="flex justify-between"><span>Height:</span> <span className="text-primary">{selectedUserForDetail.heightCm} cm</span></p>
-                        <p className="flex justify-between"><span>Gender:</span> <span className="text-primary capitalize">{selectedUserForDetail.gender}</span></p>
+                        <p className="flex justify-between"><span>Gender:</span> <span className="text-primary capitalize">{getDisplayGender(selectedUserForDetail.gender)}</span></p>
                         <p className="flex justify-between"><span>Marital:</span> <span className="text-primary">{selectedUserForDetail.maritalStatus || "Single"}</span></p>
                       </div>
                     </Card>
@@ -625,56 +683,282 @@ export default function MillionClubMatchPage() {
 
                   {/* TAB: PREFERENCES */}
                   <TabsContent value="preferences" className="m-0 border-none p-0 outline-none">
-                         <div className="max-w-3xl mx-auto space-y-10 py-4">
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                {/* Age Range */}
-                                <div className="space-y-3">
-                                    <Label className="text-sm font-bold flex justify-between">Age Range <Badge variant="secondary" className="font-mono">{preferences.ageRange.min}-{preferences.ageRange.max}</Badge></Label>
-                                    <div className="flex gap-4">
-                                        <Input type="number" value={preferences.ageRange.min} onChange={(e) => setPreferences((p:any) => ({...p, ageRange: {...p.ageRange, min: parseInt(e.target.value) || 18 }}))}/>
-                                        <Input type="number" value={preferences.ageRange.max} onChange={(e) => setPreferences((p:any) => ({...p, ageRange: {...p.ageRange, max: parseInt(e.target.value) || 50 }}))}/>
-                                    </div>
-                                </div>
-                                 {/* Height Range */}
-                                 <div className="space-y-3">
-                                    <Label className="text-sm font-bold flex justify-between">Height (cm) <Badge variant="secondary" className="font-mono">{preferences.heightRangeCm.min}-{preferences.heightRangeCm.max}</Badge></Label>
-                                    <div className="flex gap-4">
-                                        <Input type="number" value={preferences.heightRangeCm.min} onChange={(e) => setPreferences((p:any) => ({...p, heightRangeCm: {...p.heightRangeCm, min: parseInt(e.target.value) || 140 }}))}/>
-                                        <Input type="number" value={preferences.heightRangeCm.max} onChange={(e) => setPreferences((p:any) => ({...p, heightRangeCm: {...p.heightRangeCm, max: parseInt(e.target.value) || 210 }}))}/>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div className="space-y-6">
-                                <div className="space-y-3">
-                                    <Label className="text-sm font-bold">Preferred Religions</Label>
-                                    <div className="grid grid-cols-2 gap-3 p-4 bg-muted/20 rounded-xl border border-dashed">
-                                        {religions.map(r => (
-                                            <div key={r._id} className="flex items-center space-x-2">
-                                                <Checkbox id={r._id} checked={preferences.religions.includes(r._id)} onCheckedChange={(c) => setPreferences((p:any) => ({...p, religions: c ? [...p.religions, r._id] : p.religions.filter((i:string)=>i!==r._id)}))}/>
-                                                <label htmlFor={r._id} className="text-xs font-medium cursor-pointer">{r.name}</label>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                                <div className="space-y-3">
-                                    <Label className="text-sm font-bold">Interests Filter</Label>
-                                    <div className="flex gap-2">
-                                        <Input placeholder="Add..." value={interestInput} onChange={e => setInterestInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && (()=>{ if(interestInput){setPreferences((p:any)=>({...p, interests: [...p.interests, interestInput]})); setInterestInput("") } })()} />
-                                        <Button size="icon" onClick={() => { if(interestInput){setPreferences((p:any)=>({...p, interests: [...p.interests, interestInput]})); setInterestInput("") } }}><PlusCircle/></Button>
-                                    </div>
-                                    <div className="flex flex-wrap gap-2 p-3 bg-muted/10 border-2 border-dotted rounded-xl min-h-[50px]">
-                                        {preferences.interests.map((it:string) => (
-                                            <Badge key={it} variant="secondary" className="flex items-center gap-2 pr-1">{it} <Button variant="ghost" size="icon" className="h-4 w-4 rounded-full" onClick={() => setPreferences((p:any)=>({...p, interests: p.interests.filter((i:string)=>i!==it)}))}><Trash2 className="w-2.5 h-2.5"/></Button></Badge>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
+                    <div className="max-w-4xl mx-auto space-y-8 py-4">
+                      {/* Age and Height */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Age Range */}
+                        <div className="space-y-3 p-4 bg-muted/20 rounded-2xl border">
+                          <Label className="text-sm font-bold flex justify-between">
+                            Age Range
+                            <Badge variant="secondary" className="font-mono">
+                              {preferences.ageRange.min} - {preferences.ageRange.max} yrs
+                            </Badge>
+                          </Label>
+                          <div className="flex gap-4">
+                            <Input
+                              type="number"
+                              min={18}
+                              max={preferences.ageRange.max}
+                              value={preferences.ageRange.min}
+                              onChange={(e) => setPreferences((p: any) => ({ ...p, ageRange: { ...p.ageRange, min: parseInt(e.target.value) || 18 } }))}
+                            />
+                            <Input
+                              type="number"
+                              min={preferences.ageRange.min}
+                              max={80}
+                              value={preferences.ageRange.max}
+                              onChange={(e) => setPreferences((p: any) => ({ ...p, ageRange: { ...p.ageRange, max: parseInt(e.target.value) || 50 } }))}
+                            />
+                          </div>
+                        </div>
 
-                            <Button className="w-full shadow-lg font-bold h-11" onClick={handleSavePreferences} disabled={loading}>
-                                {loading && <Loader2 className="animate-spin mr-2"/>} Update Preferences & Search
+                        {/* Height Range */}
+                        <div className="space-y-3 p-4 bg-muted/20 rounded-2xl border">
+                          <Label className="text-sm font-bold flex justify-between">
+                            Height (cm)
+                            <Badge variant="secondary" className="font-mono">
+                              {preferences.heightRangeCm.min} - {preferences.heightRangeCm.max} cm
+                            </Badge>
+                          </Label>
+                          <div className="flex gap-4">
+                            <Input
+                              type="number"
+                              min={120}
+                              max={preferences.heightRangeCm.max}
+                              value={preferences.heightRangeCm.min}
+                              onChange={(e) => setPreferences((p: any) => ({ ...p, heightRangeCm: { ...p.heightRangeCm, min: parseInt(e.target.value) || 140 } }))}
+                            />
+                            <Input
+                              type="number"
+                              min={preferences.heightRangeCm.min}
+                              max={250}
+                              value={preferences.heightRangeCm.max}
+                              onChange={(e) => setPreferences((p: any) => ({ ...p, heightRangeCm: { ...p.heightRangeCm, max: parseInt(e.target.value) || 210 } }))}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Preferred Religions */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-bold">Preferred Religions</Label>
+                          <span className="text-xs text-muted-foreground">
+                            {preferences.religions.length} Selected
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-4 bg-muted/20 rounded-2xl border border-dashed">
+                          {religions.map((r) => (
+                            <div key={r._id} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`rel-${r._id}`}
+                                checked={preferences.religions.includes(r._id)}
+                                onCheckedChange={(c) =>
+                                  setPreferences((p: any) => ({
+                                    ...p,
+                                    religions: c
+                                      ? [...p.religions, r._id]
+                                      : p.religions.filter((i: string) => i !== r._id)
+                                  }))
+                                }
+                              />
+                              <label htmlFor={`rel-${r._id}`} className="text-xs font-medium cursor-pointer">
+                                {r.name}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Caste / Community */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label className="text-sm font-bold block">Caste / Community</Label>
+                            <p className="text-[11px] text-muted-foreground">
+                              {preferences.religions.length === 0
+                                ? "Select religion(s) above to view corresponding castes"
+                                : "Castes matching selected religion(s)"}
+                            </p>
+                          </div>
+                          {filteredCastes.length > 0 && preferences.religions.length > 0 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs h-7 text-primary hover:text-primary/80"
+                              onClick={() => {
+                                const allFilteredIds = filteredCastes.map((c: any) => c._id);
+                                const isAllSelected = allFilteredIds.every((cid: string) =>
+                                  preferences.castes?.includes(cid)
+                                );
+                                setPreferences((prev: any) => ({
+                                  ...prev,
+                                  castes: isAllSelected
+                                    ? (prev.castes || []).filter((cid: string) => !allFilteredIds.includes(cid))
+                                    : Array.from(new Set([...(prev.castes || []), ...allFilteredIds]))
+                                }));
+                              }}
+                            >
+                              {filteredCastes.every((c: any) => preferences.castes?.includes(c._id))
+                                ? "Deselect All"
+                                : "Select All"}
                             </Button>
-                         </div>
+                          )}
+                        </div>
+                        {loadingCastes ? (
+                          <p className="text-xs text-muted-foreground py-2">Loading castes...</p>
+                        ) : preferences.religions.length === 0 ? (
+                          <div className="p-4 rounded-xl bg-muted/20 text-center border border-dashed">
+                            <p className="text-xs text-muted-foreground">
+                              Please select at least one religion above to view corresponding castes.
+                            </p>
+                          </div>
+                        ) : filteredCastes.length === 0 ? (
+                          <div className="p-4 rounded-xl bg-muted/20 text-center border border-dashed">
+                            <p className="text-xs text-muted-foreground">
+                              No castes found for the selected religion(s).
+                            </p>
+                          </div>
+                        ) : (
+                          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 p-4 bg-muted/20 rounded-2xl border border-dashed max-h-56 overflow-y-auto">
+                            {filteredCastes.map((c: any) => (
+                              <div key={c._id} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={`caste-${c._id}`}
+                                  checked={preferences.castes?.includes(c._id)}
+                                  onCheckedChange={() => toggleArrayItem("castes", c._id)}
+                                />
+                                <label htmlFor={`caste-${c._id}`} className="text-xs font-medium cursor-pointer truncate">
+                                  {c.name}
+                                </label>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Qualification Level / Education */}
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <Label className="text-sm font-bold">Qualification Level</Label>
+                          <span className="text-xs text-muted-foreground">
+                            {preferences.educationLevels.length} Selected
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 p-4 bg-muted/20 rounded-2xl border border-dashed">
+                          {educationLevels.map((edu) => (
+                            <div key={edu._id} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`edu-${edu._id}`}
+                                checked={preferences.educationLevels.includes(edu._id)}
+                                onCheckedChange={() => toggleArrayItem("educationLevels", edu._id)}
+                              />
+                              <label htmlFor={`edu-${edu._id}`} className="text-xs font-medium cursor-pointer truncate">
+                                {edu.name}
+                              </label>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Diet Preference */}
+                      <div className="space-y-3">
+                        <Label className="text-sm font-bold">Diet Preference</Label>
+                        <div className="flex flex-wrap gap-2 p-4 bg-muted/20 rounded-2xl border border-dashed">
+                          {staticDietOptions.map((diet) => {
+                            const isSelected = preferences.diets?.includes(diet.name) || preferences.diets?.includes(diet.id);
+                            return (
+                              <Badge
+                                key={diet.id}
+                                variant={isSelected ? "default" : "outline"}
+                                className="cursor-pointer py-2 px-3.5 text-xs transition-all gap-1.5"
+                                onClick={() => toggleArrayItem("diets", diet.name)}
+                              >
+                                <span>{diet.icon}</span>
+                                <span>{diet.name}</span>
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Personality Traits */}
+                      <div className="space-y-3">
+                        <Label className="text-sm font-bold">Personality Traits</Label>
+                        <div className="flex flex-wrap gap-2 p-4 bg-muted/20 rounded-2xl border border-dashed">
+                          {staticTraitsOptions.map((trait) => {
+                            const isSelected = preferences.personalityTraits?.includes(trait.name) || preferences.personalityTraits?.includes(trait.id);
+                            return (
+                              <Badge
+                                key={trait.id}
+                                variant={isSelected ? "default" : "outline"}
+                                className="cursor-pointer py-2 px-3.5 text-xs transition-all gap-1.5"
+                                onClick={() => toggleArrayItem("personalityTraits", trait.name)}
+                              >
+                                <span>{trait.icon}</span>
+                                <span>{trait.name}</span>
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Common Interests */}
+                      <div className="space-y-3">
+                        <Label className="text-sm font-bold">Interests Filter</Label>
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="Add an interest (e.g. Travel, Music)"
+                            value={interestInput}
+                            onChange={(e) => setInterestInput(e.target.value)}
+                            onKeyDown={(e) =>
+                              e.key === "Enter" &&
+                              (() => {
+                                if (interestInput.trim()) {
+                                  toggleArrayItem("interests", interestInput.trim());
+                                  setInterestInput("");
+                                }
+                              })()
+                            }
+                          />
+                          <Button
+                            size="icon"
+                            onClick={() => {
+                              if (interestInput.trim()) {
+                                toggleArrayItem("interests", interestInput.trim());
+                                setInterestInput("");
+                              }
+                            }}
+                          >
+                            <PlusCircle className="w-4 h-4" />
+                          </Button>
+                        </div>
+                        <div className="flex flex-wrap gap-2 p-3 bg-muted/10 border-2 border-dotted rounded-2xl min-h-[50px]">
+                          {preferences.interests?.length === 0 ? (
+                            <span className="text-xs text-muted-foreground italic">No interest tags added</span>
+                          ) : (
+                            preferences.interests?.map((it: string) => (
+                              <Badge key={it} variant="secondary" className="flex items-center gap-2 pr-1 text-xs">
+                                {it}
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="h-4 w-4 rounded-full p-0 hover:bg-destructive hover:text-white"
+                                  onClick={() => toggleArrayItem("interests", it)}
+                                >
+                                  <Trash2 className="w-2.5 h-2.5" />
+                                </Button>
+                              </Badge>
+                            ))
+                          )}
+                        </div>
+                      </div>
+
+                      <Button className="w-full shadow-lg font-bold h-11 rounded-xl" onClick={handleSavePreferences} disabled={loading}>
+                        {loading && <Loader2 className="animate-spin mr-2 w-4 h-4" />} Update Preferences &amp; Search Matches
+                      </Button>
+                    </div>
                   </TabsContent>
                 </div>
               </ScrollArea>

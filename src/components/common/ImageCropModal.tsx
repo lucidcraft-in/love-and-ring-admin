@@ -325,7 +325,7 @@ export function ImageCropModal({
 
           {/* Controls */}
           <div className="space-y-4 pt-2">
-            <div className="flex items-center gap-4 px-2">
+            {/* <div className="flex items-center gap-4 px-2">
               <ZoomOut className="w-4 h-4 text-muted-foreground" />
               <Slider
                 value={zoom}
@@ -336,7 +336,7 @@ export function ImageCropModal({
                 className="flex-1"
               />
               <ZoomIn className="w-4 h-4 text-muted-foreground" />
-            </div>
+            </div> */}
 
             <div className="flex justify-center gap-2">
               <Button type="button" variant="outline" size="sm" onClick={handleRotate} disabled={isProcessing}>

@@ -1064,8 +1064,8 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
                   <SelectContent>
                     <SelectItem value="APPROVED">Active</SelectItem>
                     <SelectItem value="INACTIVE">Inactive</SelectItem>
-                    <SelectItem value="PENDING">Pending</SelectItem>
-                    <SelectItem value="REJECTED">Rejected</SelectItem>
+                    {/* <SelectItem value="PENDING">Pending</SelectItem>
+                    <SelectItem value="REJECTED">Rejected</SelectItem> */}
                   </SelectContent>
                 </Select>
               </div>

@@ -7,7 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
 import { sendEmailOtpAsync, verifyEmailOtpAsync, resetOtpState } from "@/store/slices/usersSlice";
-import { Mail, KeyRound, CheckCircle2 } from "lucide-react";
+import { Mail, KeyRound, CheckCircle2, Eye, EyeOff } from "lucide-react";
 
 interface AddUserDialogProps {
   open: boolean;
@@ -25,6 +25,7 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
   const [mobile, setMobile] = useState("");
   const [countryCode, setCountryCode] = useState("+91");
   const [otp, setOtp] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
     password: "",
     accountFor: "Self",
@@ -35,6 +36,22 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
     gender: "",
   });
 
+  const validatePassword = (password: string) => {
+    const minLength = password.length >= 8;
+    const hasUppercase = /[A-Z]/.test(password);
+    const hasDigit = /\d/.test(password);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
+    return {
+      minLength,
+      hasUppercase,
+      hasDigit,
+      hasSpecial,
+      isValid: minLength && hasUppercase && hasDigit && hasSpecial,
+    };
+  };
+
+  const passwordValidation = validatePassword(formData.password);
+
   // Reset state when dialog opens/closes
   useEffect(() => {
     if (open) {
@@ -43,6 +60,7 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
       setMobile("");
       setCountryCode("+91");
       setOtp("");
+      setShowPassword(false);
       setFormData({
         password: "",
         accountFor: "Self",
@@ -128,6 +146,15 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
       toast({
         title: "Error",
         description: "OTP and password are required",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!passwordValidation.isValid) {
+      toast({
+        title: "Error",
+        description: "Password does not meet strong password requirements.",
         variant: "destructive",
       });
       return;
@@ -277,14 +304,50 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
 
               <div className="col-span-2 space-y-2">
                 <Label htmlFor="password">Password *</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => handleInputChange("password", e.target.value)}
-                  placeholder="Minimum 6 characters"
-                  disabled={verificationLoading}
-                />
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={formData.password}
+                    onChange={(e) => handleInputChange("password", e.target.value)}
+                    placeholder="Create a strong password"
+                    disabled={verificationLoading}
+                    className="pr-10"
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <Eye className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </Button>
+                </div>
+
+                {formData.password && (
+                  <div className="text-xs space-y-1 mt-2 bg-muted/40 p-2.5 rounded border">
+                    <p className="font-semibold text-muted-foreground mb-1">Password Requirements:</p>
+                    <div className="grid grid-cols-2 gap-x-2 gap-y-1">
+                      <div className={passwordValidation.minLength ? "text-green-600 dark:text-green-400 font-medium flex items-center gap-1" : "text-muted-foreground flex items-center gap-1"}>
+                        <span>{passwordValidation.minLength ? "✓" : "○"}</span> At least 8 characters
+                      </div>
+                      <div className={passwordValidation.hasUppercase ? "text-green-600 dark:text-green-400 font-medium flex items-center gap-1" : "text-muted-foreground flex items-center gap-1"}>
+                        <span>{passwordValidation.hasUppercase ? "✓" : "○"}</span> One uppercase letter (A-Z)
+                      </div>
+                      <div className={passwordValidation.hasDigit ? "text-green-600 dark:text-green-400 font-medium flex items-center gap-1" : "text-muted-foreground flex items-center gap-1"}>
+                        <span>{passwordValidation.hasDigit ? "✓" : "○"}</span> One number (0-9)
+                      </div>
+                      <div className={passwordValidation.hasSpecial ? "text-green-600 dark:text-green-400 font-medium flex items-center gap-1" : "text-muted-foreground flex items-center gap-1"}>
+                        <span>{passwordValidation.hasSpecial ? "✓" : "○"}</span> Special character (!@#$%^&*)
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">

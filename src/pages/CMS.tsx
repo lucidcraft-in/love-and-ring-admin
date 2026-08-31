@@ -89,6 +89,9 @@ const CMS = () => {
   const [enquiryDetailOpen, setEnquiryDetailOpen] = useState(false);
   const [enquiryStatusFilter, setEnquiryStatusFilter] = useState("ALL");
   const [enquirySearchQuery, setEnquirySearchQuery] = useState("");
+  const [deleteEnquiryConfirmOpen, setDeleteEnquiryConfirmOpen] = useState(false);
+  const [pendingDeleteEnquiryItem, setPendingDeleteEnquiryItem] = useState<ServiceEnquiryItem | null>(null);
+  const [deleteEnquiryLoading, setDeleteEnquiryLoading] = useState(false);
 
   const [activeTab, setActiveTab] = useState("banners");
 
@@ -127,13 +130,24 @@ const CMS = () => {
     }
   };
 
-  const handleDeleteEnquiry = async (id: string) => {
+  const requestDeleteEnquiry = (item: ServiceEnquiryItem) => {
+    setPendingDeleteEnquiryItem(item);
+    setDeleteEnquiryConfirmOpen(true);
+  };
+
+  const handleConfirmDeleteEnquiry = async () => {
+    if (!pendingDeleteEnquiryItem) return;
     try {
-      await weddingServiceService.deleteServiceEnquiry(id);
+      setDeleteEnquiryLoading(true);
+      await weddingServiceService.deleteServiceEnquiry(pendingDeleteEnquiryItem._id);
       toast({ title: "Enquiry Deleted", description: "Service enquiry deleted successfully" });
       fetchServiceEnquiries();
     } catch (err: any) {
       toast({ title: "Error", description: err.message || "Failed to delete enquiry", variant: "destructive" });
+    } finally {
+      setDeleteEnquiryLoading(false);
+      setDeleteEnquiryConfirmOpen(false);
+      setPendingDeleteEnquiryItem(null);
     }
   };
 
@@ -959,7 +973,7 @@ const CMS = () => {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-destructive"
-                              onClick={() => handleDeleteEnquiry(item._id)}
+                              onClick={() => requestDeleteEnquiry(item)}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </Button>
@@ -1017,6 +1031,19 @@ const CMS = () => {
         cancelText="Cancel"
         loading={statusToggleLoading}
         onConfirm={handleConfirmStatusToggle}
+      />
+
+      {/* Service Enquiry Delete Confirmation Dialog */}
+      <ConfirmDialog
+        open={deleteEnquiryConfirmOpen}
+        onOpenChange={setDeleteEnquiryConfirmOpen}
+        title="Delete Service Enquiry"
+        description={`Are you sure you want to delete service enquiry ${pendingDeleteEnquiryItem?.enquiryId ? `"${pendingDeleteEnquiryItem.enquiryId}"` : ""} from ${pendingDeleteEnquiryItem?.name || "this client"}? This action cannot be undone.`}
+        confirmText="Delete Enquiry"
+        cancelText="Cancel"
+        variant="destructive"
+        loading={deleteEnquiryLoading}
+        onConfirm={handleConfirmDeleteEnquiry}
       />
 
     </div>

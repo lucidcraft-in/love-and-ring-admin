@@ -116,7 +116,7 @@ export default function ConsultantList({ initialTab }: ConsultantListProps) {
       c.email.toLowerCase().includes(searchQuery.toLowerCase());
 
     const effectiveStatus = advancedFilters.status || statusFilter;
-    const matchesStatus = effectiveStatus === "all" || c.status === effectiveStatus;
+    const matchesStatus = effectiveStatus === "all" ? c.status !== "PENDING" : c.status === effectiveStatus;
 
     const matchesRegions = !advancedFilters.regions || advancedFilters.regions.length === 0 ||
       advancedFilters.regions.some(region =>

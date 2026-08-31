@@ -358,9 +358,9 @@ export default function ConsultantDashboard() {
                   </CardDescription>
                 </div>
               </div>
-              <Badge variant="outline" className="w-fit text-xs font-mono bg-background/80 border-primary/40 text-primary">
+              {/* <Badge variant="outline" className="w-fit text-xs font-mono bg-background/80 border-primary/40 text-primary">
                 Consultant ID: {consultantId || "N/A"}
-              </Badge>
+              </Badge> */}
             </div>
           </CardHeader>
           <CardContent>

@@ -31,7 +31,7 @@ Axios.interceptors.request.use((config) => {
   const pathname = window.location.pathname;
   let token: string | null = null;
 
-  if (pathname.startsWith("/consultant")) {
+  if (pathname.startsWith("/consultant/")) {
     token = localStorage.getItem("consultantToken");
     if (!token || token === "null" || token === "undefined") {
       try {
@@ -39,7 +39,7 @@ Axios.interceptors.request.use((config) => {
         token = consultant?.token || null;
       } catch (e) {}
     }
-  } else if (pathname.startsWith("/staff")) {
+  } else if (pathname.startsWith("/staff/")) {
     token = localStorage.getItem("staffToken") || localStorage.getItem("staff_token");
     if (!token || token === "null" || token === "undefined") {
       try {

@@ -258,6 +258,8 @@ export default function ConsultantList({ initialTab }: ConsultantListProps) {
       status: statusFilter === "all" ? undefined : statusFilter as any,
     }));
     dispatch(getConsultantStatsAsync());
+    dispatch(fetchPendingProfilesAsync({ take: 50, skip: 0 }));
+    dispatch(fetchApprovalStatsAsync());
   };
 
   const handleApplyFilters = (filters: ConsultantFilters) => {
@@ -446,7 +448,7 @@ export default function ConsultantList({ initialTab }: ConsultantListProps) {
                       <SelectItem value="ACTIVE">Active</SelectItem>
                       <SelectItem value="PENDING">Pending</SelectItem>
                       <SelectItem value="REJECTED">Rejected</SelectItem>
-                      <SelectItem value="SUSPENDED">Suspended</SelectItem>
+                      {/* <SelectItem value="SUSPENDED">Suspended</SelectItem> */}
                     </SelectContent>
                   </Select>
                   <Button

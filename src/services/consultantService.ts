@@ -69,7 +69,7 @@ export interface ConsultantLoginResponse {
 }
 
 export interface CreateConsultantPayload {
-  username: string;
+  username?: string;
   email: string;
   fullName: string;
   phone?: string;

@@ -25,7 +25,6 @@ export function ConsultantCreateDialog({ open, onOpenChange, onCreate }: Consult
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [formData, setFormData] = useState({
-    username: "",
     email: "",
     fullName: "",
     phone: "",
@@ -92,7 +91,6 @@ export function ConsultantCreateDialog({ open, onOpenChange, onCreate }: Consult
 
       // Reset form
       setFormData({
-        username: "",
         email: "",
         fullName: "",
         phone: "",
@@ -124,11 +122,11 @@ export function ConsultantCreateDialog({ open, onOpenChange, onCreate }: Consult
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Username *</Label>
+                <Label>Full Name *</Label>
                 <Input
-                  placeholder="broker_name"
-                  value={formData.username}
-                  onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+                  placeholder="Full Name"
+                  value={formData.fullName}
+                  onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                   required
                   disabled={createLoading}
                 />
@@ -145,16 +143,6 @@ export function ConsultantCreateDialog({ open, onOpenChange, onCreate }: Consult
                 />
               </div>
             </div>
-            <div>
-              <Label>Full Name *</Label>
-              <Input
-                placeholder="Full Name"
-                value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                required
-                disabled={createLoading}
-              />
-            </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>Phone</Label>
@@ -165,27 +153,6 @@ export function ConsultantCreateDialog({ open, onOpenChange, onCreate }: Consult
                   disabled={createLoading}
                 />
               </div>
-              {/* <div>
-                <Label>Branch *</Label>
-                <Select
-                  value={formData.branch}
-                  onValueChange={(value) => setFormData({ ...formData, branch: value })}
-                  disabled={createLoading || branchesLoading}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder={branchesLoading ? "Loading..." : "Select branch"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {branches.map((branch) => (
-                      <SelectItem key={branch._id} value={branch._id}>
-                        {branch.name} - {branch.city}, {branch.state}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div> */}
-            </div>
-            <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label>License Number</Label>
                 <Input
@@ -195,15 +162,15 @@ export function ConsultantCreateDialog({ open, onOpenChange, onCreate }: Consult
                   disabled={createLoading}
                 />
               </div>
-              <div>
-                <Label>Regions (comma-separated)</Label>
-                <Input
-                  placeholder="Mumbai, Delhi, Bangalore"
-                  value={formData.regions}
-                  onChange={(e) => setFormData({ ...formData, regions: e.target.value })}
-                  disabled={createLoading}
-                />
-              </div>
+            </div>
+            <div>
+              <Label>Regions (comma-separated)</Label>
+              <Input
+                placeholder="Mumbai, Delhi, Bangalore"
+                value={formData.regions}
+                onChange={(e) => setFormData({ ...formData, regions: e.target.value })}
+                disabled={createLoading}
+              />
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>

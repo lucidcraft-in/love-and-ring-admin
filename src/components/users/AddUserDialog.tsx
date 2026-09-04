@@ -52,27 +52,33 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
 
   const passwordValidation = validatePassword(formData.password);
 
-  // Reset state when dialog opens/closes
+  // Load draft from localStorage on open or mount
   useEffect(() => {
     if (open) {
-      setStep("email");
-      setEmail("");
-      setMobile("");
-      setCountryCode("+91");
-      setOtp("");
-      setShowPassword(false);
-      setFormData({
-        password: "",
-        accountFor: "Self",
-        fullName: "",
-        mobile: "",
-        alternateMobile: "",
-        countryCode: "+91",
-        gender: "",
-      });
-      dispatch(resetOtpState());
+      const savedDraft = localStorage.getItem("admin_add_user_draft");
+      if (savedDraft) {
+        try {
+          const draft = JSON.parse(savedDraft);
+          if (draft.email) setEmail(draft.email);
+          if (draft.mobile) setMobile(draft.mobile);
+          if (draft.countryCode) setCountryCode(draft.countryCode);
+          if (draft.otp) setOtp(draft.otp);
+          if (draft.step) setStep(draft.step);
+          if (draft.formData) setFormData(draft.formData);
+        } catch (e) {
+          console.error("Failed to parse add user draft", e);
+        }
+      }
     }
-  }, [open, dispatch]);
+  }, [open]);
+
+  // Save draft to localStorage on state changes
+  useEffect(() => {
+    if (open && (email || mobile || formData.fullName || formData.password)) {
+      const draft = { step, email, mobile, countryCode, otp, formData };
+      localStorage.setItem("admin_add_user_draft", JSON.stringify(draft));
+    }
+  }, [open, step, email, mobile, countryCode, otp, formData]);
 
   // Move to verification step when OTP is sent
   useEffect(() => {
@@ -174,6 +180,8 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
           gender: formData.gender,
         })
       ).unwrap();
+
+      localStorage.removeItem("admin_add_user_draft");
 
       toast({
         title: "Success",

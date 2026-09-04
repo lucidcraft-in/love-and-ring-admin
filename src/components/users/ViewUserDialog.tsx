@@ -309,7 +309,14 @@ export const ViewUserDialog = ({ open, onOpenChange, user, onEdit }: ViewUserDia
               <div className="grid grid-cols-2 gap-6 pt-4 border-t">
                 <InfoRow label="City" value={formatLocation(user.city)} icon={MapPin} />
                 <InfoRow label="Religion" value={extractName(user.religion)} />
-                <InfoRow label="Caste" value={extractName(user.caste)} />
+                <InfoRow
+                  label="Caste"
+                  value={
+                    extractName(user.religion)?.toLowerCase() === "free thinker"
+                      ? "N/A"
+                      : extractName(user.caste)
+                  }
+                />
                 <InfoRow label="Mother Tongue" value={extractName(user.motherTongue)} />
                 {/* <InfoRow label="Branch" value={user.branch} /> */}
                 {/* <InfoRow label="Referred By" value={user.referredBy} /> */}

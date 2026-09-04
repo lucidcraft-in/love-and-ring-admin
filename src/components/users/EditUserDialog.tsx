@@ -19,6 +19,7 @@ import {
 } from "@/store/slices/masterDataSlice";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getFriendlyActionName, getFriendlyDetails, getStepInfo } from "@/utils/activityLogUtils";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 
 interface User {
   photos?: {
@@ -221,47 +222,108 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
     }
   }, [user?.email, open]);
 
+  const [isCustomProfession, setIsCustomProfession] = useState(false);
+  const [customProfessionName, setCustomProfessionName] = useState("");
+  const [selectedPhotoFile, setSelectedPhotoFile] = useState<File | null>(null);
+  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
+  const [isPhotoRemoved, setIsPhotoRemoved] = useState(false);
+
   useEffect(() => {
-    if (user) {
-      setFormData({
-        accountFor: user.accountFor || "",
-        fullName: user.fullName || "",
-        email: user.email || "",
-        countryCode: user.countryCode || "+91",
-        mobile: user.mobile || "",
-        alternateMobile: user.alternateMobile || "",
-        gender: user.gender || "",
-        dateOfBirth: user.dateOfBirth
-          ? (typeof user.dateOfBirth === "string" ? user.dateOfBirth.split("T")[0] : new Date(user.dateOfBirth).toISOString().split("T")[0])
-          : "",
-        preferredLanguage: user.preferredLanguage || "English",
-        heightCm: user.heightCm?.toString() || "",
-        weightKg: user.weightKg?.toString() || "",
-        maritalStatus: user.maritalStatus || "",
-        bodyType: user.bodyType || "",
-        physicallyChallenged: user.physicallyChallenged || false,
-        livingWithFamily: user.livingWithFamily || false,
-        // course: user.course || ""
-        primaryEducation: extractId(user.primaryEducation),
-        profession: extractId(user.profession),
-        incomeAmount: user.income?.amount?.toString() || "",
-        incomeType: user.income?.type || "Yearly",
-        interests: user.interests?.join(", ") || "",
-        personalityTraits: user.personalityTraits?.join(", ") || "",
-        dietPreference: user.dietPreference?.join(", ") || "",
-        city: extractCityText(user.city),
-        religion: extractId(user.religion),
-        caste: extractId(user.caste),
-        motherTongue: extractId(user.motherTongue),
-        approvalStatus: user.approvalStatus || "PENDING",
-        // branch: extractId(user.branch),
-        referredBy: extractId(user.referredBy),
-        address: user.address || "",
-      });
+    if (user && open) {
+      const draftKey = `admin_edit_user_draft_${user._id}`;
+      const savedDraft = localStorage.getItem(draftKey);
+      let loadedFromDraft = false;
+
+      if (savedDraft) {
+        try {
+          const draft = JSON.parse(savedDraft);
+          if (draft.formData) {
+            setFormData(draft.formData);
+            if (draft.isCustomProfession !== undefined) setIsCustomProfession(draft.isCustomProfession);
+            if (draft.customProfessionName) setCustomProfessionName(draft.customProfessionName);
+            loadedFromDraft = true;
+          }
+        } catch (e) {
+          console.error("Failed to parse edit user draft", e);
+        }
+      }
+
+      if (!loadedFromDraft) {
+        const profId = extractId(user.profession);
+        const profName = typeof user.profession === "string"
+          ? user.profession
+          : (typeof user.profession === "object" ? user.profession?.name : "");
+
+        const matchingOcc = occupations.find(
+          (o) => o._id === profId || (profName && o.name.toLowerCase() === profName.toLowerCase())
+        );
+
+        let initialProf = "";
+        if (matchingOcc) {
+          initialProf = matchingOcc._id;
+          setIsCustomProfession(false);
+          setCustomProfessionName("");
+        } else if (profName || profId) {
+          initialProf = profName || profId;
+          setIsCustomProfession(true);
+          setCustomProfessionName(profName || profId);
+        } else {
+          initialProf = "";
+          setIsCustomProfession(false);
+          setCustomProfessionName("");
+        }
+
+        setFormData({
+          accountFor: user.accountFor || "",
+          fullName: user.fullName || "",
+          email: user.email || "",
+          countryCode: user.countryCode || "+91",
+          mobile: user.mobile || "",
+          alternateMobile: user.alternateMobile || "",
+          gender: user.gender || "",
+          dateOfBirth: user.dateOfBirth
+            ? (typeof user.dateOfBirth === "string" ? user.dateOfBirth.split("T")[0] : new Date(user.dateOfBirth).toISOString().split("T")[0])
+            : "",
+          preferredLanguage: user.preferredLanguage || "English",
+          heightCm: user.heightCm?.toString() || "",
+          weightKg: user.weightKg?.toString() || "",
+          maritalStatus: user.maritalStatus || "",
+          bodyType: user.bodyType || "",
+          physicallyChallenged: user.physicallyChallenged || false,
+          livingWithFamily: user.livingWithFamily || false,
+          primaryEducation: extractId(user.primaryEducation),
+          profession: initialProf,
+          incomeAmount: user.income?.amount?.toString() || "",
+          incomeType: user.income?.type || "Yearly",
+          interests: user.interests?.join(", ") || "",
+          personalityTraits: user.personalityTraits?.join(", ") || "",
+          dietPreference: user.dietPreference?.join(", ") || "",
+          city: extractCityText(user.city),
+          religion: extractId(user.religion),
+          caste: extractId(user.caste),
+          motherTongue: extractId(user.motherTongue),
+          approvalStatus: user.approvalStatus || "PENDING",
+          referredBy: extractId(user.referredBy),
+          address: user.address || "",
+        });
+      }
+
       setPhotos(user.photos || []);
+      setSelectedPhotoFile(null);
+      setPhotoPreviewUrl(null);
+      setIsPhotoRemoved(false);
       setShowConfirmModal(false);
     }
-  }, [user]);
+  }, [user, open, occupations]);
+
+  // Save edit draft to localStorage on form changes
+  useEffect(() => {
+    if (open && user?._id) {
+      const draftKey = `admin_edit_user_draft_${user._id}`;
+      const draft = { formData, isCustomProfession, customProfessionName };
+      localStorage.setItem(draftKey, JSON.stringify(draft));
+    }
+  }, [open, user?._id, formData, isCustomProfession, customProfessionName]);
 
   const handleInputChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -301,11 +363,11 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
       return;
     }
 
-    if (!formData.city || !formData.religion || !formData.caste || !formData.motherTongue) {
+    if (!formData.city || !formData.religion || !formData.motherTongue) {
       setCurrentTab("additional");
       toast({
         title: "Validation Error",
-        description: "City, Religion, Caste, and Mother Tongue are required in the Additional tab (*).",
+        description: "City, Religion, and Mother Tongue are required in the Additional tab (*).",
         variant: "destructive",
       });
       return;
@@ -319,6 +381,11 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
 
     try {
       setLoading(true);
+
+      const selectedRelObj = religions.find((r) => r._id === formData.religion || r.name === formData.religion);
+      const isFreeThinker = selectedRelObj?.name?.toLowerCase() === "free thinker";
+      const casteVal = (isFreeThinker || !formData.caste) ? null : formData.caste;
+      const professionVal = isCustomProfession ? (customProfessionName || formData.profession) : formData.profession;
 
       const userData = {
         accountFor: formData.accountFor,
@@ -336,9 +403,8 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
         bodyType: formData.bodyType,
         physicallyChallenged: formData.physicallyChallenged,
         livingWithFamily: formData.livingWithFamily,
-        // course: formData.course,
         primaryEducation: formData.primaryEducation || undefined,
-        profession: formData.profession || undefined,
+        profession: professionVal || undefined,
         income: formData.incomeAmount
           ? {
             amount: Number(formData.incomeAmount),
@@ -354,15 +420,48 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
           : [],
         city: formData.city || undefined,
         religion: formData.religion || undefined,
-        caste: formData.caste || undefined,
+        caste: casteVal,
         motherTongue: formData.motherTongue || undefined,
         approvalStatus: formData.approvalStatus,
-        // branch: formData.branch || undefined,
         referredBy: formData.referredBy || undefined,
         address: formData.address || undefined,
       };
 
       await Axios.put(`/api/users/${user._id}`, userData);
+
+      // Process deferred photo delete if photo was marked for removal
+      if (isPhotoRemoved && photos.length > 0) {
+        for (const photo of photos) {
+          if (photo._id) {
+            try {
+              await userService.deleteUserPhoto(user._id, photo._id);
+            } catch (err) {
+              console.error("Failed to delete existing photo", err);
+            }
+          }
+        }
+      }
+
+      // Process deferred photo upload if new photo file was selected
+      if (selectedPhotoFile) {
+        if (photos.length > 0 && !isPhotoRemoved) {
+          for (const photo of photos) {
+            if (photo._id) {
+              try {
+                await userService.deleteUserPhoto(user._id, photo._id);
+              } catch (err) {
+                console.error("Failed to delete old photo before upload", err);
+              }
+            }
+          }
+        }
+        const photoFormData = new FormData();
+        photoFormData.append("photos", selectedPhotoFile);
+        await userService.uploadUserPhotos(user._id, photoFormData);
+      }
+
+      // Clear draft on successful save
+      localStorage.removeItem(`admin_edit_user_draft_${user._id}`);
 
       toast({
         title: "Success",
@@ -383,77 +482,23 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
     }
   };
 
-  const handlePhotoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || !e.target.files.length || !user?._id) return;
-
-    try {
-      setUploading(true);
-
-      // If there are existing photos with _id, delete them first to replace primary photo
-      if (photos.length > 0) {
-        for (const photo of photos) {
-          if (photo._id) {
-            try {
-              await userService.deleteUserPhoto(user._id, photo._id);
-            } catch (err) {
-              console.error("Failed to delete existing photo", err);
-            }
-          }
-        }
-      }
-
-      const formData = new FormData();
-      if (e.target.files.length > 0) {
-        formData.append("photos", e.target.files[0]);
-      }
-
-      const newPhotos = await userService.uploadUserPhotos(user._id, formData);
-
-      if (newPhotos) {
-        setPhotos(newPhotos);
-      }
-
-      toast({
-        title: "Success",
-        description: "Profile photo updated successfully",
-      });
-
-      onUserUpdated?.();
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.response?.data?.message || "Failed to upload photo",
-        variant: "destructive",
-      });
-    } finally {
-      setUploading(false);
-    }
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || !e.target.files.length) return;
+    const file = e.target.files[0];
+    setSelectedPhotoFile(file);
+    setPhotoPreviewUrl(URL.createObjectURL(file));
+    setIsPhotoRemoved(false);
   };
 
-  const handleDeletePhoto = async (photoId: string) => {
-    if (!user?._id) return;
-
-    try {
-      const updatedPhotos = await userService.deleteUserPhoto(user._id, photoId);
-      setPhotos(updatedPhotos || []);
-
-      toast({
-        title: "Success",
-        description: "Photo deleted successfully",
-      });
-      onUserUpdated?.();
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to delete photo",
-        variant: "destructive",
-      });
-    }
+  const handleDeletePhoto = () => {
+    setSelectedPhotoFile(null);
+    setPhotoPreviewUrl(null);
+    setIsPhotoRemoved(true);
   };
 
   if (!user) return null;
 
-  const currentPhotoUrl = photos?.[0]?.url;
+  const currentPhotoUrl = (!isPhotoRemoved && (photoPreviewUrl || photos?.[0]?.url)) || "";
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -487,12 +532,12 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
                   />
                 </Button>
               </div>
-              {photos.length > 0 && photos[0]?._id && (
+              {(!isPhotoRemoved && (photoPreviewUrl || photos.length > 0)) && (
                 <Button
                   size="sm"
                   variant="ghost"
                   className="h-8 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
-                  onClick={() => handleDeletePhoto(photos[0]._id!)}
+                  onClick={() => handleDeletePhoto()}
                   disabled={uploading}
                 >
                   <Trash2 className="w-3.5 h-3.5 mr-1" />
@@ -732,23 +777,42 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
 
               <div className="space-y-2">
                 <Label htmlFor="profession">Profession <span className="text-red-500">*</span></Label>
-                <Select
-                  value={formData.profession}
-                  onValueChange={(val) => handleInputChange("profession", val)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select profession" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {Array.isArray(occupations) &&
-                      occupations.map((occupation) => (
-                        <SelectItem key={occupation._id} value={occupation._id}>
-                          {occupation.name}
-                        </SelectItem>
-                      ))
+                <SearchableSelect
+                  options={occupations}
+                  value={isCustomProfession ? "OTHER" : formData.profession}
+                  onValueChange={(val) => {
+                    if (val === "OTHER") {
+                      setIsCustomProfession(true);
+                      handleInputChange("profession", customProfessionName);
+                    } else {
+                      setIsCustomProfession(false);
+                      handleInputChange("profession", val);
                     }
-                  </SelectContent>
-                </Select>
+                  }}
+                  placeholder="Select profession..."
+                  searchPlaceholder="Search profession..."
+                  allowCustom={true}
+                  customLabel="+ Add Custom Profession"
+                  isCustomSelected={isCustomProfession}
+                  onCustomSelect={() => {
+                    setIsCustomProfession(true);
+                    handleInputChange("profession", customProfessionName);
+                  }}
+                />
+                {isCustomProfession && (
+                  <div className="pt-2">
+                    <Label className="text-xs text-muted-foreground mb-1 block">Specify Custom Profession <span className="text-red-500">*</span></Label>
+                    <Input
+                      placeholder="Type your profession name..."
+                      value={customProfessionName}
+                      onChange={(e) => {
+                        setCustomProfessionName(e.target.value);
+                        handleInputChange("profession", e.target.value);
+                      }}
+                      className="h-10 text-sm"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -831,10 +895,10 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
 
             <div className="space-y-2">
               <Label>User Photos</Label>
-              {photos.length > 0 ? (
+              {(!isPhotoRemoved && (photoPreviewUrl || photos.length > 0)) ? (
                 <div className="relative group aspect-square rounded-lg overflow-hidden border bg-muted w-full max-w-xs mx-auto">
                   <img
-                    src={photos[0].url}
+                    src={photoPreviewUrl || photos[0]?.url}
                     alt="User photo"
                     className="w-full h-full object-cover"
                   />
@@ -844,27 +908,28 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        handleDeletePhoto(photos[0]._id);
+                        handleDeletePhoto();
                       }}
                     >
                       <Trash2 className="w-4 h-4 mr-2" /> Remove
                     </Button>
                     <div className="relative">
-                      {/* <Button variant="secondary" size="sm" className="pointer-events-none">
-                        Change Photo
-                      </Button> */}
                       <input
                         type="file"
                         accept="image/*"
                         className="absolute inset-0 opacity-0 cursor-pointer"
                         onChange={handlePhotoUpload}
-                        disabled={uploading}
                       />
                     </div>
                   </div>
-                  {photos[0].isPrimary && (
+                  {(!photoPreviewUrl && photos[0]?.isPrimary) && (
                     <div className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full flex items-center gap-1">
                       <Star className="w-3 h-3 fill-current" /> Primary
+                    </div>
+                  )}
+                  {photoPreviewUrl && (
+                    <div className="absolute top-2 left-2 bg-amber-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1 font-medium">
+                      New Photo (Unsaved)
                     </div>
                   )}
                 </div>
@@ -875,11 +940,10 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
                     accept="image/*"
                     className="absolute inset-0 opacity-0 cursor-pointer z-10"
                     onChange={handlePhotoUpload}
-                    disabled={uploading}
                   />
                   <Upload className="w-8 h-8 text-muted-foreground mb-2" />
                   <span className="text-xs font-medium text-center px-2">
-                    {uploading ? "Uploading..." : "Click to upload primary photo"}
+                    Click to select photo (saves when you click Update User)
                   </span>
                 </div>
               )}
@@ -1001,7 +1065,16 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
 
               <div className="space-y-2">
                 <Label htmlFor="religion">Religion <span className="text-red-500">*</span></Label>
-                <Select value={formData.religion} onValueChange={(val) => handleInputChange("religion", val)}>
+                <Select
+                  value={formData.religion}
+                  onValueChange={(val) => {
+                    handleInputChange("religion", val);
+                    const selectedRelObj = religions.find((r) => r._id === val || r.name === val);
+                    if (selectedRelObj?.name?.toLowerCase() === "free thinker") {
+                      handleInputChange("caste", "");
+                    }
+                  }}
+                >
                   <SelectTrigger>
                     <SelectValue placeholder="Select religion" />
                   </SelectTrigger>
@@ -1018,10 +1091,22 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="caste">Caste <span className="text-red-500">*</span></Label>
-                <Select value={formData.caste} onValueChange={(val) => handleInputChange("caste", val)}>
+                <Label htmlFor="caste">Caste</Label>
+                <Select
+                  value={formData.caste}
+                  onValueChange={(val) => handleInputChange("caste", val)}
+                  disabled={(() => {
+                    const selectedRelObj = religions.find((r) => r._id === formData.religion || r.name === formData.religion);
+                    return selectedRelObj?.name?.toLowerCase() === "free thinker";
+                  })()}
+                >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select caste" />
+                    <SelectValue placeholder={
+                      (() => {
+                        const selectedRelObj = religions.find((r) => r._id === formData.religion || r.name === formData.religion);
+                        return selectedRelObj?.name?.toLowerCase() === "free thinker" ? "N/A (Free Thinker)" : "Select caste";
+                      })()
+                    } />
                   </SelectTrigger>
                   <SelectContent>
                     {Array.isArray(filteredCastes) &&

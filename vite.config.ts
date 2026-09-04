@@ -3,6 +3,38 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
+import crypto from "node:crypto";
+
+const webcrypto = crypto.webcrypto;
+const nodeCrypto = new Proxy(webcrypto || {}, {
+  get(target, prop, receiver) {
+    if (prop in target) {
+      const val = Reflect.get(target, prop, receiver);
+      return typeof val === "function" ? val.bind(target) : val;
+    }
+    if (prop in crypto) {
+      const val = (crypto as any)[prop];
+      return typeof val === "function" ? val.bind(crypto) : val;
+    }
+    return undefined;
+  },
+});
+
+if (typeof globalThis.crypto === "undefined") {
+  Object.defineProperty(globalThis, "crypto", {
+    value: nodeCrypto,
+    writable: true,
+    configurable: true,
+  });
+}
+
+if (typeof global.crypto === "undefined") {
+  Object.defineProperty(global, "crypto", {
+    value: nodeCrypto,
+    writable: true,
+    configurable: true,
+  });
+}
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({

@@ -536,6 +536,7 @@ export default function ConsultantList({ initialTab }: ConsultantListProps) {
                           <TableHead className="sticky top-0 bg-background z-10 border-b">Consultant</TableHead>
                           <TableHead className="sticky top-0 bg-background z-10 border-b">Regions</TableHead>
                           <TableHead className="sticky top-0 bg-background z-10 border-b">Profiles</TableHead>
+                          <TableHead className="sticky top-0 bg-background z-10 border-b">Revenue</TableHead>
                           <TableHead className="sticky top-0 bg-background z-10 border-b">Status</TableHead>
                           <TableHead className="sticky top-0 bg-background z-10 border-b">Created</TableHead>
                           <TableHead className="sticky top-0 bg-background z-10 border-b text-right">Actions</TableHead>
@@ -569,6 +570,18 @@ export default function ConsultantList({ initialTab }: ConsultantListProps) {
                               </div>
                             </TableCell>
                             <TableCell className="font-medium">{c.profilesCreated || 0}</TableCell>
+                            <TableCell>
+                              <div className="flex flex-col">
+                                <span className={`font-semibold ${((c.totalRevenue ?? c.revenueGenerated ?? 0) > 0) ? "text-emerald-600 dark:text-emerald-400" : "text-muted-foreground"}`}>
+                                  ₹{(c.totalRevenue ?? c.revenueGenerated ?? 0).toLocaleString()}
+                                </span>
+                                {Boolean(c.paymentsCount && c.paymentsCount > 0) && (
+                                  <span className="text-[11px] text-muted-foreground">
+                                    {c.paymentsCount} {c.paymentsCount === 1 ? "payment" : "payments"}
+                                  </span>
+                                )}
+                              </div>
+                            </TableCell>
                             <TableCell>{getStatusBadge(c.status)}</TableCell>
                             <TableCell className="text-sm text-muted-foreground">
                               {c.createdAt ? new Date(c.createdAt).toLocaleDateString() : "-"}

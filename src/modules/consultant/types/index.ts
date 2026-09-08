@@ -5,7 +5,44 @@ export interface ConsultantPermissions {
   deleteProfile: boolean;
 }
 
+export interface ConsultantPayment {
+  _id: string;
+  transactionId: string;
+  userEmail: string;
+  user?: {
+    _id: string;
+    fullName?: string;
+    name?: string;
+    email: string;
+    mobile?: string;
+    phone?: string;
+    customId?: string;
+  };
+  plan?: {
+    _id: string;
+    title: string;
+    price?: number;
+    currency?: string;
+    chatProfilesLimit?: number;
+    contactViews?: number;
+  };
+  amount: number;
+  paymentMethod: string;
+  paymentGateway?: string;
+  referenceNo?: string;
+  attachment?: string;
+  status: 'Success' | 'Pending' | 'Failed';
+  paidAt?: string;
+  createdAt: string;
+  addedBy?: {
+    _id: string;
+    fullName?: string;
+    email?: string;
+  };
+}
+
 export interface Consultant {
+  _id?: string;
   id: string;
   username: string;
   email: string;
@@ -21,6 +58,10 @@ export interface Consultant {
   status: 'PENDING' | 'ACTIVE' | 'REJECTED' | 'SUSPENDED';
   permissions: ConsultantPermissions;
   profilesCreated: number;
+  totalRevenue?: number;
+  revenueGenerated?: number;
+  paymentsCount?: number;
+  payments?: ConsultantPayment[];
   createdAt: string;
   lastLogin: string;
 }

@@ -27,6 +27,42 @@ export interface ConsultantStatsResponse {
   totalInactiveConsultants: number;
 }
 
+export interface ConsultantPayment {
+  _id: string;
+  transactionId: string;
+  userEmail: string;
+  user?: {
+    _id: string;
+    fullName?: string;
+    name?: string;
+    email: string;
+    mobile?: string;
+    phone?: string;
+    customId?: string;
+  };
+  plan?: {
+    _id: string;
+    title: string;
+    price?: number;
+    currency?: string;
+    chatProfilesLimit?: number;
+    contactViews?: number;
+  };
+  amount: number;
+  paymentMethod: string;
+  paymentGateway?: string;
+  referenceNo?: string;
+  attachment?: string;
+  status: 'Success' | 'Pending' | 'Failed';
+  paidAt?: string;
+  createdAt: string;
+  addedBy?: {
+    _id: string;
+    fullName?: string;
+    email?: string;
+  };
+}
+
 export interface Consultant {
   _id: string;
   id: string;
@@ -43,6 +79,10 @@ export interface Consultant {
   // };
   regions: string[];
   profilesCreated: number;
+  totalRevenue?: number;
+  revenueGenerated?: number;
+  paymentsCount?: number;
+  payments?: ConsultantPayment[];
   status: 'PENDING' | 'ACTIVE' | 'REJECTED' | 'SUSPENDED';
   permissions: ConsultantPermissions;
   approvedAt?: string;
@@ -158,6 +198,14 @@ export const consultantService = {
    */
   getConsultantById: async (id: string): Promise<Consultant> => {
     const response = await Axios.get<Consultant>(`/api/consultants/${id}`);
+    return response.data;
+  },
+
+  /**
+   * Get consultant payments list
+   */
+  getConsultantPayments: async (id: string): Promise<ConsultantPayment[]> => {
+    const response = await Axios.get<ConsultantPayment[]>(`/api/consultants/${id}/payments`);
     return response.data;
   },
 

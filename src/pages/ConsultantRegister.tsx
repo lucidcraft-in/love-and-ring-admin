@@ -4,6 +4,7 @@ import { Heart, Eye, EyeOff, AlertCircle, Loader2, CheckCircle2 } from "lucide-r
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CountryCodeSelect } from "@/components/ui/country-code-select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useToast } from "@/hooks/use-toast";
@@ -16,11 +17,12 @@ export default function ConsultantRegister() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [countryCode, setCountryCode] = useState("+91");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [formData, setFormData] = useState({
     username: "",
     email: "",
     fullName: "",
-    phone: "",
     agencyName: "",
     licenseNumber: "",
     regions: "",
@@ -55,7 +57,8 @@ export default function ConsultantRegister() {
     setIsLoading(true);
 
     try {
-      await consultantService.createConsultant(formData);
+      const finalPhone = phoneNumber.trim() ? `${countryCode} ${phoneNumber.trim()}` : "";
+      await consultantService.createConsultant({ ...formData, phone: finalPhone });
 
       setIsSuccess(true);
       toast({
@@ -168,13 +171,22 @@ export default function ConsultantRegister() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="phone">Phone Number</Label>
-                <Input
-                  id="phone"
-                  placeholder="+91 98xxxxxxxx"
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  disabled={isLoading}
-                />
+                <div className="flex gap-2">
+                  <CountryCodeSelect
+                    value={countryCode}
+                    onChange={(val) => setCountryCode(val)}
+                    disabled={isLoading}
+                  />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="Enter phone number"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9]/g, ""))}
+                    disabled={isLoading}
+                    className="flex-1"
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="licenseNumber">License Number</Label>

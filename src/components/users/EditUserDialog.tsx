@@ -20,6 +20,7 @@ import {
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { getFriendlyActionName, getFriendlyDetails, getStepInfo } from "@/utils/activityLogUtils";
 import { SearchableSelect } from "@/components/ui/searchable-select";
+import { CountryCodeSelect } from "@/components/ui/country-code-select";
 
 interface User {
   photos?: {
@@ -595,15 +596,14 @@ export const EditUserDialog = ({ open, onOpenChange, user, onUserUpdated }: Edit
               <div className="space-y-2">
                 <Label htmlFor="mobile">Mobile <span className="text-red-500">*</span></Label>
                 <div className="flex gap-2">
-                  <Input
-                    className="w-20"
+                  <CountryCodeSelect
                     value={formData.countryCode}
-                    onChange={(e) => handleInputChange("countryCode", e.target.value)}
+                    onChange={(val) => handleInputChange("countryCode", val)}
                   />
                   <Input
                     id="mobile"
                     value={formData.mobile}
-                    onChange={(e) => handleInputChange("mobile", e.target.value)}
+                    onChange={(e) => handleInputChange("mobile", e.target.value.replace(/[^0-9]/g, ""))}
                   />
                 </div>
               </div>

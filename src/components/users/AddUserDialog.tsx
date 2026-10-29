@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CountryCodeSelect } from "@/components/ui/country-code-select";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -251,18 +252,16 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
             <div className="space-y-2">
               <Label htmlFor="mobile">Mobile Number</Label>
               <div className="flex gap-2">
-                <Input
-                  className="w-20"
+                <CountryCodeSelect
                   value={countryCode}
-                  onChange={(e) => setCountryCode(e.target.value)}
-                  placeholder="+91"
+                  onChange={(val) => setCountryCode(val)}
                   disabled={otpLoading}
                 />
                 <Input
                   id="mobile"
                   type="tel"
                   value={mobile}
-                  onChange={(e) => setMobile(e.target.value)}
+                  onChange={(e) => setMobile(e.target.value.replace(/[^0-9]/g, ""))}
                   placeholder="Enter mobile number"
                   disabled={otpLoading}
                 />
@@ -394,16 +393,15 @@ export const AddUserDialog = ({ open, onOpenChange, onUserAdded }: AddUserDialog
               <div className="space-y-2">
                 <Label htmlFor="mobile">Mobile Number</Label>
                 <div className="flex gap-2">
-                  <Input
-                    className="w-20"
+                  <CountryCodeSelect
                     value={formData.countryCode}
-                    onChange={(e) => handleInputChange("countryCode", e.target.value)}
+                    onChange={(val) => handleInputChange("countryCode", val)}
                     disabled={verificationLoading}
                   />
                   <Input
                     id="mobile"
                     value={formData.mobile}
-                    onChange={(e) => handleInputChange("mobile", e.target.value)}
+                    onChange={(e) => handleInputChange("mobile", e.target.value.replace(/[^0-9]/g, ""))}
                     placeholder="Mobile number"
                     disabled={verificationLoading}
                   />

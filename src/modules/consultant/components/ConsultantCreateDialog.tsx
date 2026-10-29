@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { CountryCodeSelect } from "@/components/ui/country-code-select";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useAppDispatch, useAppSelector } from "@/store/hooks";
@@ -23,11 +24,12 @@ export function ConsultantCreateDialog({ open, onOpenChange, onCreate }: Consult
 
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [countryCode, setCountryCode] = useState("+91");
+  const [phoneNumber, setPhoneNumber] = useState("");
 
   const [formData, setFormData] = useState({
     email: "",
     fullName: "",
-    phone: "",
     // branch: "",
     licenseNumber: "",
     regions: "",
@@ -82,7 +84,8 @@ export function ConsultantCreateDialog({ open, onOpenChange, onCreate }: Consult
     }
 
     try {
-      await dispatch(createConsultantAsync(formData)).unwrap();
+      const finalPhone = phoneNumber.trim() ? `${countryCode} ${phoneNumber.trim()}` : "";
+      await dispatch(createConsultantAsync({ ...formData, phone: finalPhone })).unwrap();
 
       toast({
         title: "Consultant Created",
@@ -93,13 +96,14 @@ export function ConsultantCreateDialog({ open, onOpenChange, onCreate }: Consult
       setFormData({
         email: "",
         fullName: "",
-        phone: "",
         // branch: "",
         licenseNumber: "",
         regions: "",
         password: "",
         confirmPassword: "",
       });
+      setCountryCode("+91");
+      setPhoneNumber("");
 
       onCreate();
       onOpenChange(false);
@@ -145,13 +149,23 @@ export function ConsultantCreateDialog({ open, onOpenChange, onCreate }: Consult
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label>Phone</Label>
-                <Input
-                  placeholder="+91..."
-                  value={formData.phone}
-                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                  disabled={createLoading}
-                />
+                <Label htmlFor="phone">Phone</Label>
+                <div className="flex gap-2">
+                  <CountryCodeSelect
+                    value={countryCode}
+                    onChange={(val) => setCountryCode(val)}
+                    disabled={createLoading}
+                  />
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="Enter phone number"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9]/g, ""))}
+                    disabled={createLoading}
+                    className="flex-1"
+                  />
+                </div>
               </div>
               <div>
                 <Label>License Number</Label>
